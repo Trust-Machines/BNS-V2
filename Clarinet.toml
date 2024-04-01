@@ -1,0 +1,29 @@
+[project]
+name = 'BNS-V2'
+description = ''
+authors = []
+telemetry = true
+cache_dir = './.cache'
+requirements = []
+[contracts.BNS-V2]
+path = 'contracts/BNS-V2.clar'
+clarity_version = 2
+epoch = 2.4
+
+[contracts.commission-trait]
+path = 'contracts/commission-trait.clar'
+clarity_version = 2
+epoch = 2.4
+
+[contracts.sip-09]
+path = 'contracts/sip-09.clar'
+clarity_version = 2
+epoch = 2.4
+[repl.analysis]
+passes = ['check_checker']
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
