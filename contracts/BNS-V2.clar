@@ -138,6 +138,7 @@
 (define-constant ERR-NOT-LISTED (err u103))
 (define-constant ERR-WRONG-COMMISSION (err u104))
 (define-constant ERR-LISTED (err u105))
+(define-constant ERR-ALREADY-PRIMARY-NAME (err u106))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -161,12 +162,50 @@
 ;; Map to track market listings, associating NFT IDs with price and commission details
 (define-map market uint {price: uint, commission: principal})
 
+;; This map stores properties of each namespace including who manages it, and the timestamps of key events.
+;; It allows tracking the lifecycle of namespace names.
+(define-map namespaces (buff 20)
+    { 
+        ;; Optional principal indicating who manages the namespace. 'None' if not managed.
+        namespace-manager: (optional principal),
+        ;; Timestamp of when the namespace was revealed.
+        revealed-at: uint,
+        ;; Optional timestamp for when the namespace was officially launched. 'None' until launch.
+        launched-at: (optional uint),
+        ;; Duration in blocks for how long names within the namespace are valid.
+        lifetime: uint,
+    }
+)
+
+;; This map tracks the primary name chosen by a user who owns multiple BNS names.
+;; It maps a user's principal to the ID of their primary name.
+(define-map primary-name principal uint)
+
+;; Tracks all the BNS names owned by a user. Each user is mapped to a list of name IDs.
+;; This allows for easy enumeration of all names owned by a particular user.
+(define-map all-user-names principal (list 1000 uint))
+
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;; Public ;;;;;
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;
 
+(define-public (set-primary-name (primary-name-id uint))
+    (let 
+        (
+            ;; Get the owner of the Name (NFT)
+            (owner (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-UNWRAP))
+            (current-primary-name (unwrap! (map-get? primary-name tx-sender) ERR-UNWRAP))
+        ) 
+        ;; Check if the caller of the function (`tx-sender`) is the same as the owner of the name. If not, it returns `ERR_UNAUTHORIZED`.
+        (asserts! (is-eq owner tx-sender) ERR-NOT-AUTHORIZED)
+        ;; Assert that the current primary name is not the same as the one trying to update
+        (asserts! (not (is-eq primary-name-id current-primary-name)) ERR-ALREADY-PRIMARY-NAME)
+        (map-set primary-name tx-sender primary-name-id)
+        (ok true)
+    )
+)
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;; Read Only ;;;;;
