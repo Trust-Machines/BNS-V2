@@ -139,6 +139,8 @@
 (define-constant ERR-WRONG-COMMISSION (err u104))
 (define-constant ERR-LISTED (err u105))
 (define-constant ERR-ALREADY-PRIMARY-NAME (err u106))
+(define-constant ERR-NO-NAME (err u107))
+(define-constant ERR-NAME-LOCKED (err u108))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -185,33 +187,80 @@
 ;; This allows for easy enumeration of all names owned by a particular user.
 (define-map all-user-names principal (list 1000 uint))
 
+(define-map name-properties 
+    {
+        name: (buff 48), namespace: (buff 20)
+    } 
+    { 
+        locked: bool,
+        renewal-height: uint,
+        price: uint,
+        owner: principal,
+    }
+)
+
+(define-map index-to-name uint 
+    {
+        name: (buff 48), namespace: (buff 20)
+    } 
+)
+
+(define-map name-to-index 
+    {
+        name: (buff 48), namespace: (buff 20)
+    } 
+    uint
+)
+
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;; Public ;;;;;
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;
 
+;; Sets the primary name for the caller to a specific BNS name they own.
 (define-public (set-primary-name (primary-name-id uint))
     (let 
         (
-            ;; Get the owner of the Name (NFT)
+            ;; Retrieves the owner of the specified name ID
             (owner (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-UNWRAP))
+            ;; Retrieves the current primary name for the caller, to check if an update is necessary.
             (current-primary-name (unwrap! (map-get? primary-name tx-sender) ERR-UNWRAP))
+            ;; Retrieves the name and namespace from the uint/index
+            (name-and-namespace (unwrap! (map-get? index-to-name primary-name-id) ERR-NO-NAME))
+            ;; Retrieves the current locked status of the name
+            (is-locked (unwrap! (get locked (map-get? name-properties name-and-namespace)) ERR-UNWRAP))
         ) 
-        ;; Check if the caller of the function (`tx-sender`) is the same as the owner of the name. If not, it returns `ERR_UNAUTHORIZED`.
+        ;; Verifies that the caller (`tx-sender`) is indeed the owner of the name they wish to set as primary.
         (asserts! (is-eq owner tx-sender) ERR-NOT-AUTHORIZED)
-        ;; Assert that the current primary name is not the same as the one trying to update
+        ;; Ensures the new primary name is different from the current one to avoid redundant updates.
         (asserts! (not (is-eq primary-name-id current-primary-name)) ERR-ALREADY-PRIMARY-NAME)
+        ;; Asserts that the name is not locked
+        (asserts! (is-eq false is-locked) ERR-NAME-LOCKED)
+        ;; Updates the mapping of the caller's principal to the new primary name ID.
         (map-set primary-name tx-sender primary-name-id)
+        ;; Returns 'true' upon successful execution of the function.
         (ok true)
     )
 )
+
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;; Read Only ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
+(define-read-only (get-bns-info (name (buff 48)) (namespace (buff 20))) 
+    (map-get? name-to-index {name: name, namespace: namespace})
+)
+
+(define-read-only (get-primary-name (owner principal))
+    (map-get? primary-name owner)
+)
+
+(define-read-only (get-all-names-id (owner principal))
+    (map-get? all-user-names owner)
+)
 ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;
 ;;;;;; Private ;;;;;
