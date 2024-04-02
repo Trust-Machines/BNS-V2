@@ -127,6 +127,16 @@
 (define-constant token-name "BNS-V2")
 (define-constant token-symbol "BNS-V2")
 
+;; Time-to-live (TTL) constants for namespace preorders and name preorders, and the duration for name grace period.
+;; The TTL for namespace preorders.
+(define-constant NAMESPACE-PREORDER-CLAIMABILITY-TTL u144) 
+;; The duration after revealing a namespace within which it must be launched.
+(define-constant NAMESPACE-LAUNCHABILITY-TTL u52595) 
+;; The TTL for name preorders.
+(define-constant NAME-PREORDER-CLAIMABILITY-TTL u144) 
+;; The grace period duration for name renewals post-expiration.
+(define-constant NAME-GRACE-PERIOD-DURATION u5000) 
+
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;; Errors ;;;;;
@@ -141,6 +151,18 @@
 (define-constant ERR-ALREADY-PRIMARY-NAME (err u106))
 (define-constant ERR-NO-NAME (err u107))
 (define-constant ERR-NAME-LOCKED (err u108))
+(define-constant ERR-NAMESPACE-PREORDER-ALREADY-EXISTS (err u109))
+(define-constant ERR-NAMESPACE-HASH-MALFORMED (err u110))
+(define-constant ERR-NAMESPACE-STX-BURNT-INSUFFICIENT (err u111))
+(define-constant ERR-INSUFFICIENT-FUNDS (err u112))
+(define-constant ERR-NAMESPACE-PREORDER-NOT-FOUND (err u113))
+(define-constant ERR-NAMESPACE-CHARSET-INVALID (err u114))
+(define-constant ERR-NAMESPACE-ALREADY-EXISTS (err u115))
+(define-constant ERR-NAMESPACE-PREORDER-CLAIMABILITY-EXPIRED (err u116))
+(define-constant ERR-NAMESPACE-NOT-FOUND (err u117))
+(define-constant ERR-NAMESPACE-OPERATION-UNAUTHORIZED (err u118))
+(define-constant ERR-NAMESPACE-ALREADY-LAUNCHED (err u119))
+(define-constant ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED (err u200))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -170,10 +192,8 @@
     { 
         ;; Optional principal indicating who manages the namespace. 'None' if not managed.
         namespace-manager: (optional principal),
-        ;; Timestamp of when the namespace was revealed.
-        revealed-at: uint,
-        ;; Optional timestamp for when the namespace was officially launched. 'None' until launch.
-        launched-at: (optional uint),
+        ;; Timestamp for when the namespace was officially launched.
+        launched-at: uint,
         ;; Duration in blocks for how long names within the namespace are valid.
         lifetime: uint,
     }
@@ -212,6 +232,12 @@
     uint
 )
 
+;; Records namespace preorder transactions with their creation times, claim status, and STX burned.
+(define-map namespace-preorders
+    { hashed-salted-namespace: (buff 20), buyer: principal }
+    { created-at: uint, claimed: bool, stx-burned: uint }
+)
+
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;; Public ;;;;;
@@ -244,6 +270,94 @@
     )
 )
 
+;; Public function `namespace-preorder` initiates the registration process for a namespace by sending a transaction with a salted hash of the namespace.
+;; This transaction burns the registration fee as a commitment.
+;; @params:
+    ;; hashed-salted-namespace (buff 20): The hashed and salted namespace being preordered.
+    ;; stx-to-burn (uint): The amount of STX tokens to be burned as part of the preorder process.
+(define-public (namespace-preorder (hashed-salted-namespace (buff 20)) (stx-to-burn uint))
+    (let 
+        (
+            ;; Check if there's an existing preorder for the same hashed-salted-namespace by the same buyer.
+            (former-preorder (map-get? namespace-preorders { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }))
+        )
+        ;; Verify that any previous preorder by the same buyer has expired.
+        (asserts! 
+            (if (is-none former-preorder) 
+                ;; Proceed if no previous preorder exists.
+                true 
+                ;; If a previous preorder exists, check that it has expired based on the NAMESPACE-PREORDER-CLAIMABILITY-TTL.
+                (>= block-height (+ NAMESPACE-PREORDER-CLAIMABILITY-TTL (unwrap! (get created-at former-preorder) ERR-UNWRAP)))
+            ) 
+            ERR-NAMESPACE-PREORDER-ALREADY-EXISTS
+        )
+        ;; Validate that the hashed-salted-namespace is exactly 20 bytes long to conform to expected hash standards.
+        (asserts! (is-eq (len hashed-salted-namespace) u20) ERR-NAMESPACE-HASH-MALFORMED)
+        ;; Confirm that the STX amount to be burned is positive
+        (asserts! (> stx-to-burn u0) ERR-NAMESPACE-STX-BURNT-INSUFFICIENT)
+        ;; Execute the token burn operation, deducting the specified STX amount from the buyer's balance.
+        (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-INSUFFICIENT-FUNDS)
+        ;; Record the preorder details in the `namespace-preorders` map, marking it as not yet claimed.
+        (map-set namespace-preorders
+            { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }
+            { created-at: block-height, claimed: false, stx-burned: stx-to-burn }
+        )
+        ;; Return the block height at which the preorder claimability expires, based on the NAMESPACE_PREORDER_CLAIMABILITY_TTL.
+        (ok (+ block-height NAMESPACE-PREORDER-CLAIMABILITY-TTL))
+    )
+)
+
+;; Public function `namespace-reveal` completes the second step in the namespace registration process by revealing the details of the namespace to the blockchain.
+;; It associates the revealed namespace with its corresponding preorder, establishes the namespace's pricing function, and sets its lifetime and ownership details.
+;; @params:
+    ;; namespace (buff 20): The namespace being revealed.
+    ;; namespace-salt (buff 20): The salt used during the preorder to generate a unique hash.
+    ;; p-func-base, p-func-coeff, p-func-b1 to p-func-b16: Parameters defining the price function for registering names within this namespace.
+    ;; p-func-non-alpha-discount (uint): Discount applied to names with non-alphabetic characters.
+    ;; p-func-no-vowel-discount (uint): Discount applied to names without vowels.
+    ;; lifetime (uint): Duration that names within this namespace are valid before needing renewal.
+    ;; namespace-import (principal): The principal authorized to import names into this namespace.
+(define-public (namespace-launch (namespace (buff 20)) (namespace-salt (buff 20)) (lifetime uint) (namespace-manager (optional principal)))
+    ;; The salt and namespace must hash to a preorder entry in the `namespace_preorders`.
+    ;; The sender must match the principal in the preorder entry
+    (let 
+        (
+            ;; Generate the hashed, salted namespace identifier to match with its preorder.
+            (hashed-salted-namespace (hash160 (concat namespace namespace-salt)))
+            ;; Retrieve the preorder record to ensure it exists and is valid for the revealing namespace.
+            (preorder (unwrap! (map-get? namespace-preorders { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }) ERR-NAMESPACE-PREORDER-NOT-FOUND))
+           
+        )
+        ;; Ensure the namespace consists of valid characters only.
+        (asserts! (not (has-invalid-chars namespace)) ERR-NAMESPACE-CHARSET-INVALID)
+        ;; Check that the namespace is available for reveal (not already existing or expired).
+        (asserts! (is-none (map-get? namespaces namespace)) ERR-NAMESPACE-ALREADY-EXISTS)
+        ;; Verify the burned amount during preorder meets or exceeds the namespace's registration price.
+        (asserts! (>= (get stx-burned preorder) u2) ERR-NAMESPACE-STX-BURNT-INSUFFICIENT)
+        ;; Confirm the reveal action is performed within the allowed timeframe from the preorder.
+        (asserts! (< block-height (+ (get created-at preorder) NAMESPACE-PREORDER-CLAIMABILITY-TTL)) ERR-NAMESPACE-PREORDER-CLAIMABILITY-EXPIRED)
+        ;; Mark the preorder as claimed to prevent reuse.
+        (map-set namespace-preorders
+            { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }
+            { created-at: (get created-at preorder), claimed: true, stx-burned: (get stx-burned preorder) }
+        )
+        ;; Register the namespace as revealed with its pricing function, lifetime, and import principal details.
+        (map-set namespaces namespace
+            { 
+                ;; Optional principal indicating who manages the namespace. 'None' if not managed.
+                namespace-manager: namespace-manager,
+                ;; Timestamp for when the namespace was officially launched.
+                launched-at: block-height,
+                ;; Duration in blocks for how long names within the namespace are valid.
+                lifetime: lifetime,
+            }
+        )
+        ;; Confirm successful reveal of the namespace
+        (ok true)
+    )
+)
+
+
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;; Read Only ;;;;;
@@ -267,3 +381,96 @@
 ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;
 
+;; Determines if a character is a digit (0-9).
+(define-private (is-digit (char (buff 1)))
+    (or 
+        ;; Checks if the character is between '0' and '9' using hex values.
+        (is-eq char 0x30) ;; 0
+        (is-eq char 0x31) ;; 1
+        (is-eq char 0x32) ;; 2
+        (is-eq char 0x33) ;; 3
+        (is-eq char 0x34) ;; 4
+        (is-eq char 0x35) ;; 5
+        (is-eq char 0x36) ;; 6
+        (is-eq char 0x37) ;; 7
+        (is-eq char 0x38) ;; 8
+        (is-eq char 0x39) ;; 9
+    )
+) 
+
+;; Checks if a character is a lowercase alphabetic character (a-z).
+(define-private (is-lowercase-alpha (char (buff 1)))
+    (or 
+        ;; Checks for each lowercase letter using hex values.
+        (is-eq char 0x61) ;; a
+        (is-eq char 0x62) ;; b
+        (is-eq char 0x63) ;; c
+        (is-eq char 0x64) ;; d
+        (is-eq char 0x65) ;; e
+        (is-eq char 0x66) ;; f
+        (is-eq char 0x67) ;; g
+        (is-eq char 0x68) ;; h
+        (is-eq char 0x69) ;; i
+        (is-eq char 0x6a) ;; j
+        (is-eq char 0x6b) ;; k
+        (is-eq char 0x6c) ;; l
+        (is-eq char 0x6d) ;; m
+        (is-eq char 0x6e) ;; n
+        (is-eq char 0x6f) ;; o
+        (is-eq char 0x70) ;; p
+        (is-eq char 0x71) ;; q
+        (is-eq char 0x72) ;; r
+        (is-eq char 0x73) ;; s
+        (is-eq char 0x74) ;; t
+        (is-eq char 0x75) ;; u
+        (is-eq char 0x76) ;; v
+        (is-eq char 0x77) ;; w
+        (is-eq char 0x78) ;; x
+        (is-eq char 0x79) ;; y
+        (is-eq char 0x7a) ;; z
+    )
+) 
+
+;; Determines if a character is a vowel (a, e, i, o, u, and y).
+(define-private (is-vowel (char (buff 1)))
+    (or 
+        (is-eq char 0x61) ;; a
+        (is-eq char 0x65) ;; e
+        (is-eq char 0x69) ;; i
+        (is-eq char 0x6f) ;; o
+        (is-eq char 0x75) ;; u
+        (is-eq char 0x79) ;; y
+    )
+)
+
+;; Identifies if a character is a special character, specifically '-' or '_'.
+(define-private (is-special-char (char (buff 1)))
+    (or 
+        (is-eq char 0x2d) ;; -
+        (is-eq char 0x5f)) ;; _
+) 
+
+;; Determines if a character is valid within a name, based on allowed character sets.
+(define-private (is-char-valid (char (buff 1)))
+    (or (is-lowercase-alpha char) (is-digit char) (is-special-char char))
+)
+
+;; Checks if a character is non-alphabetic, either a digit or a special character.
+(define-private (is-nonalpha (char (buff 1)))
+    (or (is-digit char) (is-special-char char))
+)
+
+;; Evaluates if a name contains any vowel characters.
+(define-private (has-vowels-chars (name (buff 48)))
+    (> (len (filter is-vowel name)) u0)
+)
+
+;; Determines if a name contains non-alphabetic characters.
+(define-private (has-nonalpha-chars (name (buff 48)))
+    (> (len (filter is-nonalpha name)) u0)
+)
+
+;; Identifies if a name contains any characters that are not considered valid.
+(define-private (has-invalid-chars (name (buff 48)))
+    (< (len (filter is-char-valid name)) (len name))
+)
