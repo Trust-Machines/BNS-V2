@@ -163,6 +163,10 @@
 (define-constant ERR-NAMESPACE-OPERATION-UNAUTHORIZED (err u118))
 (define-constant ERR-NAMESPACE-ALREADY-LAUNCHED (err u119))
 (define-constant ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED (err u200))
+(define-constant ERR-NAMESPACE-NOT-LAUNCHED (err u201))
+(define-constant ERR-NAME-OPERATION-UNAUTHORIZED (err u202))
+(define-constant ERR-NAME-NOT-AVAILABLE (err u203))
+(define-constant ERR-NAME-NOT-FOUND (err u204))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -212,10 +216,12 @@
         name: (buff 48), namespace: (buff 20)
     } 
     { 
+        registered-at: (optional uint),
         locked: bool,
         renewal-height: uint,
         price: uint,
         owner: principal,
+        zonefile-hash: (buff 20)
     }
 )
 
@@ -365,16 +371,54 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 
 (define-read-only (get-bns-info (name (buff 48)) (namespace (buff 20))) 
-    (map-get? name-to-index {name: name, namespace: namespace})
+    (let 
+        (
+            (nft-index (unwrap! (map-get? name-to-index {name: name, namespace: namespace}) ERR-NAME-NOT-FOUND))
+            (owner (unwrap! (nft-get-owner? BNS-V2 nft-index) ERR-UNWRAP))
+        ) 
+        (ok 
+            {
+                owner: owner, id: nft-index
+            }
+        )
+    )
 )
 
+;; Fetches the primary BNS name ID set by a specific owner.
 (define-read-only (get-primary-name (owner principal))
+    ;; Looks up the primary name associated with the given owner's principal in the 'primary-name' map
     (map-get? primary-name owner)
 )
 
-(define-read-only (get-all-names-id (owner principal))
+;; Retrieves all BNS name IDs owned by a specific principal.
+(define-read-only (bns-ids-by-principal (owner principal))
+    ;; Accesses the 'all-user-names' map to find all name IDs associated with the given owner's principal.
     (map-get? all-user-names owner)
 )
+
+;; Checks whether a specific BNS name is available within a given namespace.
+(define-read-only (is-name-available (name (buff 48)) (namespace (buff 20))) 
+    (let 
+        (
+            ;; Fetches properties of the specified namespace to ensure it exists.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; Attempts to retrieve the index or ID for the given name within the namespace, expecting failure if no name is found.
+            (name-index  (unwrap! (map-get? name-to-index {name: name, namespace: namespace}) ERR-NAME-NOT-FOUND))
+            ;; Checks if the name is currently owned by any principal.
+            (owner (nft-get-owner? BNS-V2 name-index))
+            ;; Gets the name properties
+            (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-UNWRAP))
+        )
+        (ok 
+            {
+                available: true,
+                renews-at: (get renewal-height name-props),
+                price: (get price name-props),
+            }
+        )
+    )
+)
+
 ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;
 ;;;;;; Private ;;;;;
