@@ -363,6 +363,66 @@
     )
 )
 
+;; Defines a public function to burn an NFT, identified by its unique ID, under managed namespace authority.
+(define-public (mng-burn (id uint)) 
+    (let 
+        (
+            ;; Retrieves the name and namespace associated with the given NFT ID. If not found, returns an error.
+            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NAME-NOT-FOUND))
+
+            ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
+            (namespace (get namespace name-and-namespace))
+
+            ;; Fetches existing properties of the namespace to confirm its existence and retrieve management details.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+
+            ;; Retrieves the current manager of the namespace from the namespace properties.
+            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
+
+            ;; Retrieves the current owner of the NFT, necessary to authorize the burn operation.
+            (current-name-owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP))
+        ) 
+        ;; Ensures that the function caller is the current namespace manager, providing the authority to perform the burn.
+        (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
+
+        ;; Executes the burn operation for the specified NFT, effectively removing it from circulation.
+        (ok (nft-burn? BNS-V2 id current-name-owner))
+    )
+)
+
+
+;; This function transfers the management role of a specific namespace to a new principal.
+(define-public (mng-manager-transfer (new-manager principal) (namespace (buff 20)))
+    (let 
+        (
+            ;; Fetches existing properties of the namespace to verify its existence and current management details.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+
+            ;; Extracts the current manager of the namespace from the retrieved properties.
+            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
+        ) 
+        ;; Verifies that the caller of the function is the current namespace manager to authorize the management transfer.
+        (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
+
+        ;; If the checks pass, updates the namespace entry with the new manager's principal.
+        ;; Retains other properties such as the launched time and the lifetime of names.
+        (ok 
+            (map-set namespaces namespace 
+                {
+                    ;; Updates the namespace-manager field to the new manager's principal.
+                    namespace-manager: (some new-manager),
+
+                    ;; Retains the existing launch time of the namespace.
+                    launched-at: (get launched-at namespace-props),
+
+                    ;; Retains the existing lifetime duration setting for names within the namespace.
+                    lifetime: (get lifetime namespace-props),
+                }
+            )
+        )
+    )
+)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
