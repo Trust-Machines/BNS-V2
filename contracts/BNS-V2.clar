@@ -390,6 +390,63 @@
     )
 )
 
+;; Defines a public function for registering a new BNS name within a specified namespace.
+(define-public (mng-register (name (buff 48)) (namespace (buff 20)) (send-to principal) (price uint) (zonefile (buff 20)))
+    (let 
+        (
+            ;; Retrieves existing properties of the namespace to confirm its existence and management details.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            
+            ;; Extracts the current manager of the namespace to verify the authority of the caller.
+            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
+            
+            ;; Calculates the ID for the new name to be minted, incrementing the last used ID.
+            (id-to-be-minted (+ (var-get bns-mint-counter) u1))
+            
+            ;; Retrieves a list of all names currently owned by the recipient. Defaults to an empty list if none are found.
+            (all-users-names-owned (default-to (list) (map-get? all-user-names send-to)))
+        ) 
+        ;; Verifies that the caller of the function is the current namespace manager to authorize the registration.
+        (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
+
+        ;; Updates the list of all names owned by the recipient to include the new name ID.
+        (map-set all-user-names send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
+
+        ;; Conditionally sets the newly minted name as the primary name if the recipient does not already have one.
+        (if (is-none (map-get? primary-name send-to)) 
+            (map-set primary-name send-to id-to-be-minted)
+            false
+        )
+
+        ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
+        (map-set name-properties
+            {
+                name: name, namespace: namespace
+            } 
+            {
+                registered-at: (some block-height),
+                locked: false,
+                renewal-height: (+ (get lifetime namespace-props) block-height),
+                price: price,
+                owner: send-to,
+                zonefile-hash: zonefile
+            }
+        )
+
+        ;; Links the newly minted ID to the name and namespace combination for reverse lookup.
+        (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
+
+        ;; Links the name and namespace combination to the newly minted ID for forward lookup.
+        (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
+
+        ;; Mints the new BNS name as an NFT, assigned to the 'send-to' principal.
+        (unwrap! (nft-mint? BNS-V2 id-to-be-minted send-to) ERR-UNWRAP)
+
+        ;; Signals successful completion of the registration process.
+        (ok true)
+    )
+)
+
 
 ;; This function transfers the management role of a specific namespace to a new principal.
 (define-public (mng-manager-transfer (new-manager principal) (namespace (buff 20)))
