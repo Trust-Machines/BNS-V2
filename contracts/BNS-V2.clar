@@ -790,6 +790,8 @@
 ;; This is the first transaction to be sent. It tells all BNS nodes the salted hash of the BNS name,
 ;; and it burns the registration fee.
 
+;; Do we need to add the namespace here? 
+
 ;; Public function `name-preorder` initiates the registration process for a BNS name by sending a transaction with a salted hash of the name.
 ;; This transaction burns the registration fee as a demonstration of commitment and to prevent spamming.
 ;; @params:
@@ -893,7 +895,15 @@
         (
             ;; Check preconditions to ensure the operation is authorized, including that the caller is the current owner, and the name is in a valid state for updates (not expired, not in grace period, and not revoked).
             (data (try! (check-name-ops-preconditions namespace name)))
+            ;; Retrieve the properties of the namespace to ensure it exists and is valid for registration.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; New
+            ;; Retrieve namespace manager if any
+            (namespace-manager (get namespace-manager namespace-props))
         )
+        ;; New
+        ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
+        (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
         ;; Execute the update of the zone file hash for the name. This involves updating the name's properties in the `name-properties` map with the new zone file hash. The operation type "name-update" is also specified for logging.
         (update-zonefile-and-props namespace name (get registered-at (get name-props data)) (get imported-at (get name-props data)) none zonefile-hash "name-update")
         ;; Confirm successful completion of the zone file hash update.
@@ -924,7 +934,15 @@
             (data (try! (check-name-ops-preconditions namespace name)))
             ;; Check if the new owner is eligible to receive the name, ensuring they don't already own another name.
             (can-new-owner-get-name (try! (can-receive-name new-owner)))
+            ;; Retrieve the properties of the namespace to ensure it exists and is valid for registration.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; New
+            ;; Retrieve namespace manager if any
+            (namespace-manager (get namespace-manager namespace-props))
         )
+        ;; New
+        ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
+        (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
         ;; Ensure the new owner is eligible to receive the name. If they already own a name, the operation is aborted.
         (asserts! can-new-owner-get-name ERR-PRINCIPAL-ALREADY-ASSOCIATED)
         ;; Perform the transfer of the name to the new owner. This updates the ownership records.
@@ -952,7 +970,15 @@
         (
             ;; Check preconditions for name operations such as ownership and namespace launch status.
             (data (try! (check-name-ops-preconditions namespace name)))
+            ;; Retrieve the properties of the namespace to ensure it exists and is valid for registration.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; New
+            ;; Retrieve namespace manager if any
+            (namespace-manager (get namespace-manager namespace-props))
         )
+        ;; New
+        ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
+        (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
         ;; Update the name properties to revoke the name:
             ;; - The zone file hash is set to null (0x), effectively making the name unresolvable.
             ;; - The `update-zonefile-and-props` function is called with the current registered and imported timestamps, the current block height as the revoked timestamp, and a null zone file hash.
@@ -990,7 +1016,13 @@
             (owner (unwrap! (nft-get-owner? names { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
             ;; Fetch the name properties from the `name-properties` map.
             (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
-        ) 
+            ;; New
+            ;; Retrieve namespace manager if any
+            (namespace-manager (get namespace-manager namespace-props))
+        )
+        ;; New
+        ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
+        (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
         ;; Asserts that the namespace has been launched.
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Asserts that renewals are required for names in this namespace
@@ -1271,44 +1303,45 @@
     )
 )
 
+;; Remove this
 ;; Read-only function `name-resolve` for resolving a name within a namespace to its properties.
 ;; @params:
     ;; namespace (buff 20): The namespace of the name to be resolved.
     ;; name (buff 48): The actual name to be resolved.
-(define-read-only (name-resolve (namespace (buff 20)) (name (buff 48)))
-    (let 
-        (
-            ;; Fetch the current owner of the name from the `names` NFT map.
-            (owner (unwrap! (nft-get-owner? names { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
-            ;; Retrieve the name properties from the `name-properties` map.
-            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
-            ;; Fetch the properties of the namespace from the `namespaces` map.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-        )
-        ;; Asserts the name is not within its grace period to ensure it's currently resolvable.
-        (asserts! (not (try! (is-name-in-grace-period namespace name))) ERR-NAME-GRACE-PERIOD)
-        ;; Asserts the name lease has not expired; it must be active to resolve.
-        (asserts! (not (try! (is-name-lease-expired namespace name))) ERR-NAME-EXPIRED)
-        ;; Asserts the name has not been revoked and is still valid for resolution.
-        (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
+;; (define-read-only (name-resolve (namespace (buff 20)) (name (buff 48)))
+;;     (let 
+;;         (
+;;             ;; Fetch the current owner of the name from the `names` NFT map.
+;;             (owner (unwrap! (nft-get-owner? names { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
+;;             ;; Retrieve the name properties from the `name-properties` map.
+;;             (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
+;;             ;; Fetch the properties of the namespace from the `namespaces` map.
+;;             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+;;         )
+;;         ;; Asserts the name is not within its grace period to ensure it's currently resolvable.
+;;         (asserts! (not (try! (is-name-in-grace-period namespace name))) ERR-NAME-GRACE-PERIOD)
+;;         ;; Asserts the name lease has not expired; it must be active to resolve.
+;;         (asserts! (not (try! (is-name-lease-expired namespace name))) ERR-NAME-EXPIRED)
+;;         ;; Asserts the name has not been revoked and is still valid for resolution.
+;;         (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
         
-        (let 
-            (
-                ;; Determines the start of the lease period for the name.
-                (lease-started-at (try! (name-lease-started-at? (get launched-at namespace-props) (get revealed-at namespace-props) name-props)))
-            )
-            ;; Returns name resolution details including the owner, zone file hash, and lease period.
-            (ok 
-                { 
-                    zonefile-hash: (get zonefile-hash name-props), 
-                    owner: owner,
-                    lease-started-at: lease-started-at,
-                    lease-ending-at: (if (is-eq (get lifetime namespace-props) u0) none (some (+ lease-started-at (get lifetime namespace-props))))
-                }
-            )
-        )
-    )
-)
+;;         (let 
+;;             (
+;;                 ;; Determines the start of the lease period for the name.
+;;                 (lease-started-at (try! (name-lease-started-at? (get launched-at namespace-props) (get revealed-at namespace-props) name-props)))
+;;             )
+;;             ;; Returns name resolution details including the owner, zone file hash, and lease period.
+;;             (ok 
+;;                 { 
+;;                     zonefile-hash: (get zonefile-hash name-props), 
+;;                     owner: owner,
+;;                     lease-started-at: lease-started-at,
+;;                     lease-ending-at: (if (is-eq (get lifetime namespace-props) u0) none (some (+ lease-started-at (get lifetime namespace-props))))
+;;                 }
+;;             )
+;;         )
+;;     )
+;; )
 
 ;; Read-only function `get-namespace-properties` for retrieving properties of a specific namespace.
 ;; @params:
