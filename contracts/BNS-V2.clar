@@ -263,6 +263,7 @@
 ;; Maps a principal to the name they own, enforcing a one-to-one relationship between principals and names.
 (define-map owner-name principal { name: (buff 48), namespace: (buff 20) })
 
+
 ;;;;;;;;;
 ;; New ;;
 ;;;;;;;;;
@@ -283,23 +284,10 @@
 ;; This allows for easy enumeration of all names owned by a particular user.
 (define-map all-user-names principal (list 1000 uint))
 
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-(define-map name-properties-new
-    {
-        name: (buff 48), namespace: (buff 20)
-    } 
-    { 
-        registered-at: (optional uint),
-        locked: bool,
-        renewal-height: uint,
-        price: uint,
-        owner: principal,
-        zonefile-hash: (buff 20)
-    }
-)
 
+;;;;;;;;;;;;;
+;; Updated ;;
+;;;;;;;;;;;;;
 ;; Contains detailed properties of names, including registration and importation times, revocation status, and zonefile hash.
 (define-map name-properties
     { name: (buff 48), namespace: (buff 20) }
@@ -307,7 +295,11 @@
         registered-at: (optional uint),
         imported-at: (optional uint),
         revoked-at: (optional uint),
-        zonefile-hash: (buff 20) 
+        zonefile-hash: (buff 20),
+        locked: bool, 
+        renewal-height: uint,
+        price: uint,
+        owner: principal,
     }
 )
 
@@ -409,7 +401,7 @@
             ;; Retrieves the name and namespace from the uint/index
             (name-and-namespace (unwrap! (map-get? index-to-name primary-name-id) ERR-NO-NAME))
             ;; Retrieves the current locked status of the name
-            (is-locked (unwrap! (get locked (map-get? name-properties-new name-and-namespace)) ERR-UNWRAP))
+            (is-locked (unwrap! (get locked (map-get? name-properties name-and-namespace)) ERR-UNWRAP))
         ) 
         ;; Verifies that the caller (`tx-sender`) is indeed the owner of the name they wish to set as primary.
         (asserts! (is-eq owner tx-sender) ERR-NOT-AUTHORIZED)
@@ -480,17 +472,19 @@
         )
 
         ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
-        (map-set name-properties-new
+        (map-set name-properties
             {
                 name: name, namespace: namespace
             } 
             {
                 registered-at: (some block-height),
+                imported-at: none,
+                revoked-at: none,
+                zonefile-hash: zonefile,
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 price: price,
                 owner: send-to,
-                zonefile-hash: zonefile
             }
         )
 
@@ -718,8 +712,8 @@
         (asserts! (< block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)
         ;; Mint or transfer the name to the beneficiary, establishing ownership.
         (try! (mint-or-transfer-name? namespace name beneficiary))
-        ;; Update the name's properties in the `name-properties` map, setting its zone file hash and marking it as imported.
-        (update-zonefile-and-props namespace name none (some block-height) none zonefile-hash "name-import")
+        ;; ;; Update the name's properties in the `name-properties` map, setting its zone file hash and marking it as imported.
+        ;; (update-zonefile-and-props namespace name none (some block-height) none zonefile-hash "name-import")
         ;; Confirm successful import of the name.
         (ok true)
     )
@@ -872,8 +866,8 @@
         (asserts! (>= (get stx-burned preorder) (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Mint or transfer the name to the tx sender, effectively finalizing its registration or updating ownership if already existing.
         (try! (mint-or-transfer-name? namespace name tx-sender))
-        ;; Update the name's properties with the new zone file hash and registration metadata.
-        (update-zonefile-and-props namespace name (some block-height) none none zonefile-hash "name-register")
+        ;; ;; Update the name's properties with the new zone file hash and registration metadata.
+        ;; (update-zonefile-and-props namespace name (some block-height) none none zonefile-hash "name-register")
         ;; Confirm successful registration of the name.
         (ok true)
     )
@@ -904,8 +898,8 @@
         ;; New
         ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
         (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
-        ;; Execute the update of the zone file hash for the name. This involves updating the name's properties in the `name-properties` map with the new zone file hash. The operation type "name-update" is also specified for logging.
-        (update-zonefile-and-props namespace name (get registered-at (get name-props data)) (get imported-at (get name-props data)) none zonefile-hash "name-update")
+        ;; ;; Execute the update of the zone file hash for the name. This involves updating the name's properties in the `name-properties` map with the new zone file hash. The operation type "name-update" is also specified for logging.
+        ;; (update-zonefile-and-props namespace name (get registered-at (get name-props data)) (get imported-at (get name-props data)) none zonefile-hash "name-update")
         ;; Confirm successful completion of the zone file hash update.
         (ok true)
     )
@@ -947,9 +941,9 @@
         (asserts! can-new-owner-get-name ERR-PRINCIPAL-ALREADY-ASSOCIATED)
         ;; Perform the transfer of the name to the new owner. This updates the ownership records.
         (unwrap! (update-name-ownership? namespace name tx-sender new-owner) ERR-NAME-TRANSFER-FAILED)
-        ;; Update the name's zone file hash. If a new hash is provided, it's used; otherwise, the hash is cleared.
-        ;; This operation also updates the name's registration properties accordingly.
-        (update-zonefile-and-props namespace name (get registered-at (get name-props data)) (get imported-at (get name-props data)) none (if (is-none zonefile-hash) 0x (unwrap-panic zonefile-hash)) "name-transfer")
+        ;; ;; Update the name's zone file hash. If a new hash is provided, it's used; otherwise, the hash is cleared.
+        ;; ;; This operation also updates the name's registration properties accordingly.
+        ;; (update-zonefile-and-props namespace name (get registered-at (get name-props data)) (get imported-at (get name-props data)) none (if (is-none zonefile-hash) 0x (unwrap-panic zonefile-hash)) "name-transfer")
         ;; Confirm the successful completion of the name transfer operation.
         (ok true)
     )
@@ -979,11 +973,11 @@
         ;; New
         ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
         (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
-        ;; Update the name properties to revoke the name:
-            ;; - The zone file hash is set to null (0x), effectively making the name unresolvable.
-            ;; - The `update-zonefile-and-props` function is called with the current registered and imported timestamps, the current block height as the revoked timestamp, and a null zone file hash.
-            ;; - The operation type "name-revoke" is passed to `update-zonefile-and-props` for logging.
-        (update-zonefile-and-props namespace name (get registered-at (get name-props data)) (get imported-at (get name-props data)) (some block-height) 0x "name-revoke")
+        ;; ;; Update the name properties to revoke the name:
+        ;;     ;; - The zone file hash is set to null (0x), effectively making the name unresolvable.
+        ;;     ;; - The `update-zonefile-and-props` function is called with the current registered and imported timestamps, the current block height as the revoked timestamp, and a null zone file hash.
+        ;;     ;; - The operation type "name-revoke" is passed to `update-zonefile-and-props` for logging.
+        ;; (update-zonefile-and-props namespace name (get registered-at (get name-props data)) (get imported-at (get name-props data)) (some block-height) 0x "name-revoke")
         ;; Return a success response indicating the name has been successfully revoked.
         (ok true)
     )
@@ -1038,6 +1032,8 @@
         (asserts! (>= stx-to-burn (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Asserts that the name has not been revoked.
         (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
+        ;; Burns the STX provided
+        (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-UNWRAP)
         ;; Checks if a new owner is specified
         (if (is-none new-owner)
             ;; If no new owner return true
@@ -1057,11 +1053,31 @@
                     registered-at: (some block-height),
                     imported-at: none,
                     revoked-at: none,
-                    zonefile-hash: (get zonefile-hash name-props) 
+                    zonefile-hash: (get zonefile-hash name-props),
+                    locked: (get locked name-props),
+                    renewal-height: (+ (get lifetime namespace-props) block-height),
+                    owner: (get owner name-props),
+                    price: (get price name-props)
                 }
             )
-            ;; If new zone file hash, then update with new zone file hash
-            (update-zonefile-and-props namespace name (some block-height) none none (unwrap-panic zonefile-hash) "name-renewal")
+            (map-set name-properties
+                { 
+                    name: name, 
+                    namespace: namespace 
+                }
+                { 
+                    registered-at: (some block-height),
+                    imported-at: none,
+                    revoked-at: none,
+                    zonefile-hash: (unwrap! zonefile-hash ERR-UNWRAP),
+                    locked: (get locked name-props),
+                    renewal-height: (+ (get lifetime namespace-props) block-height),
+                    owner: (get owner name-props),
+                    price: (get price name-props)
+                }
+            )
+            ;; ;; If new zone file hash, then update with new zone file hash
+            ;; (update-zonefile-and-props namespace name (some block-height) none none (unwrap-panic zonefile-hash) "name-renewal")
         )
         ;; Successfully completes the renewal process.
         (ok true)
@@ -1477,7 +1493,7 @@
 )
 
 ;; Calculates the block height at which a name's lease started, considering if it was registered or imported.
-(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (buff 20)}))
+(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (buff 20), locked: bool, renewal-height: uint, price: uint, owner: principal}))
     (let 
         (
             ;; Extract the registration and importation times from the name properties.
@@ -1588,6 +1604,7 @@
         (
             ;; Retrieve the current index for attachments to keep track of this operation uniquely.
             (current-index (var-get attachment-index))
+            (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-UNWRAP))
         )
         ;; Log the operation as an event with relevant metadata, including the zone file hash, name, namespace, and operation type.
         (print 
@@ -1609,15 +1626,19 @@
         ;; Increment the attachment index for future operations to maintain uniqueness.
         (var-set attachment-index (+ u1 current-index))
         ;; Update the name's properties in the `name-properties` map with the new zone file hash and any other provided properties.
-        (map-set name-properties
+        (ok (map-set name-properties
             { name: name, namespace: namespace }
             { 
                 registered-at: registered-at,
                 imported-at: imported-at,
                 revoked-at: revoked-at,
-                zonefile-hash: zonefile-hash 
+                zonefile-hash: zonefile-hash, 
+                locked: (get locked name-props), 
+                renewal-height: (get renewal-height name-props),
+                price: (get price name-props),
+                owner: (get owner name-props),
             }
-        )
+        ))
     )
 )
 
