@@ -322,19 +322,19 @@
     uint
 )
 
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; Stores properties of namespaces, including their import principals, reveal and launch times, and pricing functions.
-(define-map namespaces-new (buff 20)
-    { 
-        namespace-manager: (optional principal),
-        namespace-import: principal,
-        revealed-at: uint,
-        launched-at: (optional uint),
-        lifetime: uint,
-    }
-)
+;; ;;;;;;;;;
+;; ;; New ;;
+;; ;;;;;;;;;
+;; ;; Stores properties of namespaces, including their import principals, reveal and launch times, and pricing functions.
+;; (define-map namespaces-new (buff 20)
+;;     { 
+;;         namespace-manager: (optional principal),
+;;         namespace-import: principal,
+;;         revealed-at: uint,
+;;         launched-at: (optional uint),
+;;         lifetime: uint,
+;;     }
+;; )
 
 ;; Stores properties of namespaces, including their import principals, reveal and launch times, and pricing functions.
 (define-map namespaces (buff 20)
@@ -427,7 +427,7 @@
             (namespace (get namespace name-and-namespace))
 
             ;; Fetches existing properties of the namespace to confirm its existence and retrieve management details.
-            (namespace-props (unwrap! (map-get? namespaces-new namespace) ERR-NAMESPACE-NOT-FOUND))
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
 
             ;; Retrieves the current manager of the namespace from the namespace properties.
             (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
@@ -448,7 +448,7 @@
     (let 
         (
             ;; Retrieves existing properties of the namespace to confirm its existence and management details.
-            (namespace-props (unwrap! (map-get? namespaces-new namespace) ERR-NAMESPACE-NOT-FOUND))
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
             
             ;; Extracts the current manager of the namespace to verify the authority of the caller.
             (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
@@ -508,7 +508,7 @@
     (let 
         (
             ;; Fetches existing properties of the namespace to verify its existence and current management details.
-            (namespace-props (unwrap! (map-get? namespaces-new namespace) ERR-NAMESPACE-NOT-FOUND))
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
 
             ;; Extracts the current manager of the namespace from the retrieved properties.
             (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
@@ -519,7 +519,7 @@
         ;; If the checks pass, updates the namespace entry with the new manager's principal.
         ;; Retains other properties such as the launched time and the lifetime of names.
         (ok 
-            (map-set namespaces-new namespace 
+            (map-set namespaces namespace 
                 {
                     ;; Updates the namespace-manager field to the new manager's principal.
                     namespace-manager: (some new-manager),
@@ -529,6 +529,8 @@
                     launched-at: (get launched-at namespace-props),
                     ;; Retains the existing lifetime duration setting for names within the namespace.
                     lifetime: (get lifetime namespace-props),
+                    can-update-price-function: (get can-update-price-function namespace-props),
+                    price-function: (get price-function namespace-props)
                 }
             )
         )
@@ -696,11 +698,17 @@
     ;; name (buff 48): The name being imported into the namespace.
     ;; beneficiary (principal): The principal who will own the imported name.
     ;; zonefile-hash (buff 20): The hash of the zone file associated with the imported name.
-(define-public (name-import (namespace (buff 20)) (name (buff 48)) (beneficiary principal) (zonefile-hash (buff 20)))
+(define-public (name-import (namespace (buff 20)) (name (buff 48)) (beneficiary principal) (zonefile-hash (buff 20)) (price uint))
     (let 
         (
             ;; Fetch properties of the specified namespace to ensure it exists and to check its current state.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; Fetch the latest index to mint
+            (current-mint (+ (var-get bns-mint-counter) u1))
+            ;; Fetch the primary name of the beneficiary
+            (beneficiary-primary-name (map-get? primary-name beneficiary))
+            ;; Fetch names owned by the beneficiary
+            (all-users-names-owned (default-to (list) (map-get? all-user-names beneficiary)))
         )
         ;; Verify that the name contains only valid characters to ensure compliance with naming conventions.
         (asserts! (not (has-invalid-chars name)) ERR-NAME-CHARSET-INVALID)
@@ -710,8 +718,37 @@
         (asserts! (is-none (get launched-at namespace-props)) ERR-NAMESPACE-ALREADY-LAUNCHED)
         ;; Confirm that the import is occurring within the allowed timeframe since the namespace was revealed.
         (asserts! (< block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)
+        ;; Mint the name to the beneficiary
+        (unwrap! (nft-mint? BNS-V2 current-mint beneficiary) ERR-UNWRAP)
+        ;; Check if beneficiary has primary-name
+        (if (is-none beneficiary-primary-name) 
+            ;; If not, then set this as primary name
+            (map-set primary-name beneficiary current-mint)
+            ;; if it does then do nothing
+            false
+        )
+        ;; Add the name into the all-users-name map
+        (map-set all-user-names beneficiary (unwrap! (as-max-len? (append all-users-names-owned current-mint) u1000) ERR-UNWRAP))
+        ;; Set the name properties
+        (map-set name-properties {name: name, namespace: namespace}
+            {
+                registered-at: none,
+                imported-at: (some block-height),
+                revoked-at: none,
+                zonefile-hash: zonefile-hash,
+                locked: false,
+                renewal-height: (+ (get lifetime namespace-props) block-height),
+                price: price,
+                owner: beneficiary
+            }
+        )
+        ;; Set the map index-to-name
+        (map-set index-to-name current-mint {name: name, namespace: namespace})
+        ;; Set the map name-to-index
+        (map-set name-to-index {name: name, namespace: namespace} current-mint)
+
         ;; Mint or transfer the name to the beneficiary, establishing ownership.
-        (try! (mint-or-transfer-name? namespace name beneficiary))
+        ;; (try! (mint-or-transfer-name? namespace name beneficiary))
         ;; ;; Update the name's properties in the `name-properties` map, setting its zone file hash and marking it as imported.
         ;; (update-zonefile-and-props namespace name none (some block-height) none zonefile-hash "name-import")
         ;; Confirm successful import of the name.
