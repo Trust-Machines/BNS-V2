@@ -33,6 +33,7 @@
 ;; Define the non-fungible token (NFT) called BNS-V2 with unique identifiers as unsigned integers
 (define-non-fungible-token BNS-V2 uint)
 
+;; To be removed
 ;; A non-fungible token (NFT) representing a specific name within a namespace.
 (define-non-fungible-token names { name: (buff 48), namespace: (buff 20) })
 
@@ -746,7 +747,6 @@
         (map-set index-to-name current-mint {name: name, namespace: namespace})
         ;; Set the map name-to-index
         (map-set name-to-index {name: name, namespace: namespace} current-mint)
-
         ;; Mint or transfer the name to the beneficiary, establishing ownership.
         ;; (try! (mint-or-transfer-name? namespace name beneficiary))
         ;; ;; Update the name's properties in the `name-properties` map, setting its zone file hash and marking it as imported.
@@ -1126,6 +1126,40 @@
 ;;;;; Read Only ;;;;
 ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;
+
+;; This read-only function determines the availability of a specific BNS (Blockchain Name Service) name within a specified namespace.
+(define-read-only (is-name-available (name (buff 48)) (namespace (buff 20)))
+    (let 
+        (
+            ;; Attempts to retrieve properties of the specified namespace to ensure it exists.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+
+            ;; Attempts to find an index for the name-namespace pair, which would indicate prior registration.
+            (name-index (map-get? name-to-index {name: name, namespace: namespace}))
+
+            ;; Tries to get the properties associated with the name within the namespace, if it's registered.
+            (name-props (map-get? name-properties {name: name, namespace: namespace}))
+        ) 
+        ;; Returns the availability status based on whether name properties were found.
+        (ok
+            (if (is-none name-props)
+                {
+                    ;; If no properties are found, the name is considered available, and no renewal or price info is applicable.
+                    available: true,
+                    renews-at: none,
+                    price: none
+                }
+                {
+                    ;; If properties are found, the name is not available, and the function returns its renewal height and price.
+                    available: false,
+                    renews-at: (get renewal-height name-props),  ;; The block height at which the name needs to be renewed.
+                    price: (get price name-props)  ;; The current registration price for the name.
+                }
+            )
+        )
+    )
+)
+
 
 ;; Read-only function `get-namespace-price` calculates the registration price for a namespace based on its length.
 ;; @params:
