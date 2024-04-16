@@ -1,26 +1,28 @@
 import { Cl } from "@stacks/transactions";
 import { describe, expect, it } from "vitest";
 import { initSimnet } from "@hirosystems/clarinet-sdk";
-import crypto from "crypto"; // Import the crypto module
+import crypto from "crypto";
 const simnet = await initSimnet();
 
 const accounts = simnet.getAccounts();
 const address1 = accounts.get("wallet_1")!;
-// Function to create a Hash-160 from a string, including a salt
+// Function to create a Hash-160
 function createHash160(input: Uint8Array, salt: Uint8Array) {
-  const saltedInput = Buffer.concat([Buffer.from(input), salt]); // Use Buffer to concatenate salt and input
-
-  const sha256Hash = crypto.createHash("sha256").update(saltedInput).digest(); // First SHA-256
+  // Concatenate the input buffer + the salt buffer
+  const saltedInput = Buffer.concat([Buffer.from(input), salt]);
+  // hash with sha256
+  const sha256Hash = crypto.createHash("sha256").update(saltedInput).digest();
+  // hash the result with ripemd160
   const ripemd160Hash = crypto
     .createHash("ripemd160")
     .update(sha256Hash)
-    .digest(); // Then RIPEMD-160
-
-  return ripemd160Hash; // This is a 20-byte Buffer (160 bits)
+    .digest();
+  // Final 20 bytes hash
+  return ripemd160Hash;
 }
 // Create a UTF-8 Encoder
 const encoder = new TextEncoder();
-// Define a salt
+// Define the salt
 const salt = "stratalabs";
 // Encode the salt string to a Uint8Array
 const saltBuff = encoder.encode(salt);
