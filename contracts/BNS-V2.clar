@@ -87,36 +87,34 @@
 ;; )
 
 (define-public (transfer (id uint) (owner principal) (recipient principal))
-        (let 
-            (
-                (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
-                (namespace (get namespace name-and-namespace))
-                (namespace-props (unwrap! (map-get? namespaces namespace) ERR-UNWRAP))
-                (namespace-manager (get namespace-manager namespace-props))
-            )
-            (if (is-none namespace-manager) 
-                (begin                 
-                    ;; Asserts that the tx-sender is the owner of the NFT being transferred
-                    (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
-                    ;; Asserts that the ID being transferred is not listed in a marketplace
-                    (asserts! (is-none (map-get? market id)) ERR-LISTED)
-                    ;; Executes NFT transfer if conditions are met
-                    (nft-transfer? BNS-V2 id owner recipient)
-                )
-                (begin                 
-                    ;; Asserts that the tx-sender is the owner of the NFT being transferred
-                    (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
-                    ;; Not sure they would be able to list if they are under a managed namespace?
-                    ;; Asserts that the ID being transferred is not listed in a marketplace
-                    (asserts! (is-none (map-get? market id)) ERR-LISTED)
-                    ;; Executes NFT transfer if conditions are met
-                    (nft-transfer? BNS-V2 id owner recipient)
-                )
-            ) 
+    (let 
+        (
+            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
+            (namespace (get namespace name-and-namespace))
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-UNWRAP))
+            (namespace-manager (get namespace-manager namespace-props))
         )
+        (if (is-none namespace-manager) 
+            (begin                 
+                ;; Asserts that the tx-sender is the owner of the NFT being transferred
+                (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
+                ;; Asserts that the ID being transferred is not listed in a marketplace
+                (asserts! (is-none (map-get? market id)) ERR-LISTED)
+                ;; Executes NFT transfer if conditions are met
+                (nft-transfer? BNS-V2 id owner recipient)
+            )
+            (begin                 
+                ;; Asserts that the tx-sender is the owner of the NFT being transferred
+                (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+                ;; Not sure they would be able to list if they are under a managed namespace?
+                ;; Asserts that the ID being transferred is not listed in a marketplace
+                (asserts! (is-none (map-get? market id)) ERR-LISTED)
+                ;; Executes NFT transfer if conditions are met
+                (nft-transfer? BNS-V2 id owner recipient)
+            )
+        ) 
+    )
 )
-
-
 
 ;;;;;;;;;
 ;; New ;;
@@ -1467,6 +1465,10 @@
         ;; Returns the namespace along with its associated properties.
         (ok { namespace: namespace, properties: namespace-props })
     )
+)
+
+(define-read-only (get-id-from-bns (name (buff 48)) (namespace (buff 20))) 
+    (map-get? name-to-index {name: name, namespace: namespace})
 )
 
 ;;;;;;;;;;;;;;;;;;
