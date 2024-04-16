@@ -145,7 +145,7 @@
 ;; New ;;
 ;;;;;;;;;
 ;; Counter to keep track of the last minted NFT ID, ensuring unique identifiers
-(define-data-var bns-mint-counter uint u0)
+(define-data-var bns-index uint u0)
 
 ;;;;;;;;;
 ;; New ;;
@@ -204,6 +204,7 @@
         renewal-height: uint,
         price: uint,
         owner: principal,
+        suspended: bool
     }
 )
 
@@ -288,6 +289,8 @@
             (namespace-manager (get namespace-manager namespace-props))
             ;; Gets the name-props
             (name-props (unwrap! (map-get? name-properties name-and-namespace) ERR-NO-NAME))
+            ;; Gets if the name is suspended
+            (name-suspended (get suspended name-props))
             ;; Gets the current owner of the name from the name-props
             (name-current-owner (get owner name-props))
             ;; Gets the currently owned NFTs by the owner
@@ -298,8 +301,9 @@
             (owner-primary-name (map-get? primary-name owner))
             ;; Checks if the recipient has a primary name
             (recipient-primary-name (map-get? primary-name recipient))
-
         )
+        ;; Checks if the name is not suspended, if it is then don't execute anything
+        (asserts! (is-eq false name-suspended) ERR-NAME-OPERATION-UNAUTHORIZED)
         ;; Checks if the namespace is managed.
         (if (is-none namespace-manager) 
             (begin                 
@@ -472,7 +476,7 @@
             (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
             
             ;; Calculates the ID for the new name to be minted, incrementing the last used ID.
-            (id-to-be-minted (+ (var-get bns-mint-counter) u1))
+            (id-to-be-minted (+ (var-get bns-index) u1))
             
             ;; Retrieves a list of all names currently owned by the recipient. Defaults to an empty list if none are found.
             (all-users-names-owned (default-to (list) (map-get? all-user-names send-to)))
@@ -503,6 +507,7 @@
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 price: price,
                 owner: send-to,
+                suspended: false
             }
         )
 
@@ -724,7 +729,7 @@
             ;; Fetch properties of the specified namespace to ensure it exists and to check its current state.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
             ;; Fetch the latest index to mint
-            (current-mint (+ (var-get bns-mint-counter) u1))
+            (current-mint (+ (var-get bns-index) u1))
             ;; Fetch the primary name of the beneficiary
             (beneficiary-primary-name (map-get? primary-name beneficiary))
             ;; Fetch names owned by the beneficiary
@@ -759,7 +764,8 @@
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 price: price,
-                owner: beneficiary
+                owner: beneficiary,
+                suspended: false
             }
         )
         ;; Set the map index-to-name
@@ -1117,7 +1123,8 @@
                     locked: (get locked name-props),
                     renewal-height: (+ (get lifetime namespace-props) block-height),
                     owner: (get owner name-props),
-                    price: (get price name-props)
+                    price: (get price name-props),
+                    suspended: false
                 }
             )
             (map-set name-properties
@@ -1133,7 +1140,8 @@
                     locked: (get locked name-props),
                     renewal-height: (+ (get lifetime namespace-props) block-height),
                     owner: (get owner name-props),
-                    price: (get price name-props)
+                    price: (get price name-props),
+                    suspended: false,
                 }
             )
             ;; ;; If new zone file hash, then update with new zone file hash
@@ -1152,8 +1160,8 @@
 
 ;; @desc SIP-09 compliant function to get the last minted token's ID
 (define-read-only (get-last-token-id)
-    ;; Returns the current value of bns-mint-counter variable, which tracks the last token ID
-    (ok (var-get bns-mint-counter))
+    ;; Returns the current value of bns-index variable, which tracks the last token ID
+    (ok (var-get bns-index))
 )
 
 ;; @desc SIP-09 compliant function to get token URI
@@ -1613,7 +1621,7 @@
 )
 
 ;; Calculates the block height at which a name's lease started, considering if it was registered or imported.
-(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (optional (buff 20)), locked: bool, renewal-height: uint, price: uint, owner: principal}))
+(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (optional (buff 20)), locked: bool, renewal-height: uint, price: uint, owner: principal, suspended: bool}))
     (let 
         (
             ;; Extract the registration and importation times from the name properties.
@@ -1757,6 +1765,7 @@
                 renewal-height: (get renewal-height name-props),
                 price: (get price name-props),
                 owner: (get owner name-props),
+                suspended: false
             }
         ))
     )
