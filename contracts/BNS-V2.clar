@@ -326,11 +326,12 @@
             false
         )
         ;; Updates the primary name of the receiver if needed, if the receiver doesn't have a name assign it as primary
-        (if (is-none recipient-primary-name)
-            ;; If no primary name then assign this as the primary name
-            (map-set primary-name recipient id)
+        (match recipient-primary-name
+            name-match
             ;; If there is a primary name then do nothing
             false
+            ;; If no primary name then assign this as the primary name
+            (map-set primary-name recipient id)
         )
         ;; Updates the name-props map with the new information, everything stays the same, we only change the zonefile to none for a clean slate and the owner
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
@@ -480,9 +481,10 @@
         (map-set all-user-names send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
 
         ;; Conditionally sets the newly minted name as the primary name if the recipient does not already have one.
-        (if (is-none (map-get? primary-name send-to)) 
-            (map-set primary-name send-to id-to-be-minted)
+        (match (map-get? primary-name send-to) 
+            receiver
             false
+            (map-set primary-name send-to id-to-be-minted)
         )
 
         ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
@@ -736,11 +738,12 @@
         ;; Confirm that the import is occurring within the allowed timeframe since the namespace was revealed.
         (asserts! (< block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)
         ;; Check if beneficiary has primary-name
-        (if (is-none beneficiary-primary-name) 
-            ;; If not, then set this as primary name
-            (map-set primary-name beneficiary current-mint)
+        (match beneficiary-primary-name
+            primary
             ;; if it does then do nothing
             false
+            ;; If not, then set this as primary name
+            (map-set primary-name beneficiary current-mint)
         )
         ;; Add the name into the all-users-name map
         (map-set all-user-names beneficiary (unwrap! (as-max-len? (append all-users-names-owned current-mint) u1000) ERR-OVERFLOW))
@@ -850,11 +853,12 @@
         )
         ;; Verify that any previous preorder by the same buyer has expired.
         (asserts! 
-            (if (is-none former-preorder)
-                ;; If no previous preorder exists, proceed.
-                true
+            (match former-preorder
+                preorder
                 ;; If a previous preorder exists, check that it has expired based on the NAME-PREORDER-CLAIMABILITY-TTL.
                 (>= block-height (+ NAME-PREORDER-CLAIMABILITY-TTL (unwrap-panic (get created-at former-preorder))))
+                ;; If no previous preorder exists, proceed.
+                true
             )
             ;; If a previous preorder is still valid, throw an error indicating a duplicate preorder.
             ERR-NAME-PREORDER-ALREADY-EXISTS
@@ -1046,14 +1050,32 @@
         ;; Burns the STX provided
         (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-UNWRAP)
         ;; Checks if a new owner is specified
-        (if (is-none new-owner)
-            ;; If no new owner return true
-            true 
+        (match new-owner
+            owner-new
             ;; If new owner, then checks if the new owner can receive the name.
             (try! (can-receive-name (unwrap-panic new-owner)))
+            ;; If no new owner return true
+            true    
         )
         ;; Checks if a new zone file hash is specified
-        (if (is-none zonefile-hash)
+        (match zonefile-hash
+            z-hash
+            (map-set name-properties
+                { 
+                    name: name, 
+                    namespace: namespace 
+                }
+                { 
+                    registered-at: (some block-height),
+                    imported-at: none,
+                    revoked-at: none,
+                    zonefile-hash: zonefile-hash,
+                    locked: (get locked name-props),
+                    renewal-height: (+ (get lifetime namespace-props) block-height),
+                    owner: (get owner name-props),
+                    price: (get price name-props),
+                }
+            )
             ;; If no new zone file hash then keep existing hash
             (map-set name-properties
                 { 
@@ -1071,22 +1093,7 @@
                     price: (get price name-props),
                 }
             )
-            (map-set name-properties
-                { 
-                    name: name, 
-                    namespace: namespace 
-                }
-                { 
-                    registered-at: (some block-height),
-                    imported-at: none,
-                    revoked-at: none,
-                    zonefile-hash: zonefile-hash,
-                    locked: (get locked name-props),
-                    renewal-height: (+ (get lifetime namespace-props) block-height),
-                    owner: (get owner name-props),
-                    price: (get price name-props),
-                }
-            )
+            
             ;; ;; If new zone file hash, then update with new zone file hash
             ;; (update-zonefile-and-props namespace name (some block-height) none none (unwrap-panic zonefile-hash) "name-renewal")
         )
