@@ -75,17 +75,48 @@
 ;;;;;;;;;
 ;; @desc SIP-09 compliant function to transfer a token from one owner to another
 ;; @param id: the id of the nft being transferred, owner: the principal of the owner of the nft being transferred, recipient: the principal the nft is being transferred to
-(define-public (transfer (id uint) (owner principal) (recipient principal))
-    (begin
-        ;; Asserts that the tx-sender is the owner of the NFT being transferred
-        (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
-        ;; Asserts that the ID being transferred is not listed in a marketplace
-        (asserts! (is-none (map-get? market id)) ERR-LISTED)
-        ;; Executes NFT transfer if conditions are met
-        (nft-transfer? BNS-V2 id owner recipient)
-    )
+;; (define-public (transfer (id uint) (owner principal) (recipient principal))
+;;     (begin
+;;         ;; Asserts that the tx-sender is the owner of the NFT being transferred
+;;         (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
+;;         ;; Asserts that the ID being transferred is not listed in a marketplace
+;;         (asserts! (is-none (map-get? market id)) ERR-LISTED)
+;;         ;; Executes NFT transfer if conditions are met
+;;         (nft-transfer? BNS-V2 id owner recipient)
+;;     )
+;; )
 
+(define-public (transfer (id uint) (owner principal) (recipient principal))
+        (let 
+            (
+                (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
+                (namespace (get namespace name-and-namespace))
+                (namespace-props (unwrap! (map-get? namespaces namespace) ERR-UNWRAP))
+                (namespace-manager (get namespace-manager namespace-props))
+            )
+            (if (is-none namespace-manager) 
+                (begin                 
+                    ;; Asserts that the tx-sender is the owner of the NFT being transferred
+                    (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
+                    ;; Asserts that the ID being transferred is not listed in a marketplace
+                    (asserts! (is-none (map-get? market id)) ERR-LISTED)
+                    ;; Executes NFT transfer if conditions are met
+                    (nft-transfer? BNS-V2 id owner recipient)
+                )
+                (begin                 
+                    ;; Asserts that the tx-sender is the owner of the NFT being transferred
+                    (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+                    ;; Not sure they would be able to list if they are under a managed namespace?
+                    ;; Asserts that the ID being transferred is not listed in a marketplace
+                    (asserts! (is-none (map-get? market id)) ERR-LISTED)
+                    ;; Executes NFT transfer if conditions are met
+                    (nft-transfer? BNS-V2 id owner recipient)
+                )
+            ) 
+        )
 )
+
+
 
 ;;;;;;;;;
 ;; New ;;
@@ -174,8 +205,19 @@
 ;; The grace period duration for name renewals post-expiration.
 (define-constant NAME-GRACE-PERIOD-DURATION u5000) 
 
-;; Tracks the next available index for attachments, used for managing data related to names.
-(define-data-var attachment-index uint u0)
+;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;
+;; Price tables ;;
+;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;
+
+;; Defines the price tiers for namespaces based on their lengths.
+(define-constant NAMESPACE-PRICE-TIERS (list
+    u640000000000
+    u64000000000 u64000000000 
+    u6400000000 u6400000000 u6400000000 u6400000000 
+    u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000)
+)
 
 ;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;
@@ -241,17 +283,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; Variable to store the token URI, allowing for metadata association with the NFT
-(define-data-var token-uri (string-ascii 246) "")
+;; Tracks the next available index for attachments, used for managing data related to names.
+(define-data-var attachment-index uint u0)
 
 ;;;;;;;;;
 ;; New ;;
 ;;;;;;;;;
 ;; Counter to keep track of the last minted NFT ID, ensuring unique identifiers
 (define-data-var bns-mint-counter uint u0)
+
+;;;;;;;;;
+;; New ;;
+;;;;;;;;;
+;; Variable to store the token URI, allowing for metadata association with the NFT
+(define-data-var token-uri (string-ascii 246) "")
+
 
 ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;
@@ -263,7 +309,6 @@
 
 ;; Maps a principal to the name they own, enforcing a one-to-one relationship between principals and names.
 (define-map owner-name principal { name: (buff 48), namespace: (buff 20) })
-
 
 ;;;;;;;;;
 ;; New ;;
@@ -323,20 +368,9 @@
     uint
 )
 
-;; ;;;;;;;;;
-;; ;; New ;;
-;; ;;;;;;;;;
-;; ;; Stores properties of namespaces, including their import principals, reveal and launch times, and pricing functions.
-;; (define-map namespaces-new (buff 20)
-;;     { 
-;;         namespace-manager: (optional principal),
-;;         namespace-import: principal,
-;;         revealed-at: uint,
-;;         launched-at: (optional uint),
-;;         lifetime: uint,
-;;     }
-;; )
-
+;;;;;;;;;;;;;
+;; Updated ;;
+;;;;;;;;;;;;;
 ;; Stores properties of namespaces, including their import principals, reveal and launch times, and pricing functions.
 (define-map namespaces (buff 20)
     { 
@@ -369,21 +403,6 @@
     { hashed-salted-fqn: (buff 20), buyer: principal }
     { created-at: uint, claimed: bool, stx-burned: uint }
 )
-
-;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;
-;; Price tables ;;
-;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;
-
-;; Defines the price tiers for namespaces based on their lengths.
-(define-constant NAMESPACE-PRICE-TIERS (list
-    u640000000000
-    u64000000000 u64000000000 
-    u6400000000 u6400000000 u6400000000 u6400000000 
-    u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000)
-)
-
 
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;
@@ -557,16 +576,18 @@
             (former-preorder (map-get? namespace-preorders { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }))
         )
         ;; Verify that any previous preorder by the same buyer has expired.
-
         (asserts! 
             (if (is-none former-preorder) 
                 ;; Proceed if no previous preorder exists.
                 true 
-                ;; If a previous preorder exists, check that it has expired based on the NAMESPACE-PREORDER-CLAIMABILITY-TTL.
-                (>= block-height (+ NAMESPACE-PREORDER-CLAIMABILITY-TTL (unwrap-panic (get created-at former-preorder))))
+                
+                    ;; If a previous preorder exists, check that it has expired based on the NAMESPACE-PREORDER-CLAIMABILITY-TTL.
+                    (>= block-height (+ NAMESPACE-PREORDER-CLAIMABILITY-TTL (unwrap! (get created-at former-preorder) ERR-UNWRAP))) 
+                
             ) 
             ERR-NAMESPACE-PREORDER-ALREADY-EXISTS
         )
+
         ;; Validate that the hashed-salted-namespace is exactly 20 bytes long to conform to expected hash standards.
         (asserts! (is-eq (len hashed-salted-namespace) u20) ERR-NAMESPACE-HASH-MALFORMED)
         ;; Confirm that the STX amount to be burned is positive
@@ -617,7 +638,7 @@
             )
             ;; Retrieve the preorder record to ensure it exists and is valid for the revealing namespace.
             (preorder (unwrap! (map-get? namespace-preorders { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }) ERR-NAMESPACE-PREORDER-NOT-FOUND))
-            ;; Calculate the namespace's registration price for validation.
+            ;; Calculate the namespace's registration price for validation. Using the price tiers in the NAMESPACE-PRICE-TIERS
             (namespace-price (try! (get-namespace-price namespace)))
         )
         ;; Ensure the namespace consists of valid characters only.
@@ -887,12 +908,16 @@
             (namespace-manager (get namespace-manager namespace-props))
             ;; Retrieve the preorder information using the hashed, salted FQN to verify the preorder exists and belongs to the tx sender.
             (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }) ERR-NAME-PREORDER-NOT-FOUND))
+            ;; Added this
+            ;; Retreive the name owner if any
+            (name-index (map-get? name-to-index {name: name, namespace: namespace}))
         )
         ;; New
         ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
         (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
+        ;; Changed this
         ;; Verify the name is eligible for registration within the given namespace.
-        (asserts! (try! (can-name-be-registered namespace name)) ERR-NAME-UNAVAILABLE)
+        (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
         ;; Ensure the preorder was made after the namespace was launched to be valid.
         (asserts! (> (get created-at preorder) (unwrap-panic (get launched-at namespace-props))) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Check that the preorder has not already been claimed to prevent duplicate registrations.
@@ -1357,38 +1382,38 @@
 ;; @params:
     ;; namespace (buff 20): The namespace in which the name registration is being considered.
     ;; name (buff 48): The name whose registration eligibility is being checked.
-(define-read-only (can-name-be-registered (namespace (buff 20)) (name (buff 48)))
-    (let 
-        (
-            ;; Attempt to fetch properties of the name from the `name-properties` map.
-            (wrapped-name-props (map-get? name-properties { name: name, namespace: namespace }))
-            ;; Fetch properties of the namespace.
-            (namespace-props (unwrap! (map-get? namespaces namespace) (ok false)))
-        )
-        ;; Ensure that the name contains only valid characters.
-        (asserts! (not (has-invalid-chars name)) ERR-NAME-CHARSET-INVALID)
-        ;; Ensure that the namespace has been launched.
-        (unwrap! (get launched-at namespace-props) (ok false))
-        ;; Check if the name has previously been minted.
-        (asserts! (is-some (nft-get-owner? names { name: name, namespace: namespace })) (ok true))
-        (let 
-            (
-                ;; Unwrap properties of the name
-                (name-props (unwrap-panic wrapped-name-props))
-            )
-            ;; Ensure the name has been either imported or registered.
-            (asserts! 
-                (is-eq (xor 
-                    (match (get registered-at name-props) res 1 0)
-                    (match (get imported-at name-props)   res 1 0)) 1
-                ) 
-                ERR-PANIC
-            )
-            ;; Check if the lease for the name has expired, indicating if it can be registered again.
-            (is-name-lease-expired namespace name)
-        )
-    )
-)
+;; (define-read-only (can-name-be-registered (namespace (buff 20)) (name (buff 48)))
+;;     (let 
+;;         (
+;;             ;; Attempt to fetch properties of the name from the `name-properties` map.
+;;             (wrapped-name-props (map-get? name-properties { name: name, namespace: namespace }))
+;;             ;; Fetch properties of the namespace.
+;;             (namespace-props (unwrap! (map-get? namespaces namespace) (ok false)))
+;;         )
+;;         ;; Ensure that the name contains only valid characters.
+;;         (asserts! (not (has-invalid-chars name)) ERR-NAME-CHARSET-INVALID)
+;;         ;; Ensure that the namespace has been launched.
+;;         (unwrap! (get launched-at namespace-props) (ok false))
+;;         ;; Check if the name has previously been minted.
+;;         (asserts! (is-some (nft-get-owner? names { name: name, namespace: namespace })) (ok true))
+;;         (let 
+;;             (
+;;                 ;; Unwrap properties of the name
+;;                 (name-props (unwrap-panic wrapped-name-props))
+;;             )
+;;             ;; Ensure the name has been either imported or registered.
+;;             (asserts! 
+;;                 (is-eq (xor 
+;;                     (match (get registered-at name-props) res 1 0)
+;;                     (match (get imported-at name-props)   res 1 0)) 1
+;;                 ) 
+;;                 ERR-PANIC
+;;             )
+;;             ;; Check if the lease for the name has expired, indicating if it can be registered again.
+;;             (is-name-lease-expired namespace name)
+;;         )
+;;     )
+;; )
 
 ;; Remove this
 ;; Read-only function `name-resolve` for resolving a name within a namespace to its properties.
