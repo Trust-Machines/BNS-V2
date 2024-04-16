@@ -338,7 +338,6 @@
     )
 )
 
-
 ;;;;;;;;;
 ;; New ;;
 ;;;;;;;;;
@@ -573,12 +572,12 @@
         (asserts! 
             (match former-preorder
                 preorder 
-                ;; Proceed if no previous preorder exists.
-                true 
-                
                 ;; TODO - Update error message
                 ;; If a previous preorder exists, check that it has expired based on the NAMESPACE-PREORDER-CLAIMABILITY-TTL.
                 (>= block-height (+ NAMESPACE-PREORDER-CLAIMABILITY-TTL (unwrap! (get created-at former-preorder) ERR-UNWRAP))) 
+
+                ;; Proceed if no previous preorder exists.
+                true 
             ) 
             ERR-NAMESPACE-PREORDER-ALREADY-EXISTS
         )
