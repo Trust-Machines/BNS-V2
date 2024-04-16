@@ -37,163 +37,6 @@
 ;; A non-fungible token (NFT) representing a specific name within a namespace.
 (define-non-fungible-token names { name: (buff 48), namespace: (buff 20) })
 
-;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;
-;;;;;; SIP - 09 ;;;;;
-;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; @desc SIP-09 compliant function to get the last minted token's ID
-(define-read-only (get-last-token-id)
-    ;; Returns the current value of bns-mint-counter variable, which tracks the last token ID
-    (ok (var-get bns-mint-counter))
-)
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; @desc SIP-09 compliant function to get token URI
-(define-read-only (get-token-uri (id uint))
-    ;; Returns a predefined set URI for the token metadata
-    (ok (some (var-get token-uri)))
-)
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; @desc SIP-09 compliant function to get the owner of a specific token by its ID
-(define-read-only (get-owner (id uint))
-    ;; Check and return the owner of the specified NFT
-    (ok (nft-get-owner? BNS-V2 id))
-)
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; @desc SIP-09 compliant function to transfer a token from one owner to another
-;; @param id: the id of the nft being transferred, owner: the principal of the owner of the nft being transferred, recipient: the principal the nft is being transferred to
-;; (define-public (transfer (id uint) (owner principal) (recipient principal))
-;;     (begin
-;;         ;; Asserts that the tx-sender is the owner of the NFT being transferred
-;;         (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
-;;         ;; Asserts that the ID being transferred is not listed in a marketplace
-;;         (asserts! (is-none (map-get? market id)) ERR-LISTED)
-;;         ;; Executes NFT transfer if conditions are met
-;;         (nft-transfer? BNS-V2 id owner recipient)
-;;     )
-;; )
-
-;; Defines a public function to transfer an NFT identified by its unique ID from one owner to another.
-(define-public (transfer (id uint) (owner principal) (recipient principal))
-    (let 
-        (
-            ;; Attempts to retrieve the name and namespace associated with the given NFT ID. If not found, it returns an error.
-            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
-
-            ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
-            (namespace (get namespace name-and-namespace))
-
-            ;; Fetches properties of the identified namespace to confirm its existence and retrieve management details.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-UNWRAP))
-
-            ;; Extracts the manager of the namespace, if one is set.
-            (namespace-manager (get namespace-manager namespace-props))
-        )
-        ;; Checks if the namespace is managed. If it is not managed, performs the transfer with basic checks.
-        (if (is-none namespace-manager) 
-            (begin                 
-                ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
-                (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
-
-                ;; Ensures the NFT is not currently listed in the market, which would block transfers.
-                (asserts! (is-none (map-get? market id)) ERR-LISTED)
-
-                ;; Executes the NFT transfer from owner to recipient if all conditions are met.
-                (nft-transfer? BNS-V2 id owner recipient)
-            )
-            ;; If the namespace is managed, performs the transfer under the management's authorization.
-            (begin                 
-                ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
-                (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
-
-                ;; Similar check as above for market listing.
-                (asserts! (is-none (map-get? market id)) ERR-LISTED)
-
-                ;; Executes the NFT transfer if the caller is authorized and the NFT is not listed.
-                (nft-transfer? BNS-V2 id owner recipient)
-            )
-        ) 
-    )
-)
-
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; @desc Function to list an NFT for sale
-;; @param id: the ID of the NFT in question, price: the price being listed, comm-trait: a principal that conforms to the commission-trait
-(define-public (list-in-ustx (id uint) (price uint) (comm-trait <commission-trait>))
-    (let
-        (
-            ;; Creates a listing record with price and commission details
-            (listing {price: price, commission: (contract-of comm-trait)})
-        )
-        ;; Asserts that the caller is the owner of the NFT before listing it
-        (asserts! (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
-        ;; Updates the market map with the new listing details
-        (map-set market id listing)
-        ;; Prints listing details
-        (ok (print (merge listing {a: "list-in-ustx", id: id})))
-    )
-)
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; @desc Function to remove an NFT listing from the market
-;; @param id: the ID of the NFT in question, price: the price being listed, comm-trait: a principal that conforms to the commission-trait
-(define-public (unlist-in-ustx (id uint))
-    (begin
-        ;; Asserts that the caller is the owner of the NFT before unlisting it
-        (asserts! (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
-        ;; Deletes the listing from the market map
-        (map-delete market id)
-        ;; Prints unlisting details
-        (ok (print {a: "unlist-in-stx", id: id}))
-    )
-)
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; @desc Function to buy an NFT listed for sale, transferring ownership and handling commission
-;; @param id: the ID of the NFT in question, comm-trait: a principal that conforms to the commission-trait for royalty split
-(define-public (buy-in-ustx (id uint) (comm-trait <commission-trait>))
-    (let
-        (
-            ;; Retrieves current owner and listing details
-            (owner (unwrap! (unwrap! (get-owner id) ERR-UNWRAP) ERR-UNWRAP))
-            (listing (unwrap! (map-get? market id) ERR-NOT-LISTED))
-            (price (get price listing))
-        )
-        ;; Verifies the commission details match the listing
-        (asserts! (is-eq (contract-of comm-trait) (get commission listing)) ERR-WRONG-COMMISSION)
-        ;; Transfers STX from buyer to seller
-        (try! (stx-transfer? price tx-sender owner))
-        ;; Calls the commission contract to handle commission payment
-        (try! (contract-call? comm-trait pay id price))
-        ;; Transfers the NFT to the buyer
-        (try! (transfer id owner tx-sender))
-        ;; Removes the listing from the market map
-        (map-delete market id)
-        ;; Prints purchase details
-        (ok (print {a: "buy-in-ustx", id: id}))
-    )
-)
-
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;; Constants ;;;;;
@@ -310,6 +153,9 @@
 ;; Variable to store the token URI, allowing for metadata association with the NFT
 (define-data-var token-uri (string-ascii 246) "")
 
+;; Variable helper to remove an NFT from the list of owned NFTs by a user
+(define-data-var uint-helper-to-remove uint u0)
+
 
 ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;
@@ -353,7 +199,7 @@
         registered-at: (optional uint),
         imported-at: (optional uint),
         revoked-at: (optional uint),
-        zonefile-hash: (buff 20),
+        zonefile-hash: (optional (buff 20)),
         locked: bool, 
         renewal-height: uint,
         price: uint,
@@ -421,6 +267,146 @@
 ;;;;;; Public ;;;;;
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;
+;; New ;;
+;;;;;;;;;
+;; @desc SIP-09 compliant function to transfer a token from one owner to another
+;; @param id: the id of the nft being transferred, owner: the principal of the owner of the nft being transferred, recipient: the principal the nft is being transferred to
+(define-public (transfer (id uint) (owner principal) (recipient principal))
+    (let 
+        (
+            ;; Attempts to retrieve the name and namespace associated with the given NFT ID. If not found, it returns an error.
+            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
+            ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
+            (namespace (get namespace name-and-namespace))
+            ;; Extracts the name part from the retrieved name-and-namespace tuple.
+            (name (get name name-and-namespace))
+            ;; Fetches properties of the identified namespace to confirm its existence and retrieve management details.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; Extracts the manager of the namespace, if one is set.
+            (namespace-manager (get namespace-manager namespace-props))
+            ;; Gets the name-props
+            (name-props (unwrap! (map-get? name-properties name-and-namespace) ERR-NO-NAME))
+            ;; Gets the current owner of the name from the name-props
+            (name-current-owner (get owner name-props))
+            ;; Gets the currently owned NFTs by the owner
+            (all-nfts-owned-by-owner (default-to (list) (map-get? all-user-names owner)))
+            ;; Gets the currently owned NFTs by the recipient
+            (all-nfts-owned-by-recipient (default-to (list) (map-get? all-user-names recipient)))
+            ;; Checks if the owner has a primary name
+            (owner-primary-name (map-get? primary-name owner))
+            ;; Checks if the recipient has a primary name
+            (recipient-primary-name (map-get? primary-name recipient))
+
+        )
+        ;; Checks if the namespace is managed.
+        (if (is-none namespace-manager) 
+            (begin                 
+                ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
+                (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
+                ;; Ensures the NFT is not currently listed in the market, which would block transfers.
+                (asserts! (is-none (map-get? market id)) ERR-LISTED)
+            )
+            ;; If the namespace is managed, performs the transfer under the management's authorization.
+            (begin                 
+                ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
+                (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+                ;; Similar check as above for market listing.
+                (asserts! (is-none (map-get? market id)) ERR-LISTED)
+            )
+        ) 
+        ;; Set the helper variable to remove the id being transferred from the list of currently owned nfts by owner
+        (var-set uint-helper-to-remove id)
+        ;; Updates currently owned names of the owner by removing the id being transferred
+        (map-set all-user-names owner (filter is-not-removeable all-nfts-owned-by-owner))
+        ;; Updates currently owned names of the recipient by adding the id being transferred
+        (map-set all-user-names recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-UNWRAP))
+        ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
+        (if (is-eq (some id) owner-primary-name) 
+            ;; If the id is the primary name, then set it to the index 0 of the filtered list of the owner
+            (map-set primary-name owner (unwrap! (element-at? (filter is-not-removeable all-nfts-owned-by-owner) u0) ERR-UNWRAP)) 
+            ;; If it is not equal then do nothing
+            false
+        )
+        ;; Updates the primary name of the receiver if needed, if the receiver doesn't have a name assign it as primary
+        (if (is-none recipient-primary-name)
+            ;; If no primary name then assign this as the primary name
+            (map-set primary-name recipient id)
+            ;; If there is a primary name then do nothing
+            false
+        )
+        ;; Updates the name-props map with the new information, everything stays the same, we only change the zonefile to none for a clean slate and the owner
+        (merge name-props {zonefile-hash: none, owner: recipient})
+        ;; Executes the NFT transfer from owner to recipient if all conditions are met.
+        (nft-transfer? BNS-V2 id owner recipient)
+    )
+)
+
+
+;;;;;;;;;
+;; New ;;
+;;;;;;;;;
+;; @desc Function to list an NFT for sale
+;; @param id: the ID of the NFT in question, price: the price being listed, comm-trait: a principal that conforms to the commission-trait
+(define-public (list-in-ustx (id uint) (price uint) (comm-trait <commission-trait>))
+    (let
+        (
+            ;; Creates a listing record with price and commission details
+            (listing {price: price, commission: (contract-of comm-trait)})
+        )
+        ;; Asserts that the caller is the owner of the NFT before listing it
+        (asserts! (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+        ;; Updates the market map with the new listing details
+        (map-set market id listing)
+        ;; Prints listing details
+        (ok (print (merge listing {a: "list-in-ustx", id: id})))
+    )
+)
+
+;;;;;;;;;
+;; New ;;
+;;;;;;;;;
+;; @desc Function to remove an NFT listing from the market
+;; @param id: the ID of the NFT in question, price: the price being listed, comm-trait: a principal that conforms to the commission-trait
+(define-public (unlist-in-ustx (id uint))
+    (begin
+        ;; Asserts that the caller is the owner of the NFT before unlisting it
+        (asserts! (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+        ;; Deletes the listing from the market map
+        (map-delete market id)
+        ;; Prints unlisting details
+        (ok (print {a: "unlist-in-stx", id: id}))
+    )
+)
+
+;;;;;;;;;
+;; New ;;
+;;;;;;;;;
+;; @desc Function to buy an NFT listed for sale, transferring ownership and handling commission
+;; @param id: the ID of the NFT in question, comm-trait: a principal that conforms to the commission-trait for royalty split
+(define-public (buy-in-ustx (id uint) (comm-trait <commission-trait>))
+    (let
+        (
+            ;; Retrieves current owner and listing details
+            (owner (unwrap! (unwrap! (get-owner id) ERR-UNWRAP) ERR-UNWRAP))
+            (listing (unwrap! (map-get? market id) ERR-NOT-LISTED))
+            (price (get price listing))
+        )
+        ;; Verifies the commission details match the listing
+        (asserts! (is-eq (contract-of comm-trait) (get commission listing)) ERR-WRONG-COMMISSION)
+        ;; Transfers STX from buyer to seller
+        (try! (stx-transfer? price tx-sender owner))
+        ;; Calls the commission contract to handle commission payment
+        (try! (contract-call? comm-trait pay id price))
+        ;; Transfers the NFT to the buyer
+        (try! (transfer id owner tx-sender))
+        ;; Removes the listing from the market map
+        (map-delete market id)
+        ;; Prints purchase details
+        (ok (print {a: "buy-in-ustx", id: id}))
+    )
+)
 
 ;; Sets the primary name for the caller to a specific BNS name they own.
 (define-public (set-primary-name (primary-name-id uint))
@@ -512,7 +498,7 @@
                 registered-at: (some block-height),
                 imported-at: none,
                 revoked-at: none,
-                zonefile-hash: zonefile,
+                zonefile-hash: (some zonefile),
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 price: price,
@@ -769,7 +755,7 @@
                 registered-at: none,
                 imported-at: (some block-height),
                 revoked-at: none,
-                zonefile-hash: zonefile-hash,
+                zonefile-hash: (some zonefile-hash),
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 price: price,
@@ -1143,7 +1129,7 @@
                     registered-at: (some block-height),
                     imported-at: none,
                     revoked-at: none,
-                    zonefile-hash: (unwrap! zonefile-hash ERR-UNWRAP),
+                    zonefile-hash: zonefile-hash,
                     locked: (get locked name-props),
                     renewal-height: (+ (get lifetime namespace-props) block-height),
                     owner: (get owner name-props),
@@ -1163,6 +1149,24 @@
 ;;;;; Read Only ;;;;
 ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;
+
+;; @desc SIP-09 compliant function to get the last minted token's ID
+(define-read-only (get-last-token-id)
+    ;; Returns the current value of bns-mint-counter variable, which tracks the last token ID
+    (ok (var-get bns-mint-counter))
+)
+
+;; @desc SIP-09 compliant function to get token URI
+(define-read-only (get-token-uri (id uint))
+    ;; Returns a predefined set URI for the token metadata
+    (ok (some (var-get token-uri)))
+)
+
+;; @desc SIP-09 compliant function to get the owner of a specific token by its ID
+(define-read-only (get-owner (id uint))
+    ;; Check and return the owner of the specified NFT
+    (ok (nft-get-owner? BNS-V2 id))
+)
 
 ;; This read-only function determines the availability of a specific BNS (Blockchain Name Service) name within a specified namespace.
 (define-read-only (is-name-available (name (buff 48)) (namespace (buff 20)))
@@ -1609,7 +1613,7 @@
 )
 
 ;; Calculates the block height at which a name's lease started, considering if it was registered or imported.
-(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (buff 20), locked: bool, renewal-height: uint, price: uint, owner: principal}))
+(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (optional (buff 20)), locked: bool, renewal-height: uint, price: uint, owner: principal}))
     (let 
         (
             ;; Extract the registration and importation times from the name properties.
@@ -1748,7 +1752,7 @@
                 registered-at: registered-at,
                 imported-at: imported-at,
                 revoked-at: revoked-at,
-                zonefile-hash: zonefile-hash, 
+                zonefile-hash: (some zonefile-hash), 
                 locked: (get locked name-props), 
                 renewal-height: (get renewal-height name-props),
                 price: (get price name-props),
@@ -1804,4 +1808,9 @@
         ;; The result is further scaled by a factor of 10 to adjust for unit precision.
         (* (/ (* (get coeff price-function) (pow (get base price-function) exponent)) (max nonalpha-discount no-vowel-discount)) u10)
     )
+)
+
+;; @desc - Helper function for removing a specific NFT from the NFTs list
+(define-private (is-not-removeable (nft uint))
+  (not (is-eq nft (var-get uint-helper-to-remove)))
 )
