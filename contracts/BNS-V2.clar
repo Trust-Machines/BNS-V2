@@ -131,15 +131,11 @@
 (define-constant ERR-PANIC (err u229))
 (define-constant ERR-NAMESPACE-HAS-MANAGER (err u230))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;; Variables ;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
-
-;; Tracks the next available index for attachments, used for managing data related to names.
-(define-data-var attachment-index uint u0)
 
 ;;;;;;;;;
 ;; New ;;
@@ -1335,29 +1331,6 @@
     )
 )
 
-;; Remove this
-;; Read-only function `resolve-principal` attempts to find a name owned by a given principal.
-;; @params:
-    ;; owner (principal): The principal whose owned name is being resolved.
-;; (define-read-only (resolve-principal (owner principal))
-;;     (match 
-;;         ;; Attempt to fetch the name associated with the given principal from the `owner-name` map.
-;;         (map-get? owner-name owner) name 
-;;         ;; If a name is found for the principal, try to resolve its detailed properties.
-;;         (match 
-;;             (name-resolve (get namespace name) (get name name)) 
-;;             resolved-name 
-;;             ;; If the name resolves successfully, return the name details.
-;;             (ok name)
-;;             ;; If there is an error in resolving the name, return an error with the code and the name attempted to be resolved. 
-;;             error 
-;;             (err {code: error, name: (some name)})
-;;         )
-;;         ;; If no name is found for the principal, return an error indicating no name is associated with this principal.
-;;         (err {code: ERR-NAME-NOT-FOUND, name: none})
-;;     )
-;; )
-
 ;; Read-only function `can-receive-name` checks if a given principal is eligible to receive a new name.
 ;; @params:
     ;; owner (principal): The principal whose eligibility to receive a new name is being checked.
@@ -1401,83 +1374,6 @@
         )
     )
 )
-
-;; Read-only function `can-name-be-registered` checks if a specific name within a namespace can be registered.
-;; @params:
-    ;; namespace (buff 20): The namespace in which the name registration is being considered.
-    ;; name (buff 48): The name whose registration eligibility is being checked.
-;; (define-read-only (can-name-be-registered (namespace (buff 20)) (name (buff 48)))
-;;     (let 
-;;         (
-;;             ;; Attempt to fetch properties of the name from the `name-properties` map.
-;;             (wrapped-name-props (map-get? name-properties { name: name, namespace: namespace }))
-;;             ;; Fetch properties of the namespace.
-;;             (namespace-props (unwrap! (map-get? namespaces namespace) (ok false)))
-;;         )
-;;         ;; Ensure that the name contains only valid characters.
-;;         (asserts! (not (has-invalid-chars name)) ERR-NAME-CHARSET-INVALID)
-;;         ;; Ensure that the namespace has been launched.
-;;         (unwrap! (get launched-at namespace-props) (ok false))
-;;         ;; Check if the name has previously been minted.
-;;         (asserts! (is-some (nft-get-owner? names { name: name, namespace: namespace })) (ok true))
-;;         (let 
-;;             (
-;;                 ;; Unwrap properties of the name
-;;                 (name-props (unwrap-panic wrapped-name-props))
-;;             )
-;;             ;; Ensure the name has been either imported or registered.
-;;             (asserts! 
-;;                 (is-eq (xor 
-;;                     (match (get registered-at name-props) res 1 0)
-;;                     (match (get imported-at name-props)   res 1 0)) 1
-;;                 ) 
-;;                 ERR-PANIC
-;;             )
-;;             ;; Check if the lease for the name has expired, indicating if it can be registered again.
-;;             (is-name-lease-expired namespace name)
-;;         )
-;;     )
-;; )
-
-;; Remove this
-;; Read-only function `name-resolve` for resolving a name within a namespace to its properties.
-;; @params:
-    ;; namespace (buff 20): The namespace of the name to be resolved.
-    ;; name (buff 48): The actual name to be resolved.
-;; (define-read-only (name-resolve (namespace (buff 20)) (name (buff 48)))
-;;     (let 
-;;         (
-;;             ;; Fetch the current owner of the name from the `names` NFT map.
-;;             (owner (unwrap! (nft-get-owner? names { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
-;;             ;; Retrieve the name properties from the `name-properties` map.
-;;             (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
-;;             ;; Fetch the properties of the namespace from the `namespaces` map.
-;;             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-;;         )
-;;         ;; Asserts the name is not within its grace period to ensure it's currently resolvable.
-;;         (asserts! (not (try! (is-name-in-grace-period namespace name))) ERR-NAME-GRACE-PERIOD)
-;;         ;; Asserts the name lease has not expired; it must be active to resolve.
-;;         (asserts! (not (try! (is-name-lease-expired namespace name))) ERR-NAME-EXPIRED)
-;;         ;; Asserts the name has not been revoked and is still valid for resolution.
-;;         (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
-        
-;;         (let 
-;;             (
-;;                 ;; Determines the start of the lease period for the name.
-;;                 (lease-started-at (try! (name-lease-started-at? (get launched-at namespace-props) (get revealed-at namespace-props) name-props)))
-;;             )
-;;             ;; Returns name resolution details including the owner, zone file hash, and lease period.
-;;             (ok 
-;;                 { 
-;;                     zonefile-hash: (get zonefile-hash name-props), 
-;;                     owner: owner,
-;;                     lease-started-at: lease-started-at,
-;;                     lease-ending-at: (if (is-eq (get lifetime namespace-props) u0) none (some (+ lease-started-at (get lifetime namespace-props))))
-;;                 }
-;;             )
-;;         )
-;;     )
-;; )
 
 ;; Read-only function `get-namespace-properties` for retrieving properties of a specific namespace.
 ;; @params:
@@ -1731,7 +1627,7 @@
     (let 
         (
             ;; Retrieve the current index for attachments to keep track of this operation uniquely.
-            (current-index (var-get attachment-index))
+            (current-index (var-get bns-index))
             (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-UNWRAP))
         )
         ;; Log the operation as an event with relevant metadata, including the zone file hash, name, namespace, and operation type.
@@ -1740,7 +1636,7 @@
                 attachment: 
                     {
                         hash: zonefile-hash,
-                        attachment-index: current-index,
+                        bns-index: current-index,
                         metadata: 
                             {
                                 name: name,
@@ -1752,7 +1648,7 @@
             }
         )
         ;; Increment the attachment index for future operations to maintain uniqueness.
-        (var-set attachment-index (+ u1 current-index))
+        (var-set bns-index (+ u1 current-index))
         ;; Update the name's properties in the `name-properties` map with the new zone file hash and any other provided properties.
         (ok (map-set name-properties
             { name: name, namespace: namespace }
