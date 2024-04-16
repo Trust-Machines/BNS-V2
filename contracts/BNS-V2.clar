@@ -86,35 +86,49 @@
 ;;     )
 ;; )
 
+;; Defines a public function to transfer an NFT identified by its unique ID from one owner to another.
 (define-public (transfer (id uint) (owner principal) (recipient principal))
     (let 
         (
+            ;; Attempts to retrieve the name and namespace associated with the given NFT ID. If not found, it returns an error.
             (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
+
+            ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
             (namespace (get namespace name-and-namespace))
+
+            ;; Fetches properties of the identified namespace to confirm its existence and retrieve management details.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-UNWRAP))
+
+            ;; Extracts the manager of the namespace, if one is set.
             (namespace-manager (get namespace-manager namespace-props))
         )
+        ;; Checks if the namespace is managed. If it is not managed, performs the transfer with basic checks.
         (if (is-none namespace-manager) 
             (begin                 
-                ;; Asserts that the tx-sender is the owner of the NFT being transferred
+                ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
                 (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
-                ;; Asserts that the ID being transferred is not listed in a marketplace
+
+                ;; Ensures the NFT is not currently listed in the market, which would block transfers.
                 (asserts! (is-none (map-get? market id)) ERR-LISTED)
-                ;; Executes NFT transfer if conditions are met
+
+                ;; Executes the NFT transfer from owner to recipient if all conditions are met.
                 (nft-transfer? BNS-V2 id owner recipient)
             )
+            ;; If the namespace is managed, performs the transfer under the management's authorization.
             (begin                 
-                ;; Asserts that the tx-sender is the owner of the NFT being transferred
+                ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
                 (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
-                ;; Not sure they would be able to list if they are under a managed namespace?
-                ;; Asserts that the ID being transferred is not listed in a marketplace
+
+                ;; Similar check as above for market listing.
                 (asserts! (is-none (map-get? market id)) ERR-LISTED)
-                ;; Executes NFT transfer if conditions are met
+
+                ;; Executes the NFT transfer if the caller is authorized and the NFT is not listed.
                 (nft-transfer? BNS-V2 id owner recipient)
             )
         ) 
     )
 )
+
 
 ;;;;;;;;;
 ;; New ;;
@@ -1467,9 +1481,13 @@
     )
 )
 
+
+;; Defines a read-only function to fetch the unique ID of a BNS name given its name and the namespace it belongs to.
 (define-read-only (get-id-from-bns (name (buff 48)) (namespace (buff 20))) 
+    ;; Attempts to retrieve the ID from the 'name-to-index' map using the provided name and namespace as the key.
     (map-get? name-to-index {name: name, namespace: namespace})
 )
+
 
 ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;
