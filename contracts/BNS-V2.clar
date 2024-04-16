@@ -130,6 +130,7 @@
 (define-constant ERR-PRINCIPAL-ALREADY-ASSOCIATED (err u228))
 (define-constant ERR-PANIC (err u229))
 (define-constant ERR-NAMESPACE-HAS-MANAGER (err u230))
+(define-constant ERR-OVERFLOW (err u231))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -199,7 +200,6 @@
         renewal-height: uint,
         price: uint,
         owner: principal,
-        suspended: bool
     }
 )
 
@@ -284,8 +284,6 @@
             (namespace-manager (get namespace-manager namespace-props))
             ;; Gets the name-props
             (name-props (unwrap! (map-get? name-properties name-and-namespace) ERR-NO-NAME))
-            ;; Gets if the name is suspended
-            (name-suspended (get suspended name-props))
             ;; Gets the current owner of the name from the name-props
             (name-current-owner (get owner name-props))
             ;; Gets the currently owned NFTs by the owner
@@ -297,8 +295,6 @@
             ;; Checks if the recipient has a primary name
             (recipient-primary-name (map-get? primary-name recipient))
         )
-        ;; Checks if the name is not suspended, if it is then don't execute anything
-        (asserts! (is-eq false name-suspended) ERR-NAME-OPERATION-UNAUTHORIZED)
         ;; Checks if the namespace is managed.
         (match namespace-manager 
             manager
@@ -321,7 +317,7 @@
         ;; Updates currently owned names of the owner by removing the id being transferred
         (map-set all-user-names owner (filter is-not-removeable all-nfts-owned-by-owner))
         ;; Updates currently owned names of the recipient by adding the id being transferred
-        (map-set all-user-names recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-UNWRAP))
+        (map-set all-user-names recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
         ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
         (if (is-eq (some id) owner-primary-name) 
             ;; If the id is the primary name, then set it to the index 0 of the filtered list of the owner
@@ -337,7 +333,7 @@
             false
         )
         ;; Updates the name-props map with the new information, everything stays the same, we only change the zonefile to none for a clean slate and the owner
-        (merge name-props {zonefile-hash: none, owner: recipient})
+        (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
         ;; Executes the NFT transfer from owner to recipient if all conditions are met.
         (nft-transfer? BNS-V2 id owner recipient)
     )
@@ -503,7 +499,6 @@
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 price: price,
                 owner: send-to,
-                suspended: false
             }
         )
 
@@ -581,6 +576,7 @@
                 ;; Proceed if no previous preorder exists.
                 true 
                 
+                ;; TODO - Update error message
                 ;; If a previous preorder exists, check that it has expired based on the NAMESPACE-PREORDER-CLAIMABILITY-TTL.
                 (>= block-height (+ NAMESPACE-PREORDER-CLAIMABILITY-TTL (unwrap! (get created-at former-preorder) ERR-UNWRAP))) 
             ) 
@@ -739,8 +735,6 @@
         (asserts! (is-none (get launched-at namespace-props)) ERR-NAMESPACE-ALREADY-LAUNCHED)
         ;; Confirm that the import is occurring within the allowed timeframe since the namespace was revealed.
         (asserts! (< block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)
-        ;; Mint the name to the beneficiary
-        (unwrap! (nft-mint? BNS-V2 current-mint beneficiary) ERR-NAME-COULD-NOT-BE-MINTED)
         ;; Check if beneficiary has primary-name
         (if (is-none beneficiary-primary-name) 
             ;; If not, then set this as primary name
@@ -749,7 +743,7 @@
             false
         )
         ;; Add the name into the all-users-name map
-        (map-set all-user-names beneficiary (unwrap! (as-max-len? (append all-users-names-owned current-mint) u1000) ERR-UNWRAP))
+        (map-set all-user-names beneficiary (unwrap! (as-max-len? (append all-users-names-owned current-mint) u1000) ERR-OVERFLOW))
         ;; Set the name properties
         (map-set name-properties {name: name, namespace: namespace}
             {
@@ -761,15 +755,14 @@
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 price: price,
                 owner: beneficiary,
-                suspended: false
             }
         )
         ;; Set the map index-to-name
         (map-set index-to-name current-mint {name: name, namespace: namespace})
         ;; Set the map name-to-index
         (map-set name-to-index {name: name, namespace: namespace} current-mint)
-        ;; Mint or transfer the name to the beneficiary, establishing ownership.
-        ;; (try! (mint-or-transfer-name? namespace name beneficiary))
+         ;; Mint the name to the beneficiary
+        (unwrap! (nft-mint? BNS-V2 current-mint beneficiary) ERR-NAME-COULD-NOT-BE-MINTED)
         ;; ;; Update the name's properties in the `name-properties` map, setting its zone file hash and marking it as imported.
         ;; (update-zonefile-and-props namespace name none (some block-height) none zonefile-hash "name-import")
         ;; Confirm successful import of the name.
@@ -927,7 +920,7 @@
         ;; Confirm the amount of STX burned with the preorder meets or exceeds the cost of registering the name.
         (asserts! (>= (get stx-burned preorder) (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Mint or transfer the name to the tx sender, effectively finalizing its registration or updating ownership if already existing.
-        (try! (mint-or-transfer-name? namespace name tx-sender))
+
         ;; ;; Update the name's properties with the new zone file hash and registration metadata.
         ;; (update-zonefile-and-props namespace name (some block-height) none none zonefile-hash "name-register")
         ;; Confirm successful registration of the name.
@@ -963,50 +956,6 @@
         ;; ;; Execute the update of the zone file hash for the name. This involves updating the name's properties in the `name-properties` map with the new zone file hash. The operation type "name-update" is also specified for logging.
         ;; (update-zonefile-and-props namespace name (get registered-at (get name-props data)) (get imported-at (get name-props data)) none zonefile-hash "name-update")
         ;; Confirm successful completion of the zone file hash update.
-        (ok true)
-    )
-)
-
-;; NAME-TRANSFER
-;; A NAME-TRANSFER transaction changes the name's public key hash. You would send one of these transactions if you wanted to:
-;; - Change your private key
-;; - Send the name to someone else
-;; When transferring a name, you have the option to also clear the name's zone file hash (i.e. set it to null). 
-;; This is useful for when you send the name to someone else, so the recipient's name does not resolve to your zone file.
-
-;; Public function `name-transfer` facilitates the transfer of ownership of a name to a new owner.
-;; This function can also optionally clear or update the name's associated zone file hash.
-;; @params:
-    ;; namespace (buff 20): The namespace of the name being transferred.
-    ;; name (buff 48): The name being transferred.
-    ;;;;;;;;;
-;; New ;;
-;;;;;;;;;-owner (principal): The recipient principal to whom the name will be transferred.
-    ;; zonefile-hash (optional (buff 20)): An optional new zone file hash for the name. If not provided, the zone file hash will be cleared (set to null).
-(define-public (name-transfer (namespace (buff 20)) (name (buff 48)) (new-owner principal) (zonefile-hash (optional (buff 20))))
-    (let 
-        (
-            ;; Check preconditions for the name operation, ensuring the caller is the current owner and the name is not in a restricted state.
-            (data (try! (check-name-ops-preconditions namespace name)))
-            ;; Check if the new owner is eligible to receive the name, ensuring they don't already own another name.
-            (can-new-owner-get-name (try! (can-receive-name new-owner)))
-            ;; Retrieve the properties of the namespace to ensure it exists and is valid for registration.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; New
-            ;; Retrieve namespace manager if any
-            (namespace-manager (get namespace-manager namespace-props))
-        )
-        ;; New
-        ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
-        (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
-        ;; Ensure the new owner is eligible to receive the name. If they already own a name, the operation is aborted.
-        (asserts! can-new-owner-get-name ERR-PRINCIPAL-ALREADY-ASSOCIATED)
-        ;; Perform the transfer of the name to the new owner. This updates the ownership records.
-        (unwrap! (update-name-ownership? namespace name tx-sender new-owner) ERR-NAME-TRANSFER-FAILED)
-        ;; ;; Update the name's zone file hash. If a new hash is provided, it's used; otherwise, the hash is cleared.
-        ;; ;; This operation also updates the name's registration properties accordingly.
-        ;; (update-zonefile-and-props namespace name (get registered-at (get name-props data)) (get imported-at (get name-props data)) none (if (is-none zonefile-hash) 0x (unwrap-panic zonefile-hash)) "name-transfer")
-        ;; Confirm the successful completion of the name transfer operation.
         (ok true)
     )
 )
@@ -1120,7 +1069,6 @@
                     renewal-height: (+ (get lifetime namespace-props) block-height),
                     owner: (get owner name-props),
                     price: (get price name-props),
-                    suspended: false
                 }
             )
             (map-set name-properties
@@ -1137,7 +1085,6 @@
                     renewal-height: (+ (get lifetime namespace-props) block-height),
                     owner: (get owner name-props),
                     price: (get price name-props),
-                    suspended: false,
                 }
             )
             ;; ;; If new zone file hash, then update with new zone file hash
@@ -1517,7 +1464,7 @@
 )
 
 ;; Calculates the block height at which a name's lease started, considering if it was registered or imported.
-(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (optional (buff 20)), locked: bool, renewal-height: uint, price: uint, owner: principal, suspended: bool}))
+(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (optional (buff 20)), locked: bool, renewal-height: uint, price: uint, owner: principal}))
     (let 
         (
             ;; Extract the registration and importation times from the name properties.
@@ -1555,60 +1502,6 @@
                     )
                 )
             )
-        )
-    )
-)
-
-;; Note: the following method is used in name-import and name-register. The latter ensure that the name
-;; can be registered, the former does not.
-
-;; Private helper function `mint-or-transfer-name?` either mints a new name NFT for a beneficiary or transfers an existing one to them.
-;; This function is pivotal for both the `name-import` and `name-register` processes, ensuring the name's ownership is correctly assigned.
-;; @params:
-    ;; namespace (buff 20): The namespace of the name to be minted or transferred.
-    ;; name (buff 48): The name to be minted or transferred.
-    ;; beneficiary (principal): The new owner of the name.
-(define-private (mint-or-transfer-name? (namespace (buff 20)) (name (buff 48)) (beneficiary principal))
-    (let 
-        (
-            ;; Retrieve the current owner of the name, if it exists.
-            (current-owner (nft-get-owner? names (tuple (name name) (namespace namespace))))
-        )
-        ;; Ensure the beneficiary is eligible to receive a name.
-        (asserts! (try! (can-receive-name beneficiary)) ERR-PRINCIPAL-ALREADY-ASSOCIATED)
-        (if (is-none current-owner)
-            ;; If there's no current owner, mint the name NFT for the beneficiary.
-            (begin
-                (unwrap! (nft-mint? names { name: name, namespace: namespace } beneficiary) ERR-NAME-COULD-NOT-BE-MINTED)
-                ;; Update the `owner-name` map to reflect the new ownership.
-                (map-set owner-name beneficiary { name: name, namespace: namespace })
-                (ok true)
-            )
-            ;; If the name already has an owner, transfer it to the beneficiary.
-            (update-name-ownership? namespace name (unwrap-panic current-owner) beneficiary)
-        )
-    )
-)
-
-;; Private helper function `update-name-ownership?` transfers ownership of a name NFT from one principal to another.
-;; It is used when a name already has an owner and needs to be transferred, ensuring correct ownership records.
-;; @params:
-    ;; namespace (buff 20): The namespace of the name whose ownership is being transferred.
-    ;; name (buff 48): The name whose ownership is being transferred.
-    ;; from (principal): The current owner of the name.
-    ;; to (principal): The new owner of the name.
-(define-private (update-name-ownership? (namespace (buff 20)) (name (buff 48)) (from principal) (to principal))
-    (if (is-eq from to)
-        ;; If the "from" and "to" principals are the same, there's no need to transfer, so return true.
-        (ok true)
-        (begin
-            ;; Perform the NFT transfer from the current owner to the new owner.
-            (unwrap! (nft-transfer? names { name: name, namespace: namespace } from to) ERR-NAME-COULD-NOT-BE-TRANSFERED)
-            ;; Update the `owner-name` map to remove the old ownership record.
-            (map-delete owner-name from)
-            ;; Add a new record to the `owner-name` map reflecting the new ownership.
-            (map-set owner-name to { name: name, namespace: namespace })
-            (ok true)
         )
     )
 )
@@ -1661,7 +1554,6 @@
                 renewal-height: (get renewal-height name-props),
                 price: (get price name-props),
                 owner: (get owner name-props),
-                suspended: false
             }
         ))
     )
