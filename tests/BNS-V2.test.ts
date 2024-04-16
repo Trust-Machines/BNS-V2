@@ -6,11 +6,17 @@ const simnet = await initSimnet();
 
 const accounts = simnet.getAccounts();
 const address1 = accounts.get("wallet_1")!;
-// Function to create a 20-byte hash from a string, including a salt
-function createHash(input: Uint8Array, salt: string) {
-  const hash = crypto.createHash("sha1");
-  hash.update(salt + input); // Concatenate salt and input before hashing
-  return hash.digest().slice(0, 20); // Truncate the 32-byte hash to 20 bytes
+// Function to create a Hash-160 from a string, including a salt
+function createHash160(input: Uint8Array, salt: Uint8Array) {
+  const saltedInput = Buffer.concat([Buffer.from(input), salt]); // Use Buffer to concatenate salt and input
+
+  const sha256Hash = crypto.createHash("sha256").update(saltedInput).digest(); // First SHA-256
+  const ripemd160Hash = crypto
+    .createHash("ripemd160")
+    .update(sha256Hash)
+    .digest(); // Then RIPEMD-160
+
+  return ripemd160Hash; // This is a 20-byte Buffer (160 bits)
 }
 // Create a UTF-8 Encoder
 const encoder = new TextEncoder();
@@ -19,9 +25,12 @@ const salt = "stratalabs";
 // Encode the salt string to a Uint8Array
 const saltBuff = encoder.encode(salt);
 // Hash the strings and encode to a Uint8Array
-const namespaceBuffSalt = createHash(encoder.encode("namespacetest"), salt);
-const name1BuffSalt = createHash(encoder.encode("name1"), salt);
-const name2BuffSalt = createHash(encoder.encode("name2"), salt);
+const namespaceBuffSalt = createHash160(
+  encoder.encode("namespacetest"),
+  saltBuff
+);
+const name1BuffSalt = createHash160(encoder.encode("name1"), saltBuff);
+const name2BuffSalt = createHash160(encoder.encode("name2"), saltBuff);
 // Encode the string to a Uint8Array
 const namespaceBuff = encoder.encode("namespacetest");
 const name1Buff = encoder.encode("name1");
@@ -37,7 +46,7 @@ describe("Create/Register a namespace", () => {
       "namespace-preorder",
       // Pass the hashed salt + namespace in Uint8Array Format
       // Pass the amount of STX to Burn
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(10)],
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
       address1
     );
     // This should give ok u146 since the blockheight is 2 + 144 TTL
@@ -55,7 +64,7 @@ describe("Reveal a namespace", () => {
       "namespace-preorder",
       // Pass the hashed salt + namespace in Uint8Array Format
       // Pass the amount of STX to Burn
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(10)],
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
       address1
     );
     // This should give ok u146 since the blockheight is 2 + 144 TTL
