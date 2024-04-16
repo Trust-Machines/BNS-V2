@@ -302,16 +302,14 @@
             (begin                 
                 ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
                 (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
-                ;; Similar check as above for market listing.
-                (asserts! (is-none (map-get? market id)) ERR-LISTED)
             )
             (begin                 
                 ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
                 (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
-                ;; Ensures the NFT is not currently listed in the market, which would block transfers.
-                (asserts! (is-none (map-get? market id)) ERR-LISTED)
             )  
         ) 
+        ;; Ensures the NFT is not currently listed in the market, which would block transfers.
+        (asserts! (is-none (map-get? market id)) ERR-LISTED)
         ;; Set the helper variable to remove the id being transferred from the list of currently owned nfts by owner
         (var-set uint-helper-to-remove id)
         ;; Updates currently owned names of the owner by removing the id being transferred
