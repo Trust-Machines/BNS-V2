@@ -152,7 +152,6 @@
 ;; Variable helper to remove an NFT from the list of owned NFTs by a user
 (define-data-var uint-helper-to-remove uint u0)
 
-
 ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;
 ;;;;;; Maps ;;;;;
@@ -301,13 +300,8 @@
         ;; Checks if the name is not suspended, if it is then don't execute anything
         (asserts! (is-eq false name-suspended) ERR-NAME-OPERATION-UNAUTHORIZED)
         ;; Checks if the namespace is managed.
-        (if (is-none namespace-manager) 
-            (begin                 
-                ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
-                (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
-                ;; Ensures the NFT is not currently listed in the market, which would block transfers.
-                (asserts! (is-none (map-get? market id)) ERR-LISTED)
-            )
+        (match namespace-manager 
+            manager
             ;; If the namespace is managed, performs the transfer under the management's authorization.
             (begin                 
                 ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
@@ -315,6 +309,12 @@
                 ;; Similar check as above for market listing.
                 (asserts! (is-none (map-get? market id)) ERR-LISTED)
             )
+            (begin                 
+                ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
+                (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
+                ;; Ensures the NFT is not currently listed in the market, which would block transfers.
+                (asserts! (is-none (map-get? market id)) ERR-LISTED)
+            )  
         ) 
         ;; Set the helper variable to remove the id being transferred from the list of currently owned nfts by owner
         (var-set uint-helper-to-remove id)
@@ -576,13 +576,13 @@
         )
         ;; Verify that any previous preorder by the same buyer has expired.
         (asserts! 
-            (if (is-none former-preorder) 
+            (match former-preorder
+                preorder 
                 ;; Proceed if no previous preorder exists.
                 true 
                 
-                    ;; If a previous preorder exists, check that it has expired based on the NAMESPACE-PREORDER-CLAIMABILITY-TTL.
-                    (>= block-height (+ NAMESPACE-PREORDER-CLAIMABILITY-TTL (unwrap! (get created-at former-preorder) ERR-UNWRAP))) 
-                
+                ;; If a previous preorder exists, check that it has expired based on the NAMESPACE-PREORDER-CLAIMABILITY-TTL.
+                (>= block-height (+ NAMESPACE-PREORDER-CLAIMABILITY-TTL (unwrap! (get created-at former-preorder) ERR-UNWRAP))) 
             ) 
             ERR-NAMESPACE-PREORDER-ALREADY-EXISTS
         )
@@ -740,7 +740,7 @@
         ;; Confirm that the import is occurring within the allowed timeframe since the namespace was revealed.
         (asserts! (< block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)
         ;; Mint the name to the beneficiary
-        (unwrap! (nft-mint? BNS-V2 current-mint beneficiary) ERR-UNWRAP)
+        (unwrap! (nft-mint? BNS-V2 current-mint beneficiary) ERR-NAME-COULD-NOT-BE-MINTED)
         ;; Check if beneficiary has primary-name
         (if (is-none beneficiary-primary-name) 
             ;; If not, then set this as primary name
