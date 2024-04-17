@@ -131,7 +131,7 @@
 (define-constant ERR-PANIC (err u229))
 (define-constant ERR-NAMESPACE-HAS-MANAGER (err u230))
 (define-constant ERR-OVERFLOW (err u231))
-(define-constant ERR-NOT-OWNER (err u232))
+(define-constant ERR-NO-OWNER-FOR-NFT (err u232))
 (define-constant ERR-NO-BNS-NAMES-OWNED (err u233))
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -409,7 +409,7 @@
     (let 
         (
             ;; Retrieves the owner of the specified name ID
-            (owner (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NOT-OWNER))
+            (owner (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NO-OWNER-FOR-NFT))
             ;; Retrieves the current primary name for the caller, to check if an update is necessary. This should never cause an error unless the user doesn't own any BNS names
             (current-primary-name (unwrap! (map-get? primary-name tx-sender) ERR-NO-BNS-NAMES-OWNED))
             ;; Retrieves the name and namespace from the uint/index
