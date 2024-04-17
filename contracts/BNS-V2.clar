@@ -1347,7 +1347,7 @@
     (map-get? name-to-index {name: name, namespace: namespace})
 )
 
-;; 
+;; Fetcher for all BNS ids owned by a principal
 (define-read-only (get-all-names-owned-by-principal (owner principal))
     (map-get? bns-ids-by-principal owner)
 )
