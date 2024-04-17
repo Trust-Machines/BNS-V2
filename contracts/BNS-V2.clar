@@ -840,16 +840,7 @@
             (name-props (map-get? name-properties {name: name, namespace: namespace}))
         ) 
         ;; Checks if that name already exists for the namespace if it does, then don't mint
-        (asserts! 
-            (match name-props 
-                name-exists 
-                ;; If some name, then return false so asserts fails
-                false
-                ;; If none, then return true so that asserts succeedes
-                true
-            ) 
-            ERR-NAME-ALREADY-CLAIMED
-        )
+        (asserts! (is-none name-props) ERR-NAME-ALREADY-CLAIMED)
         ;; Asserts a positive amount of STX to be burnt
         (asserts! (> stx-to-burn u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Verifies if the namespace has a manager
@@ -1145,38 +1136,12 @@
         ;; Checks if a new zone file hash is specified
         (match zonefile-hash
             z-hash
-            (map-set name-properties
-                { 
-                    name: name, 
-                    namespace: namespace 
-                }
-                { 
-                    registered-at: (get registered-at name-props),
-                    imported-at: (get imported-at name-props),
-                    revoked-at: (get revoked-at name-props),
-                    zonefile-hash: zonefile-hash,
-                    locked: (get locked name-props),
-                    renewal-height: (+ (get lifetime namespace-props) block-height),
-                    owner: (get owner name-props),
-                    price: (get price name-props),
-                }
+            (map-set name-properties {name: name, namespace: namespace}
+                (merge name-props {zonefile-hash: zonefile-hash, renewal-height: (+ (get lifetime namespace-props) block-height)})
             )
             ;; If no new zone file hash then keep existing hash
-            (map-set name-properties
-                { 
-                    name: name, 
-                    namespace: namespace 
-                }
-                { 
-                    registered-at: (get registered-at name-props),
-                    imported-at: (get imported-at name-props),
-                    revoked-at: (get revoked-at name-props),
-                    zonefile-hash: (get zonefile-hash name-props),
-                    locked: (get locked name-props),
-                    renewal-height: (+ (get lifetime namespace-props) block-height),
-                    owner: (get owner name-props),
-                    price: (get price name-props),
-                }
+            (map-set name-properties {name: name, namespace: namespace}
+                (merge name-props {renewal-height: (+ (get lifetime namespace-props) block-height)})
             )
         )
         ;; Successfully completes the renewal process.
