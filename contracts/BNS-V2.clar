@@ -414,7 +414,7 @@
             (current-primary-name (unwrap! (map-get? primary-name tx-sender) ERR-NO-BNS-NAMES-OWNED))
             ;; Retrieves the name and namespace from the uint/index
             (name-and-namespace (unwrap! (map-get? index-to-name primary-name-id) ERR-NO-NAME))
-            ;; Retrieves the current locked status of the name
+            ;; Retrieves the current locked status of the name, this should not cause and error, if the previous didn't
             (is-locked (unwrap! (get locked (map-get? name-properties name-and-namespace)) ERR-NAME-LOCKED))
         ) 
         ;; Verifies that the caller (`tx-sender`) is indeed the owner of the name they wish to set as primary.
