@@ -131,6 +131,8 @@
 (define-constant ERR-PANIC (err u229))
 (define-constant ERR-NAMESPACE-HAS-MANAGER (err u230))
 (define-constant ERR-OVERFLOW (err u231))
+(define-constant ERR-NOT-OWNER (err u232))
+(define-constant ERR-NO-BNS-NAMES-OWNED (err u233))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -407,13 +409,13 @@
     (let 
         (
             ;; Retrieves the owner of the specified name ID
-            (owner (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-UNWRAP))
-            ;; Retrieves the current primary name for the caller, to check if an update is necessary.
-            (current-primary-name (unwrap! (map-get? primary-name tx-sender) ERR-UNWRAP))
+            (owner (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NOT-OWNER))
+            ;; Retrieves the current primary name for the caller, to check if an update is necessary. This should never cause an error unless the user doesn't own any BNS names
+            (current-primary-name (unwrap! (map-get? primary-name tx-sender) ERR-NO-BNS-NAMES-OWNED))
             ;; Retrieves the name and namespace from the uint/index
             (name-and-namespace (unwrap! (map-get? index-to-name primary-name-id) ERR-NO-NAME))
             ;; Retrieves the current locked status of the name
-            (is-locked (unwrap! (get locked (map-get? name-properties name-and-namespace)) ERR-UNWRAP))
+            (is-locked (unwrap! (get locked (map-get? name-properties name-and-namespace)) ERR-NAME-LOCKED))
         ) 
         ;; Verifies that the caller (`tx-sender`) is indeed the owner of the name they wish to set as primary.
         (asserts! (is-eq owner tx-sender) ERR-NOT-AUTHORIZED)
