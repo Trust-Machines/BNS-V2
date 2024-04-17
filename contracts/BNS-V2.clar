@@ -131,6 +131,8 @@
 (define-constant ERR-PANIC (err u229))
 (define-constant ERR-NAMESPACE-HAS-MANAGER (err u230))
 (define-constant ERR-OVERFLOW (err u231))
+(define-constant ERR-NO-OWNER-FOR-NFT (err u232))
+(define-constant ERR-NO-BNS-NAMES-OWNED (err u233))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -182,7 +184,7 @@
 ;;;;;;;;;
 ;; Tracks all the BNS names owned by a user. Each user is mapped to a list of name IDs.
 ;; This allows for easy enumeration of all names owned by a particular user.
-(define-map all-user-names principal (list 1000 uint))
+(define-map bns-ids-by-principal principal (list 1000 uint))
 
 
 ;;;;;;;;;;;;;
@@ -287,9 +289,9 @@
             ;; Gets the current owner of the name from the name-props
             (name-current-owner (get owner name-props))
             ;; Gets the currently owned NFTs by the owner
-            (all-nfts-owned-by-owner (default-to (list) (map-get? all-user-names owner)))
+            (all-nfts-owned-by-owner (default-to (list) (map-get? bns-ids-by-principal owner)))
             ;; Gets the currently owned NFTs by the recipient
-            (all-nfts-owned-by-recipient (default-to (list) (map-get? all-user-names recipient)))
+            (all-nfts-owned-by-recipient (default-to (list) (map-get? bns-ids-by-principal recipient)))
             ;; Checks if the owner has a primary name
             (owner-primary-name (map-get? primary-name owner))
             ;; Checks if the recipient has a primary name
@@ -298,24 +300,20 @@
         ;; Checks if the namespace is managed.
         (match namespace-manager 
             manager
-            ;; If the namespace is managed, performs the transfer under the management's authorization.
-            (begin                 
-                ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
-                (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
-            )
-            (begin                 
-                ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
-                (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
-            )  
+            ;; If the namespace is managed, performs the transfer under the management's authorization.            
+            ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
+            (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)             
+            ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
+            (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
         ) 
         ;; Ensures the NFT is not currently listed in the market, which would block transfers.
         (asserts! (is-none (map-get? market id)) ERR-LISTED)
         ;; Set the helper variable to remove the id being transferred from the list of currently owned nfts by owner
         (var-set uint-helper-to-remove id)
         ;; Updates currently owned names of the owner by removing the id being transferred
-        (map-set all-user-names owner (filter is-not-removeable all-nfts-owned-by-owner))
+        (map-set bns-ids-by-principal owner (filter is-not-removeable all-nfts-owned-by-owner))
         ;; Updates currently owned names of the recipient by adding the id being transferred
-        (map-set all-user-names recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
+        (map-set bns-ids-by-principal recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
         ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
         (if (is-eq (some id) owner-primary-name) 
             ;; If the id is the primary name, then set it to the index 0 of the filtered list of the owner
@@ -407,13 +405,13 @@
     (let 
         (
             ;; Retrieves the owner of the specified name ID
-            (owner (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-UNWRAP))
-            ;; Retrieves the current primary name for the caller, to check if an update is necessary.
-            (current-primary-name (unwrap! (map-get? primary-name tx-sender) ERR-UNWRAP))
+            (owner (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NO-OWNER-FOR-NFT))
+            ;; Retrieves the current primary name for the caller, to check if an update is necessary. This should never cause an error unless the user doesn't own any BNS names
+            (current-primary-name (unwrap! (map-get? primary-name tx-sender) ERR-NO-BNS-NAMES-OWNED))
             ;; Retrieves the name and namespace from the uint/index
             (name-and-namespace (unwrap! (map-get? index-to-name primary-name-id) ERR-NO-NAME))
-            ;; Retrieves the current locked status of the name
-            (is-locked (unwrap! (get locked (map-get? name-properties name-and-namespace)) ERR-UNWRAP))
+            ;; Retrieves the current locked status of the name, this should not cause and error, if the previous didn't
+            (is-locked (unwrap! (get locked (map-get? name-properties name-and-namespace)) ERR-NAME-LOCKED))
         ) 
         ;; Verifies that the caller (`tx-sender`) is indeed the owner of the name they wish to set as primary.
         (asserts! (is-eq owner tx-sender) ERR-NOT-AUTHORIZED)
@@ -469,13 +467,13 @@
             (id-to-be-minted (+ (var-get bns-index) u1))
             
             ;; Retrieves a list of all names currently owned by the recipient. Defaults to an empty list if none are found.
-            (all-users-names-owned (default-to (list) (map-get? all-user-names send-to)))
+            (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal send-to)))
         ) 
         ;; Verifies that the caller of the function is the current namespace manager to authorize the registration.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
 
         ;; Updates the list of all names owned by the recipient to include the new name ID.
-        (map-set all-user-names send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
+        (map-set bns-ids-by-principal send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
 
         ;; Conditionally sets the newly minted name as the primary name if the recipient does not already have one.
         (match (map-get? primary-name send-to) 
@@ -724,7 +722,7 @@
             ;; Fetch the primary name of the beneficiary
             (beneficiary-primary-name (map-get? primary-name beneficiary))
             ;; Fetch names owned by the beneficiary
-            (all-users-names-owned (default-to (list) (map-get? all-user-names beneficiary)))
+            (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal beneficiary)))
         )
         ;; Verify that the name contains only valid characters to ensure compliance with naming conventions.
         (asserts! (not (has-invalid-chars name)) ERR-NAME-CHARSET-INVALID)
@@ -743,7 +741,7 @@
             (map-set primary-name beneficiary current-mint)
         )
         ;; Add the name into the all-users-name map
-        (map-set all-user-names beneficiary (unwrap! (as-max-len? (append all-users-names-owned current-mint) u1000) ERR-OVERFLOW))
+        (map-set bns-ids-by-principal beneficiary (unwrap! (as-max-len? (append all-users-names-owned current-mint) u1000) ERR-OVERFLOW))
         ;; Set the name properties
         (map-set name-properties {name: name, namespace: namespace}
             {
@@ -1345,6 +1343,11 @@
 (define-read-only (get-id-from-bns (name (buff 48)) (namespace (buff 20))) 
     ;; Attempts to retrieve the ID from the 'name-to-index' map using the provided name and namespace as the key.
     (map-get? name-to-index {name: name, namespace: namespace})
+)
+
+;; Fetcher for all BNS ids owned by a principal
+(define-read-only (get-all-names-owned-by-principal (owner principal))
+    (map-get? bns-ids-by-principal owner)
 )
 
 
