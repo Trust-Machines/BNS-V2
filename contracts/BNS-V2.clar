@@ -193,8 +193,7 @@
 ;; Contains detailed properties of names, including registration and importation times, revocation status, and zonefile hash.
 (define-map name-properties
     { name: (buff 48), namespace: (buff 20) }
-    { 
-        claimed-at: (optional uint),
+    {
         registered-at: (optional uint),
         imported-at: (optional uint),
         revoked-at: (optional uint),
@@ -291,8 +290,6 @@
             (registered-at-value (get registered-at name-props))
             ;; Gets the imported-at value
             (imported-at-value (get imported-at name-props))
-            ;; Gets the claimed-at value
-            (claimed-at-value (get claimed-at name-props))
             ;; Gets the current owner of the name from the name-props
             (name-current-owner (get owner name-props))
             ;; Gets the currently owned NFTs by the owner
@@ -309,14 +306,8 @@
             is-imported 
             ;; If it was imported, then do nothing
             true 
-            ;; If it was not imported then check if the name was claimed or registered
-            (match registered-at-value
-                is-registered
-                ;; If it was registered then do nothing
-                true
-                ;; If it was not registered then it was claimed, so check if claimed-at + 1 is lower than current blockheight
-                (asserts! (< (+ (unwrap! claimed-at-value ERR-UNWRAP) u1) block-height) ERR-NAME-OPERATION-UNAUTHORIZED)
-            )
+            ;; If it was not imported then it was registered, so check if registered-at + 1 is lower than current blockheight
+            (asserts! (< (+ (unwrap! registered-at-value ERR-UNWRAP) u1) block-height) ERR-NAME-OPERATION-UNAUTHORIZED)
         )
 
         ;; Checks if the namespace is managed.
@@ -386,8 +377,6 @@
             (registered-at-value (get registered-at name-props))
             ;; Gets the imported-at value
             (imported-at-value (get imported-at name-props))
-            ;; Gets the claimed-at value
-            (claimed-at-value (get claimed-at name-props))
             ;; Creates a listing record with price and commission details
             (listing {price: price, commission: (contract-of comm-trait)})
         )
@@ -396,14 +385,8 @@
             is-imported 
             ;; If it was imported, then do nothing
             true 
-            ;; If it was not imported then check if the name was claimed or registered
-            (match registered-at-value
-                is-registered
-                ;; If it was registered then do nothing
-                true
-                ;; If it was not registered then it was claimed, so check if claimed-at + 1 is lower than current blockheight
-                (asserts! (< (+ (unwrap! claimed-at-value ERR-UNWRAP) u1) block-height) ERR-NAME-OPERATION-UNAUTHORIZED)
-            )
+            ;; If it was not imported then it was registered, so check if registered-at + 1 is lower than current blockheight
+            (asserts! (< (+ (unwrap! registered-at-value ERR-UNWRAP) u1) block-height) ERR-NAME-OPERATION-UNAUTHORIZED)
         )
         ;; Asserts that the caller is the owner of the NFT before listing it
         (asserts! (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
@@ -759,7 +742,6 @@
         ;; Set the name properties
         (map-set name-properties {name: name, namespace: namespace}
             {
-                claimed-at: none,
                 registered-at: none,
                 imported-at: (some block-height),
                 revoked-at: none,
@@ -895,8 +877,8 @@
                 name: name, namespace: namespace
             } 
             {
-                claimed-at: (some block-height),
-                registered-at: none,
+               
+                registered-at: (some (+ block-height u1)),
                 imported-at: none,
                 revoked-at: none,
                 zonefile-hash: (some zonefile-hash),
@@ -1148,7 +1130,6 @@
                     namespace: namespace 
                 }
                 { 
-                    claimed-at: (get claimed-at name-props),
                     registered-at: (get registered-at name-props),
                     imported-at: (get imported-at name-props),
                     revoked-at: (get revoked-at name-props),
@@ -1166,7 +1147,6 @@
                     namespace: namespace 
                 }
                 { 
-                    claimed-at: (get claimed-at name-props),
                     registered-at: (get registered-at name-props),
                     imported-at: (get imported-at name-props),
                     revoked-at: (get revoked-at name-props),
@@ -1560,7 +1540,7 @@
 )
 
 ;; Calculates the block height at which a name's lease started, considering if it was registered or imported.
-(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { claimed-at: (optional uint), registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (optional (buff 20)), locked: bool, renewal-height: uint, price: uint, owner: principal}))
+(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (optional (buff 20)), locked: bool, renewal-height: uint, price: uint, owner: principal}))
     (let 
         (
             ;; Extract the registration and importation times from the name properties.
@@ -1642,7 +1622,6 @@
         (ok (map-set name-properties
             { name: name, namespace: namespace }
             { 
-                claimed-at: claimed-at,
                 registered-at: registered-at,
                 imported-at: imported-at,
                 revoked-at: revoked-at,
