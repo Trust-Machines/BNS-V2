@@ -802,8 +802,21 @@
             (id-to-be-minted (+ (var-get bns-index) u1))
             ;; Retrieves a list of all names currently owned by the recipient. Defaults to an empty list if none are found.
             (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal send-to)))
+            ;; Tries to retrieve the name and namespace to see if it already exists
+            (name-props (map-get? name-properties {name: name, namespace: namespace}))
         ) 
-        ;; This is not necessary since we are asserting exactly the same before
+        ;; Checks if that name already exists for the namespace if it does, then don't mint
+        (asserts! 
+            (match name-props 
+                name-exists 
+                ;; If some name, then return false so asserts fails
+                false
+                ;; If none, then return true so that asserts succeedes
+                true
+            ) 
+            ERR-NAME-ALREADY-CLAIMED
+        )
+        ;; Asserts a positive amount of STX to be burnt
         (asserts! (> stx-to-burn u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Verifies if the namespace has a manager
         (match current-namespace-manager 
