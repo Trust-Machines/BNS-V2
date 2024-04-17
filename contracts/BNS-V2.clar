@@ -300,15 +300,11 @@
         ;; Checks if the namespace is managed.
         (match namespace-manager 
             manager
-            ;; If the namespace is managed, performs the transfer under the management's authorization.
-            (begin                 
-                ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
-                (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
-            )
-            (begin                 
-                ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
-                (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
-            )  
+            ;; If the namespace is managed, performs the transfer under the management's authorization.            
+            ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
+            (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)             
+            ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
+            (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
         ) 
         ;; Ensures the NFT is not currently listed in the market, which would block transfers.
         (asserts! (is-none (map-get? market id)) ERR-LISTED)
