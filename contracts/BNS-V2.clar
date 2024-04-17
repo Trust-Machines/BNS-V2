@@ -954,25 +954,29 @@
     ;; name (buff 48): The actual name being registered.
     ;; salt (buff 20): The salt used during the preorder to generate the hashed, salted fully-qualified name (FQN).
     ;; zonefile-hash (buff 20): The hash of the zone file associated with the name.
-(define-public (name-register (namespace (buff 20)) (name (buff 48)) (salt (buff 20)) (zonefile-hash (buff 20)))
+(define-public (name-register (namespace (buff 20)) (name (buff 48)) (salt (buff 20)) (zonefile-hash (buff 20)) (send-to principal))
     (let 
         (
             ;; Generate the hashed, salted FQN from the provided name, namespace, and salt.
             (hashed-salted-fqn (hash160 (concat (concat (concat name 0x2e) namespace) salt)))
-            ;; Retrieve the properties of the namespace to ensure it exists and is valid for registration.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; New
-            ;; Retrieve namespace manager if any
-            (namespace-manager (get namespace-manager namespace-props))
             ;; Retrieve the preorder information using the hashed, salted FQN to verify the preorder exists and belongs to the tx sender.
             (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }) ERR-NAME-PREORDER-NOT-FOUND))
-            ;; Added this
-            ;; Retreive the name owner if any
+            ;; Retrieves existing properties of the namespace to confirm its existence and management details.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; Extracts the current manager of the namespace to verify the authority of the caller.
+            (current-namespace-manager (get namespace-manager namespace-props))
+            ;; Calculates the ID for the new name to be minted, incrementing the last used ID.
+            (id-to-be-minted (+ (var-get bns-index) u1))
+            ;; Retrieves a list of all names currently owned by the recipient. Defaults to an empty list if none are found.
+            (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal send-to)))
+            ;; Tries to retrieve the name and namespace to see if it already exists
+            (name-props (map-get? name-properties {name: name, namespace: namespace}))
+            ;; Gets the index, if it is some, then the name already exists
             (name-index (map-get? name-to-index {name: name, namespace: namespace}))
         )
         ;; New
         ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
-        (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
+        (asserts! (is-none current-namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
         ;; Changed this
         ;; Verify the name is eligible for registration within the given namespace.
         (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
@@ -984,10 +988,37 @@
         (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
         ;; Confirm the amount of STX burned with the preorder meets or exceeds the cost of registering the name.
         (asserts! (>= (get stx-burned preorder) (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
-        ;; Mint or transfer the name to the tx sender, effectively finalizing its registration or updating ownership if already existing.
-
-        ;; ;; Update the name's properties with the new zone file hash and registration metadata.
-        ;; (update-zonefile-and-props namespace name (some block-height) none none zonefile-hash "name-register")
+        ;; Updates the list of all names owned by the recipient to include the new name ID.
+        (map-set bns-ids-by-principal send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
+        ;; Conditionally sets the newly minted name as the primary name if the recipient does not already have one.
+        (match (map-get? primary-name send-to) 
+            receiver
+            false
+            (map-set primary-name send-to id-to-be-minted)
+        )
+        ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
+        (map-set name-properties
+            {
+                name: name, namespace: namespace
+            } 
+            {
+               
+                registered-at: (some block-height),
+                imported-at: none,
+                revoked-at: none,
+                zonefile-hash: (some zonefile-hash),
+                locked: false,
+                renewal-height: (+ (get lifetime namespace-props) block-height),
+                price: (get stx-burned preorder),
+                owner: send-to,
+            }
+        )
+        ;; Links the newly minted ID to the name and namespace combination for reverse lookup.
+        (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
+        ;; Links the name and namespace combination to the newly minted ID for forward lookup.
+        (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
+        ;; Mints the new BNS name as an NFT, assigned to the 'send-to' principal.
+        (unwrap! (nft-mint? BNS-V2 id-to-be-minted send-to) ERR-NAME-COULD-NOT-BE-MINTED)
         ;; Confirm successful registration of the name.
         (ok true)
     )
@@ -1018,8 +1049,6 @@
         ;; New
         ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
         (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
-        ;; ;; Execute the update of the zone file hash for the name. This involves updating the name's properties in the `name-properties` map with the new zone file hash. The operation type "name-update" is also specified for logging.
-        ;; (update-zonefile-and-props namespace name (get registered-at (get name-props data)) (get imported-at (get name-props data)) none zonefile-hash "name-update")
         ;; Confirm successful completion of the zone file hash update.
         (ok true)
     )
@@ -1049,11 +1078,6 @@
         ;; New
         ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
         (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
-        ;; ;; Update the name properties to revoke the name:
-        ;;     ;; - The zone file hash is set to null (0x), effectively making the name unresolvable.
-        ;;     ;; - The `update-zonefile-and-props` function is called with the current registered and imported timestamps, the current block height as the revoked timestamp, and a null zone file hash.
-        ;;     ;; - The operation type "name-revoke" is passed to `update-zonefile-and-props` for logging.
-        ;; (update-zonefile-and-props namespace name (get registered-at (get name-props data)) (get imported-at (get name-props data)) (some block-height) 0x "name-revoke")
         ;; Return a success response indicating the name has been successfully revoked.
         (ok true)
     )
@@ -1154,9 +1178,6 @@
                     price: (get price name-props),
                 }
             )
-            
-            ;; ;; If new zone file hash, then update with new zone file hash
-            ;; (update-zonefile-and-props namespace name (some block-height) none none (unwrap-panic zonefile-hash) "name-renewal")
         )
         ;; Successfully completes the renewal process.
         (ok true)
