@@ -463,57 +463,13 @@
         (
             ;; Retrieves existing properties of the namespace to confirm its existence and management details.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            
             ;; Extracts the current manager of the namespace to verify the authority of the caller.
             (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
-            
-            ;; Calculates the ID for the new name to be minted, incrementing the last used ID.
-            (id-to-be-minted (+ (var-get bns-index) u1))
-            
-            ;; Retrieves a list of all names currently owned by the recipient. Defaults to an empty list if none are found.
-            (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal send-to)))
         ) 
         ;; Verifies that the caller of the function is the current namespace manager to authorize the registration.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
-
-        ;; Updates the list of all names owned by the recipient to include the new name ID.
-        (map-set bns-ids-by-principal send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
-
-        ;; Conditionally sets the newly minted name as the primary name if the recipient does not already have one.
-        (match (map-get? primary-name send-to) 
-            receiver
-            false
-            (map-set primary-name send-to id-to-be-minted)
-        )
-
-        ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
-        (map-set name-properties
-            {
-                name: name, namespace: namespace
-            } 
-            {
-                registered-at: (some block-height),
-                imported-at: none,
-                revoked-at: none,
-                zonefile-hash: (some zonefile),
-                locked: false,
-                renewal-height: (+ (get lifetime namespace-props) block-height),
-                price: price,
-                owner: send-to,
-            }
-        )
-
-        ;; Links the newly minted ID to the name and namespace combination for reverse lookup.
-        (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
-
-        ;; Links the name and namespace combination to the newly minted ID for forward lookup.
-        (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
-
-        ;; Mints the new BNS name as an NFT, assigned to the 'send-to' principal.
-        (unwrap! (nft-mint? BNS-V2 id-to-be-minted send-to) ERR-UNWRAP)
-
-        ;; Signals successful completion of the registration process.
-        (ok true)
+        ;; Calls the fast mint function
+        (name-claim-fast name namespace zonefile price send-to)
     )
 )
 
@@ -833,6 +789,67 @@
     )
 )
 
+;; NEW FAST MINT
+;; A 'fast' one-block registration function: (name-claim-fast)
+(define-public (name-claim-fast (name (buff 48)) (namespace (buff 20)) (zonefile-hash (buff 20)) (stx-to-burn uint) (send-to principal)) 
+    (let 
+        (
+            ;; Retrieves existing properties of the namespace to confirm its existence and management details.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; Extracts the current manager of the namespace to verify the authority of the caller.
+            (current-namespace-manager (get namespace-manager namespace-props))
+            ;; Calculates the ID for the new name to be minted, incrementing the last used ID.
+            (id-to-be-minted (+ (var-get bns-index) u1))
+            ;; Retrieves a list of all names currently owned by the recipient. Defaults to an empty list if none are found.
+            (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal send-to)))
+        ) 
+        ;; This is not necessary since we are asserting exactly the same before
+        (asserts! (> stx-to-burn u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
+        ;; Verifies if the namespace has a manager
+        (match current-namespace-manager 
+            manager 
+            ;; If it does
+            (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
+            ;; If it doesn't
+            (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
+        )
+        ;; Updates the list of all names owned by the recipient to include the new name ID.
+        (map-set bns-ids-by-principal send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
+        ;; Conditionally sets the newly minted name as the primary name if the recipient does not already have one.
+        (match (map-get? primary-name send-to) 
+            receiver
+            false
+            (map-set primary-name send-to id-to-be-minted)
+        )
+        ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
+        (map-set name-properties
+            {
+                name: name, namespace: namespace
+            } 
+            {
+                registered-at: (some block-height),
+                imported-at: none,
+                revoked-at: none,
+                zonefile-hash: (some zonefile-hash),
+                locked: false,
+                renewal-height: (+ (get lifetime namespace-props) block-height),
+                price: stx-to-burn,
+                owner: send-to,
+            }
+        )
+        ;; Links the newly minted ID to the name and namespace combination for reverse lookup.
+        (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
+        ;; Links the name and namespace combination to the newly minted ID for forward lookup.
+        (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
+        ;; Burns the STX from the user
+        (unwrap! (stx-burn? stx-to-burn send-to) ERR-INSUFFICIENT-FUNDS)
+        ;; Mints the new BNS name as an NFT, assigned to the 'send-to' principal.
+        (unwrap! (nft-mint? BNS-V2 id-to-be-minted send-to) ERR-NAME-COULD-NOT-BE-MINTED)
+        ;; Signals successful completion of the registration process.
+        (ok true)
+    )
+)
+
 ;; NAME-PREORDER
 ;; This is the first transaction to be sent. It tells all BNS nodes the salted hash of the BNS name,
 ;; and it burns the registration fee.
@@ -862,12 +879,9 @@
             ;; If a previous preorder is still valid, throw an error indicating a duplicate preorder.
             ERR-NAME-PREORDER-ALREADY-EXISTS
         )
-        ;; Validate that the STX amount to be burned is greater than 0 to ensure a valid transaction.
-        (asserts! (> stx-to-burn u0) ERR-NAMESPACE-STX-BURNT-INSUFFICIENT)  
         ;; Ensure that the hashed and salted FQN is exactly 20 bytes long to match the expected hash format.
         (asserts! (is-eq (len hashed-salted-fqn) u20) ERR-NAME-HASH-MALFORMED)
         ;; Confirm that the STX amount to be burned is a positive value.
-        ;; This is not necessary since we are asserting exactly the same before
         (asserts! (> stx-to-burn u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Execute the token burn operation, removing the specified amount of STX from the buyer's balance.
         (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-INSUFFICIENT-FUNDS)
