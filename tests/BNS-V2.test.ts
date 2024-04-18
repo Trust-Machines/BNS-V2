@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 import { initSimnet } from "@hirosystems/clarinet-sdk";
 import crypto from "crypto";
 const simnet = await initSimnet();
+const assets = simnet.getAssetsMap();
+const stxBalances = assets.get("STX")!;
+
+console.log(stxBalances);
 
 const accounts = simnet.getAccounts();
 const address1 = accounts.get("wallet_1")!;

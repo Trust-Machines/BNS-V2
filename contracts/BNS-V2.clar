@@ -912,7 +912,7 @@
         ;; Confirm that the STX amount to be burned is a positive value.
         (asserts! (> stx-to-burn u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Execute the token burn operation, removing the specified amount of STX from the buyer's balance.
-        (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-INSUFFICIENT-FUNDS)
+        (unwrap! (stx-burn? stx-to-burn contract-caller) ERR-INSUFFICIENT-FUNDS)
         ;; Record the preorder details in the `name-preorders` map, marking it as not yet claimed.
         (map-set name-preorders
             ;; Changed to contract-caller for when this is called by the namespace manager
