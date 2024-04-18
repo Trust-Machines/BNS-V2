@@ -491,39 +491,6 @@
     )
 )
 
-;; Defines a public function for registering a new BNS name within a specified namespace.
-(define-public (mng-name-register (name (buff 48)) (namespace (buff 20)) (send-to principal) (price uint) (zonefile (buff 20)))
-    (let 
-        (
-            ;; Retrieves existing properties of the namespace to confirm its existence and management details.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Extracts the current manager of the namespace to verify the authority of the caller.
-            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
-        ) 
-        ;; Verifies that the caller of the function is the current namespace manager to authorize the registration.
-        (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
-        ;; Calls the fast mint function
-        (name-claim-fast name namespace zonefile price send-to)
-    )
-)
-
-;; Defines a public function for revealing a preordered BNS name within a specified namespace.
-(define-public (mng-name-reveal (name (buff 48)) (namespace (buff 20)) (send-to principal) (price uint) (zonefile (buff 20)))
-    (let 
-        (
-            ;; Retrieves existing properties of the namespace to confirm its existence and management details.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Extracts the current manager of the namespace to verify the authority of the caller.
-            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
-        ) 
-        ;; Verifies that the caller of the function is the current namespace manager to authorize the registration.
-        (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
-        ;; Calls the fast mint function
-        (name-claim-fast name namespace zonefile price send-to)
-    )
-)
-
-
 ;; This function transfers the management role of a specific namespace to a new principal.
 (define-public (mng-manager-transfer (new-manager principal) (namespace (buff 20)))
     (let 
@@ -865,7 +832,7 @@
             ;; If it does
             (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
             ;; If it doesn't
-            (asserts! (is-eq contract-caller send-to) ERR-NOT-AUTHORIZED)
+            (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
         )
         ;; Updates the list of all names owned by the recipient to include the new name ID.
         (map-set bns-ids-by-principal send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
@@ -987,7 +954,7 @@
         (match current-namespace-manager 
             manager 
             (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
-            (asserts! (is-eq contract-caller send-to) ERR-NOT-AUTHORIZED)
+            (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
         )
         ;; Changed this
         ;; Verify the name is eligible for registration within the given namespace.
