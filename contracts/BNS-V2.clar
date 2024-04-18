@@ -492,7 +492,23 @@
 )
 
 ;; Defines a public function for registering a new BNS name within a specified namespace.
-(define-public (mng-register (name (buff 48)) (namespace (buff 20)) (send-to principal) (price uint) (zonefile (buff 20)))
+(define-public (mng-name-register (name (buff 48)) (namespace (buff 20)) (send-to principal) (price uint) (zonefile (buff 20)))
+    (let 
+        (
+            ;; Retrieves existing properties of the namespace to confirm its existence and management details.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; Extracts the current manager of the namespace to verify the authority of the caller.
+            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
+        ) 
+        ;; Verifies that the caller of the function is the current namespace manager to authorize the registration.
+        (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
+        ;; Calls the fast mint function
+        (name-claim-fast name namespace zonefile price send-to)
+    )
+)
+
+;; Defines a public function for revealing a preordered BNS name within a specified namespace.
+(define-public (mng-name-reveal (name (buff 48)) (namespace (buff 20)) (send-to principal) (price uint) (zonefile (buff 20)))
     (let 
         (
             ;; Retrieves existing properties of the namespace to confirm its existence and management details.
@@ -911,7 +927,7 @@
             (match former-preorder
                 preorder
                 ;; If a previous preorder exists, check that it has expired based on the NAME-PREORDER-CLAIMABILITY-TTL.
-                (>= block-height (+ NAME-PREORDER-CLAIMABILITY-TTL (unwrap-panic (get created-at former-preorder))))
+                (>= block-height (+ NAME-PREORDER-CLAIMABILITY-TTL (unwrap! (get created-at former-preorder) ERR-UNWRAP)))
                 ;; If no previous preorder exists, proceed.
                 true
             )
@@ -926,7 +942,8 @@
         (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-INSUFFICIENT-FUNDS)
         ;; Record the preorder details in the `name-preorders` map, marking it as not yet claimed.
         (map-set name-preorders
-            { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }
+            ;; Changed to contract-caller for when this is called by the namespace manager
+            { hashed-salted-fqn: hashed-salted-fqn, buyer: contract-caller }
             { created-at: block-height, stx-burned: stx-to-burn, claimed: false }
         )
         ;; Return the block height at which the preorder claimability period will expire, based on NAME-PREORDER-CLAIMABILITY-TTL.
@@ -967,7 +984,11 @@
         )
         ;; New
         ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
-        (asserts! (is-none current-namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
+        (match current-namespace-manager 
+            manager 
+            (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
+            (asserts! (is-eq contract-caller send-to) ERR-NOT-AUTHORIZED)
+        )
         ;; Changed this
         ;; Verify the name is eligible for registration within the given namespace.
         (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
