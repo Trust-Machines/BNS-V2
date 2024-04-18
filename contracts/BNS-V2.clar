@@ -865,7 +865,7 @@
             ;; If it does
             (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
             ;; If it doesn't
-            (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
+            (asserts! (is-eq contract-caller send-to) ERR-NOT-AUTHORIZED)
         )
         ;; Updates the list of all names owned by the recipient to include the new name ID.
         (map-set bns-ids-by-principal send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
