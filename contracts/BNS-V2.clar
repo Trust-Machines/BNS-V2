@@ -830,9 +830,17 @@
         (match current-namespace-manager 
             manager 
             ;; If it does
-            (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
+            (begin 
+                (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
+                ;; Burns the STX from the manager
+                (unwrap! (stx-burn? stx-to-burn manager) ERR-INSUFFICIENT-FUNDS)
+            )
             ;; If it doesn't
-            (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
+            (begin 
+                (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
+                ;; Burns the STX from the user
+                (unwrap! (stx-burn? stx-to-burn send-to) ERR-INSUFFICIENT-FUNDS)
+            )
         )
         ;; Updates the list of all names owned by the recipient to include the new name ID.
         (map-set bns-ids-by-principal send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
@@ -863,8 +871,6 @@
         (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
         ;; Links the name and namespace combination to the newly minted ID for forward lookup.
         (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
-        ;; Burns the STX from the user
-        (unwrap! (stx-burn? stx-to-burn send-to) ERR-INSUFFICIENT-FUNDS)
         ;; Mints the new BNS name as an NFT, assigned to the 'send-to' principal.
         (unwrap! (nft-mint? BNS-V2 id-to-be-minted send-to) ERR-NAME-COULD-NOT-BE-MINTED)
         ;; Signals successful completion of the registration process.
