@@ -738,8 +738,6 @@
         (map-set name-to-index {name: name, namespace: namespace} current-mint)
          ;; Mint the name to the beneficiary
         (unwrap! (nft-mint? BNS-V2 current-mint beneficiary) ERR-NAME-COULD-NOT-BE-MINTED)
-        ;; ;; Update the name's properties in the `name-properties` map, setting its zone file hash and marking it as imported.
-        ;; (update-zonefile-and-props namespace name none (some block-height) none zonefile-hash "name-import")
         ;; Confirm successful import of the name.
         (ok true)
     )
@@ -1559,58 +1557,6 @@
     )
 )
 
-;; Private helper function `update-zonefile-and-props` updates the properties of a name, including its zone file hash.
-;; It also emits an event to signal the update operation, useful for tracking and external integrations.
-;; @params:
-    ;; namespace (buff 20): The namespace of the name being updated.
-    ;; name (buff 48): The name being updated.
-    ;; registered-at (optional uint): The block height at which the name was registered. None if not updating this field.
-    ;; imported-at (optional uint): The block height at which the name was imported. None if not updating this field.
-    ;; revoked-at (optional uint): The block height at which the name was revoked. None if not updating this field.
-    ;; zonefile-hash (buff 20): The new zone file hash for the name.
-    ;; op (string-ascii 16): A string indicating the operation performed (e.g., "name-register", "name-import").
-(define-private (update-zonefile-and-props (namespace (buff 20)) (name (buff 48)) (claimed-at (optional uint)) (registered-at (optional uint)) (imported-at (optional uint)) (revoked-at (optional uint)) (zonefile-hash (buff 20)) (op (string-ascii 16)))
-    (let 
-        (
-            ;; Retrieve the current index for attachments to keep track of this operation uniquely.
-            (current-index (var-get bns-index))
-            (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-UNWRAP))
-        )
-        ;; Log the operation as an event with relevant metadata, including the zone file hash, name, namespace, and operation type.
-        (print 
-            {
-                attachment: 
-                    {
-                        hash: zonefile-hash,
-                        bns-index: current-index,
-                        metadata: 
-                            {
-                                name: name,
-                                namespace: namespace,
-                                tx-sender: tx-sender,
-                                op: op
-                            }
-                    }
-            }
-        )
-        ;; Increment the attachment index for future operations to maintain uniqueness.
-        (var-set bns-index (+ u1 current-index))
-        ;; Update the name's properties in the `name-properties` map with the new zone file hash and any other provided properties.
-        (ok (map-set name-properties
-            { name: name, namespace: namespace }
-            { 
-                registered-at: registered-at,
-                imported-at: imported-at,
-                revoked-at: revoked-at,
-                zonefile-hash: (some zonefile-hash), 
-                locked: (get locked name-props), 
-                renewal-height: (get renewal-height name-props),
-                price: (get price name-props),
-                owner: (get owner name-props),
-            }
-        ))
-    )
-)
 
 ;; Private helper function `is-namespace-available` checks if a namespace is available for registration or other operations.
 ;; It considers if the namespace has been launched and whether it has expired.
