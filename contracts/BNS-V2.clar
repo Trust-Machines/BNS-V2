@@ -386,7 +386,7 @@
             (asserts! (< (+ (unwrap! registered-at-value ERR-UNWRAP) u1) block-height) ERR-NAME-OPERATION-UNAUTHORIZED)
         )
         ;; Asserts that the caller is the owner of the NFT before listing it
-        (asserts! (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+        (asserts! (or (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) (is-eq namespace-manager (some contract-caller))) ERR-NOT-AUTHORIZED)
         ;; Updates the market map with the new listing details
         (map-set market id listing)
         ;; Prints listing details
