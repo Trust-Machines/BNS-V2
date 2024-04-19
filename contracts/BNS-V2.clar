@@ -385,8 +385,15 @@
             ;; If it was not imported then it was registered, so check if registered-at + 1 is lower than current blockheight
             (asserts! (< (+ (unwrap! registered-at-value ERR-UNWRAP) u1) block-height) ERR-NAME-OPERATION-UNAUTHORIZED)
         )
-        ;; Asserts that the caller is the owner of the NFT before listing it
-        (asserts! (or (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) (is-eq namespace-manager (some contract-caller))) ERR-NOT-AUTHORIZED)
+        ;; Check if there is a namespace manager
+        (match namespace-manager 
+            manager 
+            ;; If there is then check that the contract-caller is the manager
+            (asserts! (is-eq manager contract-caller) ERR-NOT-AUTHORIZED)
+            ;; If there isn't assert that the owner is the tx-sender
+            (asserts! (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+        )
+        
         ;; Updates the market map with the new listing details
         (map-set market id listing)
         ;; Prints listing details
@@ -400,9 +407,27 @@
 ;; @desc Function to remove an NFT listing from the market
 ;; @param id: the ID of the NFT in question, price: the price being listed, comm-trait: a principal that conforms to the commission-trait
 (define-public (unlist-in-ustx (id uint))
-    (begin
-        ;; Asserts that the caller is the owner of the NFT before unlisting it
-        (asserts! (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+    (let
+        (
+            ;; Attempts to retrieve the name and namespace associated with the given NFT ID. If not found, it returns an error.
+            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
+            ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
+            (namespace (get namespace name-and-namespace))
+            ;; Extracts the name part from the retrieved name-and-namespace tuple.
+            (name (get name name-and-namespace))
+            ;; Fetches properties of the identified namespace to confirm its existence and retrieve management details.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; Extracts the manager of the namespace, if one is set.
+            (namespace-manager (get namespace-manager namespace-props))
+        )
+        ;; Check if there is a namespace manager
+        (match namespace-manager 
+            manager 
+            ;; If there is then check that the contract-caller is the manager
+            (asserts! (is-eq manager contract-caller) ERR-NOT-AUTHORIZED)
+            ;; If there isn't assert that the owner is the tx-sender
+            (asserts! (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+        )
         ;; Deletes the listing from the market map
         (map-delete market id)
         ;; Prints unlisting details
