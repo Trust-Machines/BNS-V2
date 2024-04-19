@@ -313,7 +313,6 @@
         ;; Checks if the namespace is managed.
         (match namespace-manager 
             manager
-
             ;; If the namespace is managed, performs the transfer under the management's authorization.
             ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
             (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
@@ -330,8 +329,14 @@
         (map-set bns-ids-by-principal recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
         ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
         (if (is-eq (some id) owner-primary-name) 
-            ;; If the id is the primary name, then set it to the index 0 of the filtered list of the owner
-            (map-set primary-name owner (unwrap! (element-at? (filter is-not-removeable all-nfts-owned-by-owner) u0) ERR-UNWRAP)) 
+            ;; If the is is the primary name, then check if there are other names owned by the user
+            (match (element-at? (filter is-not-removeable all-nfts-owned-by-owner) u0) 
+                next-name 
+                ;; If the user does have more names then set it to the index0 name
+                (map-set primary-name owner next-name) 
+                ;; If the user doesn't have more names then delete the primary-name map associated to that user
+                (map-delete primary-name owner)
+            )
             ;; If it is not equal then do nothing
             false
         )
@@ -431,7 +436,7 @@
         ;; Deletes the listing from the market map
         (map-delete market id)
         ;; Prints unlisting details
-        (ok (print {a: "unlist-in-stx", id: id}))
+        (ok (print {a: "unlist-in-ustx", id: id}))
     )
 )
 
@@ -455,7 +460,7 @@
         ;; Calls the commission contract to handle commission payment
         (try! (contract-call? comm-trait pay id price))
         ;; Transfers the NFT to the buyer
-        (try! (transfer id owner tx-sender))
+        (try! (transfer-in-ustx id owner tx-sender))
         ;; Removes the listing from the market map
         (map-delete market id)
         ;; Prints purchase details
@@ -1582,4 +1587,70 @@
 ;; @desc - Helper function for removing a specific NFT from the NFTs list
 (define-private (is-not-removeable (nft uint))
   (not (is-eq nft (var-get uint-helper-to-remove)))
+)
+
+;; @desc SIP-09 compliant function to transfer a token from one owner to another
+;; @param id: the id of the nft being transferred, owner: the principal of the owner of the nft being transferred, recipient: the principal the nft is being transferred to
+(define-private (transfer-in-ustx (id uint) (owner principal) (recipient principal))
+    (let 
+        (
+            ;; Attempts to retrieve the name and namespace associated with the given NFT ID. If not found, it returns an error.
+            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
+            ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
+            (namespace (get namespace name-and-namespace))
+            ;; Extracts the name part from the retrieved name-and-namespace tuple.
+            (name (get name name-and-namespace))
+            ;; Fetches properties of the identified namespace to confirm its existence and retrieve management details.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; Extracts the manager of the namespace, if one is set.
+            (namespace-manager (get namespace-manager namespace-props))
+            ;; Gets the name-props
+            (name-props (unwrap! (map-get? name-properties name-and-namespace) ERR-NO-NAME))
+            ;; Gets the registered-at value
+            (registered-at-value (get registered-at name-props))
+            ;; Gets the imported-at value
+            (imported-at-value (get imported-at name-props))
+            ;; Gets the current owner of the name from the name-props
+            (name-current-owner (get owner name-props))
+            ;; Gets the currently owned NFTs by the owner
+            (all-nfts-owned-by-owner (default-to (list) (map-get? bns-ids-by-principal owner)))
+            ;; Gets the currently owned NFTs by the recipient
+            (all-nfts-owned-by-recipient (default-to (list) (map-get? bns-ids-by-principal recipient)))
+            ;; Checks if the owner has a primary name
+            (owner-primary-name (map-get? primary-name owner))
+            ;; Checks if the recipient has a primary name
+            (recipient-primary-name (map-get? primary-name recipient))
+        )
+        ;; Set the helper variable to remove the id being transferred from the list of currently owned nfts by owner
+        (var-set uint-helper-to-remove id)
+        ;; Updates currently owned names of the owner by removing the id being transferred
+        (map-set bns-ids-by-principal owner (filter is-not-removeable all-nfts-owned-by-owner))
+        ;; Updates currently owned names of the recipient by adding the id being transferred
+        (map-set bns-ids-by-principal recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
+        ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
+        (if (is-eq (some id) owner-primary-name) 
+            ;; If the is is the primary name, then check if there are other names owned by the user
+            (match (element-at? (filter is-not-removeable all-nfts-owned-by-owner) u0) 
+                next-name 
+                ;; If the user does have more names then set it to the index0 name
+                (map-set primary-name owner next-name) 
+                ;; If the user doesn't have more names then delete the primary-name map associated to that user
+                (map-delete primary-name owner)
+            )
+            ;; If it is not equal then do nothing
+            false
+        )
+        ;; Updates the primary name of the receiver if needed, if the receiver doesn't have a name assign it as primary
+        (match recipient-primary-name
+            name-match
+            ;; If there is a primary name then do nothing
+            false
+            ;; If no primary name then assign this as the primary name
+            (map-set primary-name recipient id)
+        )
+        ;; Updates the name-props map with the new information, everything stays the same, we only change the zonefile to none for a clean slate and the owner
+        (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
+        ;; Executes the NFT transfer from owner to recipient if all conditions are met.
+        (nft-transfer? BNS-V2 id owner recipient)
+    )
 )
