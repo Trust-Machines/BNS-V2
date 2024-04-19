@@ -1142,14 +1142,6 @@
         (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
         ;; Burns the STX provided
         (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-UNWRAP)
-        ;; Checks if a new owner is specified
-        (match new-owner
-            owner-new
-            ;; If new owner, then checks if the new owner can receive the name.
-            (try! (can-receive-name (unwrap-panic new-owner)))
-            ;; If no new owner return true
-            true    
-        )
         ;; Checks if a new zone file hash is specified
         (match zonefile-hash
             z-hash
@@ -1343,50 +1335,6 @@
             (ok (and 
                     (> block-height (+ lifetime lease-started-at)) 
                     (<= block-height (+ (+ lifetime lease-started-at) NAME-GRACE-PERIOD-DURATION))
-                )
-            )
-        )
-    )
-)
-
-;; Read-only function `can-receive-name` checks if a given principal is eligible to receive a new name.
-;; @params:
-    ;; owner (principal): The principal whose eligibility to receive a new name is being checked.
-(define-read-only (can-receive-name (owner principal))
-    (let 
-        (
-            ;; Attempt to fetch the name currently owned by the principal from the `owner-name` map.
-            (current-owned-name (map-get? owner-name owner))
-        )
-        ;; Check if the principal currently does not own a name.
-        (if (is-none current-owned-name)
-            ;; If the principal does not own any name, they are eligible to receive one.
-            (ok true)
-            ;; If the principal already owns a name, further checks are required.
-            (let 
-                (
-                    ;; Extract the namespace and name from the owned name's details.
-                    (namespace (unwrap-panic (get namespace current-owned-name)))
-                    (name (unwrap-panic (get name current-owned-name)))
-                )
-                ;; Check if the namespace of the currently owned name is available.
-                (if (is-namespace-available namespace)
-                    ;; If the namespace is available, the principal can receive a new name.
-                    (ok true)
-                    (begin
-                        ;; Check if the lease for the currently owned name has expired.
-                        (asserts! (not (try! (is-name-lease-expired namespace name))) (ok true))
-                        (let 
-                            (
-                                ;; Fetch properties of the currently owned name.
-                                (name-props (unwrap-panic (map-get? name-properties { name: name, namespace: namespace })))
-                            )
-                            ;; Check if the currently owned name has been revoked.
-                            (asserts! (is-some (get revoked-at name-props)) (ok false))
-                            ;; If the name has not been revoked, the principal can receive a new name.
-                            (ok true)
-                        )
-                    )
                 )
             )
         )
