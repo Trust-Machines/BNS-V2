@@ -133,6 +133,7 @@
 (define-constant ERR-OVERFLOW (err u1511))
 (define-constant ERR-NO-OWNER-FOR-NFT (err u152))
 (define-constant ERR-NO-BNS-NAMES-OWNED (err u153))
+(define-constant ERR-NO-NAMESPACE-MANAGER (err u154))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -500,24 +501,54 @@
         (
             ;; Retrieves the name and namespace associated with the given NFT ID. If not found, returns an error.
             (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NAME-NOT-FOUND))
-
             ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
             (namespace (get namespace name-and-namespace))
-
             ;; Fetches existing properties of the namespace to confirm its existence and retrieve management details.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-
             ;; Retrieves the current manager of the namespace from the namespace properties.
-            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
-
+            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
             ;; Retrieves the current owner of the NFT, necessary to authorize the burn operation.
             (current-name-owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP))
+            ;; Gets the currently owned NFTs by the owner
+            (all-nfts-owned-by-owner (default-to (list) (map-get? bns-ids-by-principal current-name-owner)))
+            ;; Get if it is listed
+            (is-listed (map-get? market id))
+            ;; Checks if the owner has a primary name
+            (owner-primary-name (map-get? primary-name current-name-owner))
         ) 
         ;; Ensures that the function caller is the current namespace manager, providing the authority to perform the burn.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
-
+        ;; Check if the nft is listed 
+        (match is-listed
+            listed
+            ;; If it is listed then unlist
+            (unwrap! (unlist-in-ustx id) ERR-UNWRAP)
+            {a: "not-listed", id: id}
+        )
+        ;; Set the helper variable to remove the id being burned from the list of currently owned nfts by owner
+        (var-set uint-helper-to-remove id)
+        ;; Updates currently owned names of the owner by removing the id being burned
+        (map-set bns-ids-by-principal current-name-owner (filter is-not-removeable all-nfts-owned-by-owner))
+        ;; Deletes the maps
+        (map-delete name-properties name-and-namespace)
+        (map-delete index-to-name id)
+        (map-delete name-to-index name-and-namespace)
+        ;; Checks if the id being burned is the primary name of the owner
+        ;; Updates the primary name of the owner if needed, in the case that the id being burned is the primary name
+        (if (is-eq (some id) owner-primary-name) 
+            ;; If the is is the primary name, then check if there are other names owned by the user
+            (match (element-at? (filter is-not-removeable all-nfts-owned-by-owner) u0) 
+                next-name 
+                ;; If the user does have more names then set it to the index0 name
+                (map-set primary-name current-name-owner next-name) 
+                ;; If the user doesn't have more names then delete the primary-name map associated to that user
+                (map-delete primary-name current-name-owner)
+            )
+            ;; If it is not equal then do nothing
+            false
+        )
         ;; Executes the burn operation for the specified NFT, effectively removing it from circulation.
-        (ok (nft-burn? BNS-V2 id current-name-owner))
+        (nft-burn? BNS-V2 id current-name-owner)
     )
 )
 
@@ -1356,11 +1387,16 @@
     )
 )
 
-
 ;; Defines a read-only function to fetch the unique ID of a BNS name given its name and the namespace it belongs to.
 (define-read-only (get-id-from-bns (name (buff 48)) (namespace (buff 20))) 
     ;; Attempts to retrieve the ID from the 'name-to-index' map using the provided name and namespace as the key.
     (map-get? name-to-index {name: name, namespace: namespace})
+)
+
+;; Defines a read-only function to fetch the unique ID of a BNS name given its name and the namespace it belongs to.
+(define-read-only (get-bns-from-id (id uint)) 
+    ;; Attempts to retrieve the ID from the 'name-to-index' map using the provided name and namespace as the key.
+    (map-get? index-to-name id)
 )
 
 ;; Fetcher for all BNS ids owned by a principal
