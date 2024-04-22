@@ -854,9 +854,8 @@
         (match current-namespace-manager 
             manager 
             ;; If it does
-            (begin 
-                (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
-            )
+            (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
+           
             ;; If it doesn't
             (begin 
                 ;; Asserts a positive amount of STX to be burnt
