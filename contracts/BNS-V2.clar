@@ -231,6 +231,7 @@
 (define-map namespaces (buff 20)
     { 
         namespace-manager: (optional principal),
+        manager-transferable: bool,
         namespace-import: principal,
         revealed-at: uint,
         launched-at: (optional uint),
@@ -315,7 +316,11 @@
             manager
             ;; If the namespace is managed, performs the transfer under the management's authorization.
             ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
-            (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+            (begin 
+                (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+                ;; Also check if the namespace allows manager transfers
+                (asserts! (get manager-transferable namespace-props) ERR-NOT-AUTHORIZED)
+            )
             ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
             (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
         ) 
@@ -570,18 +575,15 @@
         ;; Retains other properties such as the launched time and the lifetime of names.
         (ok 
             (map-set namespaces namespace 
-                {
-                    ;; Updates the namespace-manager field to the new manager's principal.
-                    namespace-manager: (some new-manager),
-                    namespace-import: new-manager,
-                    revealed-at: (get revealed-at namespace-props),
-                    ;; Retains the existing launch time of the namespace.
-                    launched-at: (get launched-at namespace-props),
-                    ;; Retains the existing lifetime duration setting for names within the namespace.
-                    lifetime: (get lifetime namespace-props),
-                    can-update-price-function: (get can-update-price-function namespace-props),
-                    price-function: (get price-function namespace-props)
-                }
+                (merge 
+                    namespace-props 
+                    {
+                        ;; Updates the namespace-manager field to the new manager's principal.
+                        namespace-manager: (some new-manager),
+                        namespace-import: new-manager,
+                    }
+                )
+                
             )
         )
     )
@@ -648,7 +650,7 @@
     ;; p-func-no-vowel-discount (uint): Discount applied to names without vowels.
     ;; lifetime (uint): Duration that names within this namespace are valid before needing renewal.
     ;; namespace-import (principal): The principal authorized to import names into this namespace.
-(define-public (namespace-reveal (namespace (buff 20)) (namespace-salt (buff 20)) (p-func-base uint) (p-func-coeff uint) (p-func-b1 uint) (p-func-b2 uint) (p-func-b3 uint) (p-func-b4 uint) (p-func-b5 uint) (p-func-b6 uint) (p-func-b7 uint) (p-func-b8 uint) (p-func-b9 uint) (p-func-b10 uint) (p-func-b11 uint) (p-func-b12 uint) (p-func-b13 uint) (p-func-b14 uint) (p-func-b15 uint) (p-func-b16 uint) (p-func-non-alpha-discount uint) (p-func-no-vowel-discount uint) (lifetime uint) (namespace-import principal) (namespace-manager (optional principal)))
+(define-public (namespace-reveal (namespace (buff 20)) (namespace-salt (buff 20)) (transfers bool) (p-func-base uint) (p-func-coeff uint) (p-func-b1 uint) (p-func-b2 uint) (p-func-b3 uint) (p-func-b4 uint) (p-func-b5 uint) (p-func-b6 uint) (p-func-b7 uint) (p-func-b8 uint) (p-func-b9 uint) (p-func-b10 uint) (p-func-b11 uint) (p-func-b12 uint) (p-func-b13 uint) (p-func-b14 uint) (p-func-b15 uint) (p-func-b16 uint) (p-func-non-alpha-discount uint) (p-func-no-vowel-discount uint) (lifetime uint) (namespace-import principal) (namespace-manager (optional principal)))
     ;; The salt and namespace must hash to a preorder entry in the `namespace-preorders` table.
     ;; The sender must match the principal in the preorder entry (implied)
     (let 
@@ -689,6 +691,7 @@
                 ;; New
                 ;; Added manager here
                 namespace-manager: namespace-manager,
+                manager-transferable: transfers,
                 namespace-import: namespace-import,
                 revealed-at: block-height,
                 launched-at: none,
