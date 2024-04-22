@@ -99,40 +99,40 @@
 (define-constant ERR-NAMESPACE-NOT-FOUND (err u117))
 (define-constant ERR-NAMESPACE-OPERATION-UNAUTHORIZED (err u118))
 (define-constant ERR-NAMESPACE-ALREADY-LAUNCHED (err u119))
-(define-constant ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED (err u200))
-(define-constant ERR-NAMESPACE-NOT-LAUNCHED (err u201))
-(define-constant ERR-NAME-OPERATION-UNAUTHORIZED (err u202))
-(define-constant ERR-NAME-NOT-AVAILABLE (err u203))
-(define-constant ERR-NAME-NOT-FOUND (err u204))
-(define-constant ERR-NAMESPACE-PREORDER-EXPIRED (err u205))
-(define-constant ERR-NAMESPACE-UNAVAILABLE (err u206))
-(define-constant ERR-NAMESPACE-PRICE-FUNCTION-INVALID (err u207))
-(define-constant ERR-NAMESPACE-BLANK (err u208))
-(define-constant ERR-NAME-PREORDER-NOT-FOUND (err u209))
-(define-constant ERR-NAME-PREORDER-EXPIRED (err u210))
-(define-constant ERR-NAME-PREORDER-FUNDS-INSUFFICIENT (err u211))
-(define-constant ERR-NAME-UNAVAILABLE (err u212))
-(define-constant ERR-NAME-STX-BURNT-INSUFFICIENT (err u213))
-(define-constant ERR-NAME-EXPIRED (err u214))
-(define-constant ERR-NAME-GRACE-PERIOD (err u215))
-(define-constant ERR-NAME-BLANK (err u216))
-(define-constant ERR-NAME-ALREADY-CLAIMED (err u217))
-(define-constant ERR-NAME-CLAIMABILITY-EXPIRED (err u218))
-(define-constant ERR-NAME-REVOKED (err u219))
-(define-constant ERR-NAME-TRANSFER-FAILED (err u220))
-(define-constant ERR-NAME-PREORDER-ALREADY-EXISTS (err u221))
-(define-constant ERR-NAME-HASH-MALFORMED (err u222))
-(define-constant ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH (err u223))
-(define-constant ERR-NAME-NOT-RESOLVABLE (err u224))
-(define-constant ERR-NAME-COULD-NOT-BE-MINTED (err u225))
-(define-constant ERR-NAME-COULD-NOT-BE-TRANSFERED (err u226))
-(define-constant ERR-NAME-CHARSET-INVALID (err u227))
-(define-constant ERR-PRINCIPAL-ALREADY-ASSOCIATED (err u228))
-(define-constant ERR-PANIC (err u229))
-(define-constant ERR-NAMESPACE-HAS-MANAGER (err u230))
-(define-constant ERR-OVERFLOW (err u231))
-(define-constant ERR-NO-OWNER-FOR-NFT (err u232))
-(define-constant ERR-NO-BNS-NAMES-OWNED (err u233))
+(define-constant ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED (err u120))
+(define-constant ERR-NAMESPACE-NOT-LAUNCHED (err u121))
+(define-constant ERR-NAME-OPERATION-UNAUTHORIZED (err u122))
+(define-constant ERR-NAME-NOT-AVAILABLE (err u123))
+(define-constant ERR-NAME-NOT-FOUND (err u124))
+(define-constant ERR-NAMESPACE-PREORDER-EXPIRED (err u125))
+(define-constant ERR-NAMESPACE-UNAVAILABLE (err u126))
+(define-constant ERR-NAMESPACE-PRICE-FUNCTION-INVALID (err u127))
+(define-constant ERR-NAMESPACE-BLANK (err u128))
+(define-constant ERR-NAME-PREORDER-NOT-FOUND (err u129))
+(define-constant ERR-NAME-PREORDER-EXPIRED (err u130))
+(define-constant ERR-NAME-PREORDER-FUNDS-INSUFFICIENT (err u131))
+(define-constant ERR-NAME-UNAVAILABLE (err u132))
+(define-constant ERR-NAME-STX-BURNT-INSUFFICIENT (err u133))
+(define-constant ERR-NAME-EXPIRED (err u134))
+(define-constant ERR-NAME-GRACE-PERIOD (err u135))
+(define-constant ERR-NAME-BLANK (err u136))
+(define-constant ERR-NAME-ALREADY-CLAIMED (err u137))
+(define-constant ERR-NAME-CLAIMABILITY-EXPIRED (err u138))
+(define-constant ERR-NAME-REVOKED (err u139))
+(define-constant ERR-NAME-TRANSFER-FAILED (err u140))
+(define-constant ERR-NAME-PREORDER-ALREADY-EXISTS (err u141))
+(define-constant ERR-NAME-HASH-MALFORMED (err u142))
+(define-constant ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH (err u143))
+(define-constant ERR-NAME-NOT-RESOLVABLE (err u144))
+(define-constant ERR-NAME-COULD-NOT-BE-MINTED (err u145))
+(define-constant ERR-NAME-COULD-NOT-BE-TRANSFERED (err u146))
+(define-constant ERR-NAME-CHARSET-INVALID (err u147))
+(define-constant ERR-PRINCIPAL-ALREADY-ASSOCIATED (err u148))
+(define-constant ERR-PANIC (err u149))
+(define-constant ERR-NAMESPACE-HAS-MANAGER (err u150))
+(define-constant ERR-OVERFLOW (err u1511))
+(define-constant ERR-NO-OWNER-FOR-NFT (err u152))
+(define-constant ERR-NO-BNS-NAMES-OWNED (err u153))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -460,7 +460,7 @@
         ;; Calls the commission contract to handle commission payment
         (try! (contract-call? comm-trait pay id price))
         ;; Transfers the NFT to the buyer
-        (try! (transfer-in-ustx id owner tx-sender))
+        (try! (purchase-transfer id owner tx-sender))
         ;; Removes the listing from the market map
         (map-delete market id)
         ;; Prints purchase details
@@ -1046,7 +1046,7 @@
     ;; namespace (buff 20): The namespace of the name whose zone file hash is being updated.
     ;; name (buff 48): The name whose zone file hash is being updated.
     ;; zonefile-hash (buff 20): The new zone file hash to be associated with the name.
-(define-public (name-update (namespace (buff 20)) (name (buff 48))  (zonefile-hash (buff 20)))
+(define-public (update-zonefile-hash (namespace (buff 20)) (name (buff 48))  (zonefile-hash (buff 20)))
     (let 
         (
             ;; Check preconditions to ensure the operation is authorized, including that the caller is the current owner, and the name is in a valid state for updates (not expired, not in grace period, and not revoked).
@@ -1589,7 +1589,7 @@
 
 ;; @desc SIP-09 compliant function to transfer a token from one owner to another
 ;; @param id: the id of the nft being transferred, owner: the principal of the owner of the nft being transferred, recipient: the principal the nft is being transferred to
-(define-private (transfer-in-ustx (id uint) (owner principal) (recipient principal))
+(define-private (purchase-transfer (id uint) (owner principal) (recipient principal))
     (let 
         (
             ;; Attempts to retrieve the name and namespace associated with the given NFT ID. If not found, it returns an error.

@@ -273,12 +273,12 @@ describe("Reveal a namespace", () => {
         Cl.uint(5000),
         // Import address
         Cl.principal(address1),
-        // Manager address
-        // Cl.some(Cl.principal(address1)),
+        // No Manager Address
         Cl.none(),
       ],
       address1
     );
+    // Should return ok true
     expect(revealNamespace.result).toBeOk(Cl.bool(true));
   });
   it("This should successfully reveal a Namespace with a manager", () => {
