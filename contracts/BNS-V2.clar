@@ -529,8 +529,6 @@
             (unwrap! (unlist-in-ustx id) ERR-UNWRAP)
             {a: "not-listed", id: id}
         )
-        ;; Ensures the NFT is not currently listed in the market.
-        (asserts! (is-none (map-get? market id)) ERR-LISTED)
         ;; Set the helper variable to remove the id being burned from the list of currently owned nfts by owner
         (var-set uint-helper-to-remove id)
         ;; Updates currently owned names of the owner by removing the id being burned
