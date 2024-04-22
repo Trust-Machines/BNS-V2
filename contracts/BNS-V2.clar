@@ -460,7 +460,7 @@
         ;; Calls the commission contract to handle commission payment
         (try! (contract-call? comm-trait pay id price))
         ;; Transfers the NFT to the buyer
-        (try! (transfer-in-ustx id owner tx-sender))
+        (try! (purchase-transfer id owner tx-sender))
         ;; Removes the listing from the market map
         (map-delete market id)
         ;; Prints purchase details
@@ -1591,7 +1591,7 @@
 
 ;; @desc SIP-09 compliant function to transfer a token from one owner to another
 ;; @param id: the id of the nft being transferred, owner: the principal of the owner of the nft being transferred, recipient: the principal the nft is being transferred to
-(define-private (transfer-in-ustx (id uint) (owner principal) (recipient principal))
+(define-private (purchase-transfer (id uint) (owner principal) (recipient principal))
     (let 
         (
             ;; Attempts to retrieve the name and namespace associated with the given NFT ID. If not found, it returns an error.
