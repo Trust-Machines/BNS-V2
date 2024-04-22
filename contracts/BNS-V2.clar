@@ -133,6 +133,7 @@
 (define-constant ERR-OVERFLOW (err u1511))
 (define-constant ERR-NO-OWNER-FOR-NFT (err u152))
 (define-constant ERR-NO-BNS-NAMES-OWNED (err u153))
+(define-constant ERR-NO-NAMESPACE-MANAGER (err u154))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -510,7 +511,7 @@
             ;; Fetches existing properties of the namespace to confirm its existence and retrieve management details.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
             ;; Retrieves the current manager of the namespace from the namespace properties.
-            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
+            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
             ;; Retrieves the current owner of the NFT, necessary to authorize the burn operation.
             (current-name-owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP))
             ;; Gets the currently owned NFTs by the owner
