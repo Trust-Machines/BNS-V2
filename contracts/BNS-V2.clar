@@ -1069,33 +1069,89 @@
     )
 )
 
-;; NAME-UPDATE
-;; A NAME-UPDATE transaction changes the name's zone file hash. You would send one of these transactions 
+;; update-zonefile-hash
+;; A update-zonefile-hash transaction changes the name's zone file hash. You would send one of these transactions 
 ;; if you wanted to change the name's zone file contents. 
 ;; For example, you would do this if you want to deploy your own Gaia hub and want other people to read from it.
 
-;; Public function `name-update` for changing the zone file hash associated with a name.
+;; Public function `update-zonefile-hash` for changing the zone file hash associated with a name.
 ;; This operation is typically used to update the zone file contents of a name, such as when deploying a new Gaia hub.
 ;; @params:
     ;; namespace (buff 20): The namespace of the name whose zone file hash is being updated.
     ;; name (buff 48): The name whose zone file hash is being updated.
     ;; zonefile-hash (buff 20): The new zone file hash to be associated with the name.
-(define-public (update-zonefile-hash (namespace (buff 20)) (name (buff 48))  (zonefile-hash (buff 20)))
+(define-public (update-zonefile-hash (namespace (buff 20)) (name (buff 48)) (zonefile-hash (buff 20)))
     (let 
         (
-            ;; Check preconditions to ensure the operation is authorized, including that the caller is the current owner, and the name is in a valid state for updates (not expired, not in grace period, and not revoked).
-            (data (try! (check-name-ops-preconditions namespace name)))
-            ;; Retrieve the properties of the namespace to ensure it exists and is valid for registration.
+            ;; Get index from name and namespace
+            (index-id (unwrap! (map-get? name-to-index {name: name, namespace: namespace}) ERR-NO-NAME))
+            ;; Get the owner
+            (owner (unwrap! (nft-get-owner? BNS-V2 index-id) ERR-UNWRAP))
+            ;; Get name props
+            (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-NO-NAME))
+            ;; Get namespace props
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; New
             ;; Retrieve namespace manager if any
             (namespace-manager (get namespace-manager namespace-props))
+            ;; Get the renewal height
+            (renewal (get renewal-height name-props))
+            ;; Get the locked value
+            (is-locked (get locked name-props))
+            ;; Get the current zonefile
+            (current-zone-file (get zonefile-hash name-props))
         )
-        ;; New
-        ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
-        (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
+        ;; Assert we are actually updating the zonefile
+        (asserts! (not (is-eq (some zonefile-hash) current-zone-file)) ERR-NAME-OPERATION-UNAUTHORIZED)
+        ;; Asserts the name has not been revoked.
+        (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
+        ;; See if the namespace has a manager
+        (match namespace-manager 
+            manager 
+            ;; If it does, then check contract caller is the manager
+            (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
+            ;; If not then check that the tx-sender is the owner
+            (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
+        )
+        ;; Assert that the name is in valid time or grace period
+        (asserts! (<= block-height (+ renewal NAME-GRACE-PERIOD-DURATION)) ERR-NAME-OPERATION-UNAUTHORIZED)
+        ;; Assert that the name is not locked
+        (asserts! (not is-locked) ERR-NAME-LOCKED)
+        ;; Update the zonefile hash
+        (map-set name-properties {name: name, namespace: namespace}
+            (merge
+                name-props
+                {zonefile-hash: (some zonefile-hash)}
+            )
+        )
         ;; Confirm successful completion of the zone file hash update.
         (ok true)
+    )
+)
+
+;; Quick function to lock a name we will revisit later 
+(define-public (lock-name (name (buff 48)) (namespace (buff 20)))
+    (let 
+        (
+            ;; Retrieve the properties of the namespace to ensure it exists and is valid for registration.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; Retrieve namespace manager if any
+            (namespace-manager (get namespace-manager namespace-props))
+            ;; retreive the name props
+            (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-NO-NAME))
+        )
+        
+        
+        ;; Return a success response indicating the name has been successfully locked.
+        (ok 
+            (map-set name-properties {name: name, namespace: namespace}
+                (merge 
+                    name-props
+                    {
+                        locked: true,
+                    }
+                )
+            )
+        )
     )
 )
 
@@ -1109,20 +1165,23 @@
 ;; @params:
     ;; namespace (buff 20): The namespace of the name to be revoked.
     ;; name (buff 48): The actual name to be revoked.
+    ;; Keeping this and only modifying it enought to be able to revoke-it, don't know if we will need this so I am doing this only to assert in the update-zonefile function
 (define-public (name-revoke (namespace (buff 20)) (name (buff 48)))
     (let 
         (
-            ;; Check preconditions for name operations such as ownership and namespace launch status.
-            (data (try! (check-name-ops-preconditions namespace name)))
             ;; Retrieve the properties of the namespace to ensure it exists and is valid for registration.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; New
             ;; Retrieve namespace manager if any
             (namespace-manager (get namespace-manager namespace-props))
+            ;; retreive the name props
+            (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-NO-NAME))
         )
-        ;; New
-        ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
-        (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
+        (map-set name-properties {name: name, namespace: namespace}
+            (merge 
+                {revoked-at: (some block-height)} 
+                name-props
+            )
+        )
         ;; Return a success response indicating the name has been successfully revoked.
         (ok true)
     )
@@ -1299,16 +1358,7 @@
             ;; Fetch properties of the name, ensuring the name exists.
             (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
         ) 
-        ;; Asserts the namespace has been launched.
-        (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
-        ;; Asserts the transaction sender is the current owner of the name.
-        (asserts! (is-eq owner tx-sender) ERR-NAME-OPERATION-UNAUTHORIZED)
-        ;; Asserts the name is not in its renewal grace period.
-        (asserts! (is-eq (try! (is-name-in-grace-period namespace name)) false) ERR-NAME-GRACE-PERIOD)
-        ;; Asserts the name lease has not expired.
-        (asserts! (is-eq (try! (is-name-lease-expired namespace name)) false) ERR-NAME-EXPIRED)
-        ;; Asserts the name has not been revoked.
-        (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
+        
         ;; Returns a tuple containing the namespace properties, name properties, and the owner of the name if all checks pass.
         (ok { namespace-props: namespace-props, name-props: name-props, owner: owner })
     )
@@ -1360,7 +1410,7 @@
             ;; Fetch properties of the specific name.
             (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
             ;; Determine the start of the lease for the name based on its namespace's launch and the name's specific properties.
-            (lease-started-at (try! (name-lease-started-at? (get launched-at namespace-props) (get revealed-at namespace-props) name-props)))
+            (lease-ends-at (get renewal-height name-props))
             ;; Retrieve the lifetime duration of names within this namespace.
             (lifetime (get lifetime namespace-props))
         )
@@ -1368,10 +1418,11 @@
         (if (is-eq lifetime u0)
             ;; Return false as names cannot be in a grace period.
             (ok false)
-            ;; Otherwise, check if the current block height falls within the grace period after the name's lease has expired.
-            (ok (and 
-                    (> block-height (+ lifetime lease-started-at)) 
-                    (<= block-height (+ (+ lifetime lease-started-at) NAME-GRACE-PERIOD-DURATION))
+            ;; Otherwise, check if the current block height is lower than the lease-ends-at or renewal height of the name
+            (ok 
+                (or 
+                    (< block-height lease-ends-at) 
+                    (<= block-height (+ lease-ends-at NAME-GRACE-PERIOD-DURATION))
                 )
             )
         )
@@ -1549,7 +1600,7 @@
                 ;; Ensure the namespace has not expired by comparing the current block height with the namespace reveal time plus TTL.
                 (asserts! (> (+ namespace-revealed-at NAMESPACE-LAUNCHABILITY-TTL) block-height) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED) 
                 ;; Return the block height at which the name was imported if the namespace is yet to launch.
-                (ok (unwrap-panic imported-at))
+                (ok (unwrap! imported-at ERR-UNWRAP))
             )
             ;; If the namespace has been launched:
             (begin
