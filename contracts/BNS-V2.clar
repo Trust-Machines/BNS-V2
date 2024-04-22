@@ -834,7 +834,7 @@
 
 ;; NEW FAST MINT
 ;; A 'fast' one-block registration function: (name-claim-fast)
-(define-public (name-claim-fast (name (buff 48)) (namespace (buff 20)) (zonefile-hash (buff 20)) (stx-to-burn uint) (send-to principal)) 
+(define-public (name-claim-fast (name (buff 48)) (namespace (buff 20)) (zonefile-hash (buff 20)) (price uint) (send-to principal)) 
     (let 
         (
             ;; Retrieves existing properties of the namespace to confirm its existence and management details.
@@ -850,22 +850,21 @@
         ) 
         ;; Checks if that name already exists for the namespace if it does, then don't mint
         (asserts! (is-none name-props) ERR-NAME-ALREADY-CLAIMED)
-        ;; Asserts a positive amount of STX to be burnt
-        (asserts! (> stx-to-burn u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Verifies if the namespace has a manager
         (match current-namespace-manager 
             manager 
             ;; If it does
             (begin 
                 (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
-                ;; Burns the STX from the manager
-                (unwrap! (stx-burn? stx-to-burn manager) ERR-INSUFFICIENT-FUNDS)
             )
             ;; If it doesn't
             (begin 
+                ;; Asserts a positive amount of STX to be burnt
+                (asserts! (> price u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
+                ;; Asserts tx-sender is the send-to
                 (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
                 ;; Burns the STX from the user
-                (unwrap! (stx-burn? stx-to-burn send-to) ERR-INSUFFICIENT-FUNDS)
+                (unwrap! (stx-burn? price send-to) ERR-INSUFFICIENT-FUNDS)
             )
         )
         ;; Updates the list of all names owned by the recipient to include the new name ID.
@@ -889,7 +888,7 @@
                 zonefile-hash: (some zonefile-hash),
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
-                price: stx-to-burn,
+                price: price,
                 owner: send-to,
             }
         )
