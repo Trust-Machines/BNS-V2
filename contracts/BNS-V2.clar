@@ -552,7 +552,7 @@
             false
         )
         ;; Executes the burn operation for the specified NFT, effectively removing it from circulation.
-        (ok (nft-burn? BNS-V2 id current-name-owner))
+        (nft-burn? BNS-V2 id current-name-owner)
     )
 )
 
