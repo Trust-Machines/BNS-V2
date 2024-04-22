@@ -1397,6 +1397,12 @@
     (map-get? name-to-index {name: name, namespace: namespace})
 )
 
+;; Defines a read-only function to fetch the unique ID of a BNS name given its name and the namespace it belongs to.
+(define-read-only (get-bns-from-id (id uint)) 
+    ;; Attempts to retrieve the ID from the 'name-to-index' map using the provided name and namespace as the key.
+    (map-get? index-to-name id)
+)
+
 ;; Fetcher for all BNS ids owned by a principal
 (define-read-only (get-all-names-owned-by-principal (owner principal))
     (map-get? bns-ids-by-principal owner)
