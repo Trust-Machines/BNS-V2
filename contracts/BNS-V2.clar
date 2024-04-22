@@ -318,7 +318,7 @@
             ;; If the namespace is managed, performs the transfer under the management's authorization.
             ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
             (begin 
-                (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+                (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
                 ;; Also check if the namespace allows manager transfers
                 (asserts! (get manager-transferable namespace-props) ERR-NOT-AUTHORIZED)
             )
