@@ -232,6 +232,7 @@
 (define-map namespaces (buff 20)
     { 
         namespace-manager: (optional principal),
+        manager-transferable: bool,
         namespace-import: principal,
         revealed-at: uint,
         launched-at: (optional uint),
@@ -308,7 +309,7 @@
             ;; If it was imported, then do nothing
             true 
             ;; If it was not imported then it was registered, so check if registered-at + 1 is lower than current blockheight
-            (asserts! (< (+ (unwrap! registered-at-value ERR-UNWRAP) u1) block-height) ERR-NAME-OPERATION-UNAUTHORIZED)
+            (asserts! (<= (+ (unwrap! registered-at-value ERR-UNWRAP) u1) block-height) ERR-NAME-OPERATION-UNAUTHORIZED)
         )
 
         ;; Checks if the namespace is managed.
@@ -316,7 +317,11 @@
             manager
             ;; If the namespace is managed, performs the transfer under the management's authorization.
             ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
-            (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+            (begin 
+                (asserts! (is-eq contract-caller (unwrap! namespace-manager ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+                ;; Also check if the namespace allows manager transfers
+                (asserts! (get manager-transferable namespace-props) ERR-NOT-AUTHORIZED)
+            )
             ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
             (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
         ) 
@@ -569,18 +574,15 @@
         ;; Retains other properties such as the launched time and the lifetime of names.
         (ok 
             (map-set namespaces namespace 
-                {
-                    ;; Updates the namespace-manager field to the new manager's principal.
-                    namespace-manager: (some new-manager),
-                    namespace-import: new-manager,
-                    revealed-at: (get revealed-at namespace-props),
-                    ;; Retains the existing launch time of the namespace.
-                    launched-at: (get launched-at namespace-props),
-                    ;; Retains the existing lifetime duration setting for names within the namespace.
-                    lifetime: (get lifetime namespace-props),
-                    can-update-price-function: (get can-update-price-function namespace-props),
-                    price-function: (get price-function namespace-props)
-                }
+                (merge 
+                    namespace-props 
+                    {
+                        ;; Updates the namespace-manager field to the new manager's principal.
+                        namespace-manager: (some new-manager),
+                        namespace-import: new-manager,
+                    }
+                )
+                
             )
         )
     )
@@ -647,7 +649,7 @@
     ;; p-func-no-vowel-discount (uint): Discount applied to names without vowels.
     ;; lifetime (uint): Duration that names within this namespace are valid before needing renewal.
     ;; namespace-import (principal): The principal authorized to import names into this namespace.
-(define-public (namespace-reveal (namespace (buff 20)) (namespace-salt (buff 20)) (p-func-base uint) (p-func-coeff uint) (p-func-b1 uint) (p-func-b2 uint) (p-func-b3 uint) (p-func-b4 uint) (p-func-b5 uint) (p-func-b6 uint) (p-func-b7 uint) (p-func-b8 uint) (p-func-b9 uint) (p-func-b10 uint) (p-func-b11 uint) (p-func-b12 uint) (p-func-b13 uint) (p-func-b14 uint) (p-func-b15 uint) (p-func-b16 uint) (p-func-non-alpha-discount uint) (p-func-no-vowel-discount uint) (lifetime uint) (namespace-import principal) (namespace-manager (optional principal)))
+(define-public (namespace-reveal (namespace (buff 20)) (namespace-salt (buff 20)) (transfers bool) (p-func-base uint) (p-func-coeff uint) (p-func-b1 uint) (p-func-b2 uint) (p-func-b3 uint) (p-func-b4 uint) (p-func-b5 uint) (p-func-b6 uint) (p-func-b7 uint) (p-func-b8 uint) (p-func-b9 uint) (p-func-b10 uint) (p-func-b11 uint) (p-func-b12 uint) (p-func-b13 uint) (p-func-b14 uint) (p-func-b15 uint) (p-func-b16 uint) (p-func-non-alpha-discount uint) (p-func-no-vowel-discount uint) (lifetime uint) (namespace-import principal) (namespace-manager (optional principal)))
     ;; The salt and namespace must hash to a preorder entry in the `namespace-preorders` table.
     ;; The sender must match the principal in the preorder entry (implied)
     (let 
@@ -688,6 +690,7 @@
                 ;; New
                 ;; Added manager here
                 namespace-manager: namespace-manager,
+                manager-transferable: transfers,
                 namespace-import: namespace-import,
                 revealed-at: block-height,
                 launched-at: none,
@@ -899,6 +902,8 @@
         )
         ;; Updates the list of all names owned by the recipient to include the new name ID.
         (map-set bns-ids-by-principal send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
+        ;; Set the index 
+        (var-set bns-index id-to-be-minted)
         ;; Conditionally sets the newly minted name as the primary name if the recipient does not already have one.
         (match (map-get? primary-name send-to) 
             receiver
@@ -1387,6 +1392,7 @@
     )
 )
 
+
 ;; Defines a read-only function to fetch the unique ID of a BNS name given its name and the namespace it belongs to.
 (define-read-only (get-id-from-bns (name (buff 48)) (namespace (buff 20))) 
     ;; Attempts to retrieve the ID from the 'name-to-index' map using the provided name and namespace as the key.
@@ -1402,6 +1408,11 @@
 ;; Fetcher for all BNS ids owned by a principal
 (define-read-only (get-all-names-owned-by-principal (owner principal))
     (map-get? bns-ids-by-principal owner)
+)
+
+;; Fetcher for primary name
+(define-read-only (get-primary-name (owner principal))
+    (map-get? primary-name owner)
 )
 
 
