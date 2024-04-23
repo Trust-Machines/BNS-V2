@@ -2,16 +2,24 @@ import { Cl } from "@stacks/transactions";
 import { describe, expect, it } from "vitest";
 import { initSimnet } from "@hirosystems/clarinet-sdk";
 import crypto from "crypto";
+
+// Initialize simnet
 const simnet = await initSimnet();
 
+// Define constants for commission trait name and address, for market functions
 const commTraitName = "gamma-bns-v2-commission-container";
 const commTraitAddress = "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM";
 
+// Get accounts from simnet
 const accounts = simnet.getAccounts();
+// Assign wallet 1 to address1
 const address1 = accounts.get("wallet_1")!;
+// Assign wallet 2 to managerAddress
 const managerAddress = accounts.get("wallet_2")!;
+// Assign wallet 3 to address2
 const address2 = accounts.get("wallet_3")!;
-// Function to create a Hash-160
+
+// Function to create a Hash-160 for a namespace
 function createHash160NameSpace(input: Uint8Array, salt: Uint8Array) {
   // Concatenate the input buffer + the salt buffer
   const saltedInput = Buffer.concat([Buffer.from(input), salt]);
@@ -25,7 +33,8 @@ function createHash160NameSpace(input: Uint8Array, salt: Uint8Array) {
   // Final 20 bytes hash
   return ripemd160Hash;
 }
-// Function to create a Hash-160
+
+// Function to create a Hash-160 for a name
 function createHash160Name(
   input: Uint8Array,
   period: string,
@@ -51,23 +60,35 @@ function createHash160Name(
   // Final 20 bytes hash
   return ripemd160Hash;
 }
+
 // Create a UTF-8 Encoder
 const encoder = new TextEncoder();
+
 // Define the salt
 const salt = "stratalabs";
+
 // Encode the salt string to a Uint8Array
 const saltBuff = encoder.encode(salt);
+
 // Hash the strings and encode to a Uint8Array
 const namespaceBuffSalt = createHash160NameSpace(
   encoder.encode("namespacetest"),
   saltBuff
 );
-// Encode the string to a Uint8Array
+
+const invalidNamespaceBuffSalt = createHash160NameSpace(
+  encoder.encode("namespace*"),
+  saltBuff
+);
+
+// Encode the strings to Uint8Arrays
 const name1Buff = encoder.encode("name1");
+const invalidNamespaceBuff = encoder.encode("namespace*");
 const name2Buff = encoder.encode("name2");
 const zonefileBuff = encoder.encode("zonefile");
 const zonefile2Buff = encoder.encode("zonefile2");
 const namespaceBuff = encoder.encode("namespacetest");
+
 // Hash 160 the Names with the namespace and salt
 const name1BuffSalt = createHash160Name(
   encoder.encode("name1"),
@@ -75,6 +96,7 @@ const name1BuffSalt = createHash160Name(
   namespaceBuff,
   saltBuff
 );
+
 const name2BuffSalt = createHash160Name(
   encoder.encode("name2"),
   ".",
@@ -84,137 +106,140 @@ const name2BuffSalt = createHash160Name(
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Block for testing preorder a namespace functionality
 describe("Preorder a namespace", () => {
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Test case to preorder a Namespace successfully
   it("should successfully preorder a Namespace", () => {
-    // Call the namespace-preorder function from the BNS-V2 contract
     const preorderNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-preorder",
-      // Pass the hashed salt + namespace in Uint8Array Format
-      // Pass the amount of STX to Burn
+      // Call namespace-preorder function with hashed salt and namespace, and amount of STX to burn
       [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Use Address 1
       address1
     );
     // This should give ok u146 since the blockheight is 2 + 144 TTL
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
   });
-
-  it("should fail to preorder the same Namespace from the same sender", () => {
-    // Call the namespace-preorder function from the BNS-V2 contract
-    const preorderNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Pass the hashed salt + namespace in Uint8Array Format
-      // Pass the amount of STX to Burn
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      address1
-    );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
-    // Call the namespace-preorder function from the BNS-V2 contract
-    const preorderNamespace2 = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Pass the hashed salt + namespace in Uint8Array Format
-      // Pass the amount of STX to Burn
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      address1
-    );
-    // This should give err
-    expect(preorderNamespace2.result).toBeErr(Cl.uint(109));
-  });
-
-  it("should allow to preorder the same Namespace from a different sender", () => {
-    // Call the namespace-preorder function from the BNS-V2 contract
-    const preorderNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Pass the hashed salt + namespace in Uint8Array Format
-      // Pass the amount of STX to Burn
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      address1
-    );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
-    // Call the namespace-preorder function from the BNS-V2 contract with a different address
-    const preorderNamespace2 = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Pass the same hashed salt + namespace in Uint8Array Format
-      // Pass the amount of STX to Burn
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      address2
-    );
-    // This should give ok u147 since the blockheight is 3 + 144 TTL
-    expect(preorderNamespace2.result).toBeOk(Cl.uint(147));
-  });
-
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Test case to preorder the same Namespace from the same sender if TTL has passed
   it("should allow to preorder the same Namespace from the same sender if TTL has passed", () => {
-    // Call the namespace-preorder function from the BNS-V2 contract
     const preorderNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-preorder",
-      // Pass the hashed salt + namespace in Uint8Array Format
-      // Pass the amount of STX to Burn
+      // Call namespace-preorder function with hashed salt and namespace, and amount of STX to burn
       [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Use Address 1
       address1
     );
     // This should give ok u146 since the blockheight is 2 + 144 TTL
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
     // mine 144 empty blocks so that TTL is passed
     simnet.mineEmptyBlocks(144);
-    // Call the namespace-preorder function from the BNS-V2 contract
+
     const preorderNamespace2 = simnet.callPublicFn(
       "BNS-V2",
       "namespace-preorder",
-      // Pass the hashed salt + namespace in Uint8Array Format
-      // Pass the amount of STX to Burn
+      // Call namespace-preorder function with hashed salt and namespace, and amount of STX to burn
       [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Use Address 1
       address1
     );
     // This should give ok u291 since the blockheight is 147 + 144 TTL
     expect(preorderNamespace2.result).toBeOk(Cl.uint(291));
   });
-
-  it("should fail if the param of the hash is malformed", () => {
-    // Call the namespace-preorder function from the BNS-V2 contract
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Test case to fail preorder the same Namespace from the same sender
+  it("should fail to preorder the same Namespace from the same sender", () => {
     const preorderNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-preorder",
-      // Pass only the namespace without hash
-      // Pass the amount of STX to Burn
-      [Cl.buffer(namespaceBuff), Cl.uint(1000000000)],
+      // Call namespace-preorder function with hashed salt and namespace, and amount of STX to burn
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Use Address 1
       address1
     );
-    // This should give err
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    const preorderNamespace2 = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Call namespace-preorder function with hashed salt and namespace, and amount of STX to burn
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Use Address 1 again
+      address1
+    );
+    // This should give err u109
+    expect(preorderNamespace2.result).toBeErr(Cl.uint(109));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Test case to allow to preorder the same Namespace from a different sender
+  it("should allow to preorder the same Namespace from a different sender", () => {
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Call namespace-preorder function with hashed salt and namespace, and amount of STX to burn
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Use Address 1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    const preorderNamespace2 = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Call namespace-preorder function with hashed salt and namespace, and amount of STX to burn
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Use Address 2 this time
+      address2
+    );
+    // This should give ok u147 since the blockheight is 3 + 144 TTL
+    expect(preorderNamespace2.result).toBeOk(Cl.uint(147));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Test case to fail if the param of the hash is malformed
+  it("should fail if the param of the hash is malformed", () => {
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Call namespace-preorder function with only namespace (without hash) and amount of STX to burn
+      [Cl.buffer(namespaceBuff), Cl.uint(1000000000)],
+      // Use Address 1
+      address1
+    );
+    // This should give err u110
     expect(preorderNamespace.result).toBeErr(Cl.uint(110));
   });
-
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Test case to fail if the stx to burn is 0
   it("should fail if the stx to burn is 0", () => {
-    // Call the namespace-preorder function from the BNS-V2 contract
     const preorderNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-preorder",
-      // Pass the hashed salt + namespace in Uint8Array Format
-      // Pass the amount of STX to Burn 0
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(0)],
+      // Call namespace-preorder function with hashed salt and namespace, and 0 STX to burn
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Use Address 1
       address1
     );
-    // This should give err
+    // This should give err u111
     expect(preorderNamespace.result).toBeErr(Cl.uint(111));
   });
-
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Test case to fail if the tx-sender has insufficient funds
   it("should fail if the tx-sender has insufficient funds", () => {
     // Call the namespace-preorder function from the BNS-V2 contract
     const preorderNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-preorder",
-      // Pass the hashed salt + namespace in Uint8Array Format
-      // Pass the amount of STX to Burn extremely high, so the account doesn't have enough
+      // Call namespace-preorder function with hashed salt and namespace, and extremely high amount of STX to burn
       [Cl.buffer(namespaceBuffSalt), Cl.uint(9007199254740991)],
+      // Use Address 1
       address1
     );
-    // This should give err
+    // This should give err u112
     expect(preorderNamespace.result).toBeErr(Cl.uint(112));
   });
 });
@@ -222,8 +247,8 @@ describe("Preorder a namespace", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("Reveal a namespace", () => {
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully reveal a Namespace without a manager", () => {
-    // Call the namespace-preorder function from the BNS-V2 contract
     const preorderNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-preorder",
@@ -283,7 +308,363 @@ describe("Reveal a namespace", () => {
     // Should return ok true
     expect(revealNamespace.result).toBeOk(Cl.bool(true));
   });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully reveal a Namespace with a manager", () => {
+    // Call the namespace-preorder function from the BNS-V2 contract
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Pass the hashed salt + namespace in Uint8Array Format
+      // Pass the amount of STX to Burn
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Call the namespace-reveal function from the BNS-V2 contract
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass the namespace in Uint8Array Format
+      // Pass the salt in Uint8Array Format
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(saltBuff),
+        Cl.bool(true),
+        // Pass the pricing function
+        // Base
+        Cl.uint(1),
+        // Coeff
+        Cl.uint(1),
+        // p-funcs
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // Pass the non alpha discount
+        Cl.uint(1),
+        // Pass the non vowel discount
+        Cl.uint(1),
+        // Lifetime
+        Cl.uint(5000),
+        // Import address
+        Cl.principal(address1),
+        // Manager address
+        Cl.some(Cl.principal(managerAddress)),
+        // Cl.none(),
+      ],
+      address1
+    );
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail if no namespace preorder", () => {
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass the namespace in Uint8Array Format
+      // Pass the salt in Uint8Array Format
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(saltBuff),
+        Cl.bool(true),
+        // Pass the pricing function
+        // Base
+        Cl.uint(1),
+        // Coeff
+        Cl.uint(1),
+        // p-funcs
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // Pass the non alpha discount
+        Cl.uint(1),
+        // Pass the non vowel discount
+        Cl.uint(1),
+        // Lifetime
+        Cl.uint(5000),
+        // Import address
+        Cl.principal(address1),
+        // Manager address
+        Cl.some(Cl.principal(managerAddress)),
+        // Cl.none(),
+      ],
+      address1
+    );
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail if the namespace contains invalid characters", () => {
+    // Call the namespace-preorder function from the BNS-V2 contract
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Pass the hashed salt + namespace in Uint8Array Format
+      // Pass the amount of STX to Burn
+      [Cl.buffer(invalidNamespaceBuffSalt), Cl.uint(1000000000)],
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Call the namespace-reveal function from the BNS-V2 contract
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass the namespace in Uint8Array Format
+      // Pass the salt in Uint8Array Format
+      [
+        Cl.buffer(invalidNamespaceBuff),
+        Cl.buffer(saltBuff),
+        Cl.bool(true),
+        // Pass the pricing function
+        // Base
+        Cl.uint(1),
+        // Coeff
+        Cl.uint(1),
+        // p-funcs
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // Pass the non alpha discount
+        Cl.uint(1),
+        // Pass the non vowel discount
+        Cl.uint(1),
+        // Lifetime
+        Cl.uint(5000),
+        // Import address
+        Cl.principal(address1),
+        // Manager address
+        Cl.some(Cl.principal(managerAddress)),
+        // Cl.none(),
+      ],
+      address1
+    );
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail if the namespace already exists", () => {
+    // Call the namespace-preorder function from the BNS-V2 contract
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Pass the hashed salt + namespace in Uint8Array Format
+      // Pass the amount of STX to Burn
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Call the namespace-reveal function from the BNS-V2 contract
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass the namespace in Uint8Array Format
+      // Pass the salt in Uint8Array Format
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(saltBuff),
+        Cl.bool(true),
+        // Pass the pricing function
+        // Base
+        Cl.uint(1),
+        // Coeff
+        Cl.uint(1),
+        // p-funcs
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // Pass the non alpha discount
+        Cl.uint(1),
+        // Pass the non vowel discount
+        Cl.uint(1),
+        // Lifetime
+        Cl.uint(5000),
+        // Import address
+        Cl.principal(address1),
+        // Manager address
+        Cl.some(Cl.principal(managerAddress)),
+        // Cl.none(),
+      ],
+      address1
+    );
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+    const preorderNamespace2 = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Pass the hashed salt + namespace in Uint8Array Format
+      // Pass the amount of STX to Burn
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      address2
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace2.result).toBeOk(Cl.uint(146));
+
+    // Call the namespace-reveal function from the BNS-V2 contract
+    const revealNamespace2 = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass the namespace in Uint8Array Format
+      // Pass the salt in Uint8Array Format
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(saltBuff),
+        Cl.bool(true),
+        // Pass the pricing function
+        // Base
+        Cl.uint(1),
+        // Coeff
+        Cl.uint(1),
+        // p-funcs
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // Pass the non alpha discount
+        Cl.uint(1),
+        // Pass the non vowel discount
+        Cl.uint(1),
+        // Lifetime
+        Cl.uint(5000),
+        // Import address
+        Cl.principal(address2),
+        // Manager address
+        Cl.some(Cl.principal(managerAddress)),
+        // Cl.none(),
+      ],
+      address2
+    );
+    expect(revealNamespace2.result).toBeOk(Cl.bool(true));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail if burned stx is not enough for the price", () => {
+    // Call the namespace-preorder function from the BNS-V2 contract
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Pass the hashed salt + namespace in Uint8Array Format
+      // Pass the amount of STX to Burn
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(10)],
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Call the namespace-reveal function from the BNS-V2 contract
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass the namespace in Uint8Array Format
+      // Pass the salt in Uint8Array Format
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(saltBuff),
+        Cl.bool(true),
+        // Pass the pricing function
+        // Base
+        Cl.uint(1),
+        // Coeff
+        Cl.uint(1),
+        // p-funcs
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // Pass the non alpha discount
+        Cl.uint(1),
+        // Pass the non vowel discount
+        Cl.uint(1),
+        // Lifetime
+        Cl.uint(5000),
+        // Import address
+        Cl.principal(address1),
+        // Manager address
+        Cl.some(Cl.principal(managerAddress)),
+        // Cl.none(),
+      ],
+      address1
+    );
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail if TTL has passed to reveal a namespace", () => {
     // Call the namespace-preorder function from the BNS-V2 contract
     const preorderNamespace = simnet.callPublicFn(
       "BNS-V2",
