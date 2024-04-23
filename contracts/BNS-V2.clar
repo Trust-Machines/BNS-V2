@@ -1114,8 +1114,6 @@
         )
         ;; Assert that the name is in valid time or grace period
         (asserts! (<= block-height (+ renewal NAME-GRACE-PERIOD-DURATION)) ERR-NAME-OPERATION-UNAUTHORIZED)
-        ;; Assert that the name is not locked
-        (asserts! (not is-locked) ERR-NAME-LOCKED)
         ;; Update the zonefile hash
         (map-set name-properties {name: name, namespace: namespace}
             (merge
@@ -1125,33 +1123,6 @@
         )
         ;; Confirm successful completion of the zone file hash update.
         (ok true)
-    )
-)
-
-;; Quick function to lock a name we will revisit later 
-(define-public (lock-name (name (buff 48)) (namespace (buff 20)))
-    (let 
-        (
-            ;; Retrieve the properties of the namespace to ensure it exists and is valid for registration.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Retrieve namespace manager if any
-            (namespace-manager (get namespace-manager namespace-props))
-            ;; retreive the name props
-            (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-NO-NAME))
-        )
-        
-        
-        ;; Return a success response indicating the name has been successfully locked.
-        (ok 
-            (map-set name-properties {name: name, namespace: namespace}
-                (merge 
-                    name-props
-                    {
-                        locked: true,
-                    }
-                )
-            )
-        )
     )
 )
 
