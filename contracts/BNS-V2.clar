@@ -334,18 +334,7 @@
         ;; Updates currently owned names of the recipient by adding the id being transferred
         (map-set bns-ids-by-principal recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
         ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
-        (if (is-eq (some id) owner-primary-name) 
-            ;; If the is is the primary name, then check if there are other names owned by the user
-            (match (element-at? (filter is-not-removeable all-nfts-owned-by-owner) u0) 
-                next-name 
-                ;; If the user does have more names then set it to the index0 name
-                (map-set primary-name owner next-name) 
-                ;; If the user doesn't have more names then delete the primary-name map associated to that user
-                (map-delete primary-name owner)
-            )
-            ;; If it is not equal then do nothing
-            false
-        )
+        (shift-primary-name id owner)
         ;; Updates the primary name of the receiver if needed, if the receiver doesn't have a name assign it as primary
         (match recipient-primary-name
             name-match
@@ -540,18 +529,7 @@
         (map-delete name-to-index name-and-namespace)
         ;; Checks if the id being burned is the primary name of the owner
         ;; Updates the primary name of the owner if needed, in the case that the id being burned is the primary name
-        (if (is-eq (some id) owner-primary-name) 
-            ;; If the is is the primary name, then check if there are other names owned by the user
-            (match (element-at? (filter is-not-removeable all-nfts-owned-by-owner) u0) 
-                next-name 
-                ;; If the user does have more names then set it to the index0 name
-                (map-set primary-name current-name-owner next-name) 
-                ;; If the user doesn't have more names then delete the primary-name map associated to that user
-                (map-delete primary-name current-name-owner)
-            )
-            ;; If it is not equal then do nothing
-            false
-        )
+        (shift-primary-name id current-name-owner)
         ;; Executes the burn operation for the specified NFT, effectively removing it from circulation.
         (nft-burn? BNS-V2 id current-name-owner)
     )
@@ -1693,18 +1671,7 @@
         ;; Updates currently owned names of the recipient by adding the id being transferred
         (map-set bns-ids-by-principal recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
         ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
-        (if (is-eq (some id) owner-primary-name) 
-            ;; If the is is the primary name, then check if there are other names owned by the user
-            (match (element-at? (filter is-not-removeable all-nfts-owned-by-owner) u0) 
-                next-name 
-                ;; If the user does have more names then set it to the index0 name
-                (map-set primary-name owner next-name) 
-                ;; If the user doesn't have more names then delete the primary-name map associated to that user
-                (map-delete primary-name owner)
-            )
-            ;; If it is not equal then do nothing
-            false
-        )
+        (shift-primary-name id owner)
         ;; Updates the primary name of the receiver if needed, if the receiver doesn't have a name assign it as primary
         (match recipient-primary-name
             name-match
@@ -1717,5 +1684,28 @@
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
         ;; Executes the NFT transfer from owner to recipient if all conditions are met.
         (nft-transfer? BNS-V2 id owner recipient)
+    )
+)
+
+(define-private (shift-primary-name (nft uint) (owner principal)) 
+    (let 
+        (
+            ;; Checks if the owner has a primary name
+            (owner-primary-name (map-get? primary-name owner))
+            ;; Gets the currently owned NFTs by the owner
+            (all-nfts-owned-by-owner (default-to (list) (map-get? bns-ids-by-principal owner)))
+        ) 
+        (if (is-eq (some nft) owner-primary-name) 
+        ;; If the id is the primary name, then check if there are other names owned by the user
+        (match (element-at? (filter is-not-removeable all-nfts-owned-by-owner) u0) 
+            next-name 
+            ;; If the user does have more names then set it to the index0 name
+            (map-set primary-name owner next-name) 
+            ;; If the user doesn't have more names then delete the primary-name map associated to that user
+            (map-delete primary-name owner)
+        )
+        ;; If it is not equal then do nothing
+        false
+        )
     )
 )
