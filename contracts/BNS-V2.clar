@@ -648,11 +648,13 @@
             (preorder (unwrap! (map-get? namespace-preorders { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }) ERR-NAMESPACE-PREORDER-NOT-FOUND))
             ;; Calculate the namespace's registration price for validation. Using the price tiers in the NAMESPACE-PRICE-TIERS
             (namespace-price (try! (get-namespace-price namespace)))
+            ;; Get the namespace props to see if it already exists
+            (namespace-props (map-get? namespaces namespace))
         )
         ;; Ensure the namespace consists of valid characters only.
         (asserts! (not (has-invalid-chars namespace)) ERR-NAMESPACE-CHARSET-INVALID)
         ;; Check that the namespace is available for reveal (not already existing or expired).
-        (asserts! (is-namespace-available namespace) ERR-NAMESPACE-ALREADY-EXISTS)
+        (asserts! (is-none namespace-props) ERR-NAMESPACE-ALREADY-EXISTS)
         ;; Verify the burned amount during preorder meets or exceeds the namespace's registration price.
         (asserts! (>= (get stx-burned preorder) namespace-price) ERR-NAMESPACE-STX-BURNT-INSUFFICIENT)
         ;; Confirm the reveal action is performed within the allowed timeframe from the preorder.
@@ -1102,6 +1104,8 @@
             (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
             ;; Retrieves the preorder information using the hashed-salted FQN to verify the preorder exists and is associated with the current namespace manager.
             (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: current-namespace-manager }) ERR-NAME-PREORDER-NOT-FOUND))
+            ;; Get the stx-burned to validate no stx-amount was burned
+            (stx-burned-amount (get stx-burned preorder))
             ;; Calculates the ID for the new name to be minted, incrementing the last used ID in the BNS system.
             (id-to-be-minted (+ (var-get bns-index) u1))
             ;; Retrieves a list of all names currently owned by the send-to address, defaults to an empty list if none exist.
@@ -1113,6 +1117,8 @@
         )
         ;; Verifies that the caller of the contract is the namespace manager.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
+        ;; Asserts that the stx-burned in the preorder is 0 to validate it was made from the mng-name-preorder
+        (asserts! (is-eq u0 stx-burned-amount) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Ensures the name is not already registered by checking if it lacks an existing index.
         (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
         ;; Validates that the preorder was made after the namespace was officially launched.
