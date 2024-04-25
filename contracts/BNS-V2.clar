@@ -60,6 +60,9 @@
 ;; The grace period duration for name renewals post-expiration.
 (define-constant NAME-GRACE-PERIOD-DURATION u5000) 
 
+(define-constant HASH160LEN u20)
+
+
 ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;
 ;; Price tables ;;
@@ -202,7 +205,7 @@
         zonefile-hash: (optional (buff 20)),
         locked: bool, 
         renewal-height: uint,
-        price: uint,
+        stx-burn: uint,
         owner: principal,
     }
 )
@@ -597,7 +600,7 @@
             ERR-NAMESPACE-PREORDER-ALREADY-EXISTS
         )
         ;; Validate that the hashed-salted-namespace is exactly 20 bytes long to conform to expected hash standards.
-        (asserts! (is-eq (len hashed-salted-namespace) u20) ERR-NAMESPACE-HASH-MALFORMED)
+        (asserts! (is-eq (len hashed-salted-namespace) HASH160LEN) ERR-NAMESPACE-HASH-MALFORMED)
         ;; Confirm that the STX amount to be burned is positive
         (asserts! (> stx-to-burn u0) ERR-NAMESPACE-STX-BURNT-INSUFFICIENT)
         ;; Execute the token burn operation, deducting the specified STX amount from the buyer's balance.
@@ -731,7 +734,7 @@
     ;; name (buff 48): The name being imported into the namespace.
     ;; beneficiary (principal): The principal who will own the imported name.
     ;; zonefile-hash (buff 20): The hash of the zone file associated with the imported name.
-(define-public (name-import (namespace (buff 20)) (name (buff 48)) (beneficiary principal) (zonefile-hash (buff 20)) (price uint))
+(define-public (name-import (namespace (buff 20)) (name (buff 48)) (beneficiary principal) (zonefile-hash (buff 20)) (stx-burn uint))
     (let 
         (
             ;; Fetch properties of the specified namespace to ensure it exists and to check its current state.
@@ -770,7 +773,7 @@
                 zonefile-hash: (some zonefile-hash),
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
-                price: price,
+                stx-burn: stx-burn,
                 owner: beneficiary,
             }
         )
@@ -848,7 +851,7 @@
 
 ;; NEW FAST MINT
 ;; A 'fast' one-block registration function: (name-claim-fast)
-(define-public (name-claim-fast (name (buff 48)) (namespace (buff 20)) (zonefile-hash (buff 20)) (price uint) (send-to principal)) 
+(define-public (name-claim-fast (name (buff 48)) (namespace (buff 20)) (zonefile-hash (buff 20)) (stx-burn uint) (send-to principal)) 
     (let 
         (
             ;; Retrieves existing properties of the namespace to confirm its existence and management details.
@@ -873,11 +876,13 @@
             ;; If it doesn't
             (begin 
                 ;; Asserts a positive amount of STX to be burnt
-                (asserts! (> price u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
+                (asserts! (> stx-burn u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
                 ;; Asserts tx-sender is the send-to
                 (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
                 ;; Burns the STX from the user
-                (unwrap! (stx-burn? price send-to) ERR-INSUFFICIENT-FUNDS)
+                (unwrap! (stx-burn? stx-burn send-to) ERR-INSUFFICIENT-FUNDS)
+                ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
+                (asserts! (>= stx-burn (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
             )
         )
         ;; Updates the list of all names owned by the recipient to include the new name ID.
@@ -903,7 +908,7 @@
                 zonefile-hash: (some zonefile-hash),
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
-                price: price,
+                stx-burn: stx-burn,
                 owner: send-to,
             }
         )
@@ -943,7 +948,7 @@
         )
         ;; Validates that the length of the hashed and salted FQN is exactly 20 bytes.
         ;; This ensures that the input conforms to the expected hash format.
-        (asserts! (is-eq (len hashed-salted-fqn) u20) ERR-NAME-HASH-MALFORMED)
+        (asserts! (is-eq (len hashed-salted-fqn) HASH160LEN) ERR-NAME-HASH-MALFORMED)
         ;; Ensures that the amount of STX specified to burn is greater than zero.
         (asserts! (> stx-to-burn u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Burns the specified amount of STX tokens from the tx-sender
@@ -985,16 +990,7 @@
             (name-index (map-get? name-to-index {name: name, namespace: namespace}))
         )
         ;; Ensures that the namespace does not have a manager.
-        (asserts! 
-            (match current-namespace-manager 
-                manager 
-                ;; If there is a manager, return false to block registration.
-                false 
-                ;; If no manager, continue. 
-                true   
-            ) 
-            ERR-NOT-AUTHORIZED
-        )
+        (asserts! (is-none current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Ensures the name is not already registered by checking if it lacks an existing index.
         (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
         ;; Validates that the preorder was made after the namespace was officially launched.
@@ -1027,7 +1023,7 @@
                 zonefile-hash: (some zonefile-hash),
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
-                price: (get stx-burned preorder),
+                stx-burn: (get stx-burned preorder),
                 owner: tx-sender,
             }
         )
@@ -1076,8 +1072,8 @@
             ERR-NAME-PREORDER-ALREADY-EXISTS
         )
         ;; Validates that the length of the hashed and salted FQN is exactly 20 bytes.
-        ;; This ensures that the input conforms to the expected hash format.
-        (asserts! (is-eq (len hashed-salted-fqn) u20) ERR-NAME-HASH-MALFORMED)
+        ;; This ensures that the salt conforms to the expected hash160 output length.
+        (asserts! (is-eq (len hashed-salted-fqn) HASH160LEN) ERR-NAME-HASH-MALFORMED)
         ;; Records the preorder in the 'name-preorders' map.
         ;; It includes the hashed-salted FQN, the contract-caller as the buyer, the current block height, the amount of STX burned is set to u0, and marks the preorder as not yet claimed.
         (map-set name-preorders
@@ -1093,7 +1089,7 @@
 ;; Defines a public function `name-register` that finalizes the registration of a BNS name.
 ;; This function uses provided details to verify the preorder, register the name, and assign it initial properties.
 ;; This should only allow Managers from MANAGED namespaces to register names
-(define-public (mng-name-register (namespace (buff 20)) (name (buff 48)) (salt (buff 20)) (zonefile-hash (buff 20)) (price uint) (send-to principal))
+(define-public (mng-name-register (namespace (buff 20)) (name (buff 48)) (salt (buff 20)) (zonefile-hash (buff 20)) (send-to principal))
     (let 
         (
             ;; Generates the hashed, salted fully-qualified name by concatenating the name, namespace, and salt, then applying a hash160 function.
@@ -1104,8 +1100,6 @@
             (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
             ;; Retrieves the preorder information using the hashed-salted FQN to verify the preorder exists and is associated with the current namespace manager.
             (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: current-namespace-manager }) ERR-NAME-PREORDER-NOT-FOUND))
-            ;; Get the stx-burned to validate no stx-amount was burned
-            (stx-burned-amount (get stx-burned preorder))
             ;; Calculates the ID for the new name to be minted, incrementing the last used ID in the BNS system.
             (id-to-be-minted (+ (var-get bns-index) u1))
             ;; Retrieves a list of all names currently owned by the send-to address, defaults to an empty list if none exist.
@@ -1117,8 +1111,6 @@
         )
         ;; Verifies that the caller of the contract is the namespace manager.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
-        ;; Asserts that the stx-burned in the preorder is 0 to validate it was made from the mng-name-preorder
-        (asserts! (is-eq u0 stx-burned-amount) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Ensures the name is not already registered by checking if it lacks an existing index.
         (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
         ;; Validates that the preorder was made after the namespace was officially launched.
@@ -1149,7 +1141,7 @@
                 zonefile-hash: (some zonefile-hash),
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
-                price: price,
+                stx-burn: u0,
                 owner: send-to,
             }
         )
@@ -1373,13 +1365,13 @@
                     ;; If no properties are found, the name is considered available, and no renewal or price info is applicable.
                     available: true,
                     renews-at: none,
-                    price: none
+                    stx-burn: none
                 }
                 {
                     ;; If properties are found, the name is not available, and the function returns its renewal height and price.
                     available: false,
                     renews-at: (get renewal-height name-props),  ;; The block height at which the name needs to be renewed.
-                    price: (get price name-props)  ;; The current registration price for the name.
+                    stx-burn: (get stx-burn name-props)  ;; The current registration price for the name.
                 }
             )
         )
@@ -1662,7 +1654,7 @@
 )
 
 ;; Calculates the block height at which a name's lease started, considering if it was registered or imported.
-(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (optional (buff 20)), locked: bool, renewal-height: uint, price: uint, owner: principal}))
+(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (optional (buff 20)), locked: bool, renewal-height: uint, stx-burn: uint, owner: principal}))
     (let 
         (
             ;; Extract the registration and importation times from the name properties.
