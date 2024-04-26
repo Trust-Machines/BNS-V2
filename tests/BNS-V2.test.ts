@@ -3431,7 +3431,6 @@ describe("NAME-PREORDER FUNCTION", () => {
     // This should give ok u146 since the blockheight is 2 + 144 TTL
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
-    // Call the namespace-reveal function from the BNS-V2 contract
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
