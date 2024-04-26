@@ -60,6 +60,9 @@
 ;; The grace period duration for name renewals post-expiration.
 (define-constant NAME-GRACE-PERIOD-DURATION u5000) 
 
+(define-constant HASH160LEN u20)
+
+
 ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;
 ;; Price tables ;;
@@ -135,6 +138,7 @@
 (define-constant ERR-NO-BNS-NAMES-OWNED (err u153))
 (define-constant ERR-NO-NAMESPACE-MANAGER (err u154))
 
+
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;; Variables ;;;;;
@@ -201,7 +205,7 @@
         zonefile-hash: (optional (buff 20)),
         locked: bool, 
         renewal-height: uint,
-        price: uint,
+        stx-burn: uint,
         owner: principal,
     }
 )
@@ -595,9 +599,8 @@
             ) 
             ERR-NAMESPACE-PREORDER-ALREADY-EXISTS
         )
-
         ;; Validate that the hashed-salted-namespace is exactly 20 bytes long to conform to expected hash standards.
-        (asserts! (is-eq (len hashed-salted-namespace) u20) ERR-NAMESPACE-HASH-MALFORMED)
+        (asserts! (is-eq (len hashed-salted-namespace) HASH160LEN) ERR-NAMESPACE-HASH-MALFORMED)
         ;; Confirm that the STX amount to be burned is positive
         (asserts! (> stx-to-burn u0) ERR-NAMESPACE-STX-BURNT-INSUFFICIENT)
         ;; Execute the token burn operation, deducting the specified STX amount from the buyer's balance.
@@ -648,11 +651,13 @@
             (preorder (unwrap! (map-get? namespace-preorders { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }) ERR-NAMESPACE-PREORDER-NOT-FOUND))
             ;; Calculate the namespace's registration price for validation. Using the price tiers in the NAMESPACE-PRICE-TIERS
             (namespace-price (try! (get-namespace-price namespace)))
+            ;; Get the namespace props to see if it already exists
+            (namespace-props (map-get? namespaces namespace))
         )
         ;; Ensure the namespace consists of valid characters only.
         (asserts! (not (has-invalid-chars namespace)) ERR-NAMESPACE-CHARSET-INVALID)
         ;; Check that the namespace is available for reveal (not already existing or expired).
-        (asserts! (is-namespace-available namespace) ERR-NAMESPACE-ALREADY-EXISTS)
+        (asserts! (is-none namespace-props) ERR-NAMESPACE-ALREADY-EXISTS)
         ;; Verify the burned amount during preorder meets or exceeds the namespace's registration price.
         (asserts! (>= (get stx-burned preorder) namespace-price) ERR-NAMESPACE-STX-BURNT-INSUFFICIENT)
         ;; Confirm the reveal action is performed within the allowed timeframe from the preorder.
@@ -729,7 +734,7 @@
     ;; name (buff 48): The name being imported into the namespace.
     ;; beneficiary (principal): The principal who will own the imported name.
     ;; zonefile-hash (buff 20): The hash of the zone file associated with the imported name.
-(define-public (name-import (namespace (buff 20)) (name (buff 48)) (beneficiary principal) (zonefile-hash (buff 20)) (price uint))
+(define-public (name-import (namespace (buff 20)) (name (buff 48)) (beneficiary principal) (zonefile-hash (buff 20)) (stx-burn uint))
     (let 
         (
             ;; Fetch properties of the specified namespace to ensure it exists and to check its current state.
@@ -768,7 +773,7 @@
                 zonefile-hash: (some zonefile-hash),
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
-                price: price,
+                stx-burn: stx-burn,
                 owner: beneficiary,
             }
         )
@@ -846,7 +851,7 @@
 
 ;; NEW FAST MINT
 ;; A 'fast' one-block registration function: (name-claim-fast)
-(define-public (name-claim-fast (name (buff 48)) (namespace (buff 20)) (zonefile-hash (buff 20)) (price uint) (send-to principal)) 
+(define-public (name-claim-fast (name (buff 48)) (namespace (buff 20)) (zonefile-hash (buff 20)) (stx-burn uint) (send-to principal)) 
     (let 
         (
             ;; Retrieves existing properties of the namespace to confirm its existence and management details.
@@ -871,11 +876,13 @@
             ;; If it doesn't
             (begin 
                 ;; Asserts a positive amount of STX to be burnt
-                (asserts! (> price u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
+                (asserts! (> stx-burn u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
                 ;; Asserts tx-sender is the send-to
                 (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
                 ;; Burns the STX from the user
-                (unwrap! (stx-burn? price send-to) ERR-INSUFFICIENT-FUNDS)
+                (unwrap! (stx-burn? stx-burn send-to) ERR-INSUFFICIENT-FUNDS)
+                ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
+                (asserts! (>= stx-burn (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
             )
         )
         ;; Updates the list of all names owned by the recipient to include the new name ID.
@@ -901,7 +908,7 @@
                 zonefile-hash: (some zonefile-hash),
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
-                price: price,
+                stx-burn: stx-burn,
                 owner: send-to,
             }
         )
@@ -916,108 +923,93 @@
     )
 )
 
-;; NAME-PREORDER
-;; This is the first transaction to be sent. It tells all BNS nodes the salted hash of the BNS name,
-;; and it burns the registration fee.
-
-;; Do we need to add the namespace here? 
-
-;; Public function `name-preorder` initiates the registration process for a BNS name by sending a transaction with a salted hash of the name.
-;; This transaction burns the registration fee as a demonstration of commitment and to prevent spamming.
-;; @params:
-    ;; hashed-salted-fqn (buff 20): The hashed and salted fully qualified name (FQN) being preordered.
-    ;; stx-to-burn (uint): The amount of STX tokens to be burned as part of the preorder process.
+;; Defines a public function called `name-preorder`.
+;; This function is responsible for preordering BNS name by burning the registration fee and submitting the salted hash of the name with the namesace included.
+;; This function is callable by ANYONE, regular users or namespace managers, the real check happens in the name-register function. Only regular users who preorder a name through this function should be able to mint a name trough the register-name function
 (define-public (name-preorder (hashed-salted-fqn (buff 20)) (stx-to-burn uint))
     (let 
         (
-            ;; Check if there is an existing preorder for the same hashed-salted-fqn by the same buyer.
+            ;; Attempt to retrieve a previous preorder from the 'name-preorders' map using the hashed-salted FQN and the tx-sender's address as keys.
+            ;; This checks if the same user has already preordered the same name.
             (former-preorder (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }))
         )
-        ;; Verify that any previous preorder by the same buyer has expired.
+        ;; Checks if there was a previous preorder and if it has expired.
         (asserts! 
             (match former-preorder
                 preorder
-                ;; If a previous preorder exists, check that it has expired based on the NAME-PREORDER-CLAIMABILITY-TTL.
+                ;; Checks if the current block height is greater than or equal to the creation time of the previous preorder plus the TTL.
+                ;; This determines if the previous preorder has expired.
                 (>= block-height (+ NAME-PREORDER-CLAIMABILITY-TTL (unwrap! (get created-at former-preorder) ERR-UNWRAP)))
-                ;; If no previous preorder exists, proceed.
+                ;; If no previous preorder is found, then true, allowing the process to continue.
                 true
             )
-            ;; If a previous preorder is still valid, throw an error indicating a duplicate preorder.
+            ;; If a previous preorder is still valid/not expired, return an error indicating that a duplicate active preorder exists.
             ERR-NAME-PREORDER-ALREADY-EXISTS
         )
-        ;; Ensure that the hashed and salted FQN is exactly 20 bytes long to match the expected hash format.
-        (asserts! (is-eq (len hashed-salted-fqn) u20) ERR-NAME-HASH-MALFORMED)
-        ;; Confirm that the STX amount to be burned is a positive value.
+        ;; Validates that the length of the hashed and salted FQN is exactly 20 bytes.
+        ;; This ensures that the input conforms to the expected hash format.
+        (asserts! (is-eq (len hashed-salted-fqn) HASH160LEN) ERR-NAME-HASH-MALFORMED)
+        ;; Ensures that the amount of STX specified to burn is greater than zero.
         (asserts! (> stx-to-burn u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
-        ;; Execute the token burn operation, removing the specified amount of STX from the buyer's balance.
-        (unwrap! (stx-burn? stx-to-burn contract-caller) ERR-INSUFFICIENT-FUNDS)
-        ;; Record the preorder details in the `name-preorders` map, marking it as not yet claimed.
+        ;; Burns the specified amount of STX tokens from the tx-sender
+        ;; This operation fails if the sender does not have enough tokens, returns an insufficient funds error.
+        (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-INSUFFICIENT-FUNDS)
+        ;; Records the preorder in the 'name-preorders' map.
+        ;; It includes the hashed-salted FQN, the tx-sender as the buyer, the current block height, the amount of STX burned, and marks the preorder as not yet claimed.
         (map-set name-preorders
-            ;; Changed to contract-caller for when this is called by the namespace manager
-            { hashed-salted-fqn: hashed-salted-fqn, buyer: contract-caller }
+            { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }
             { created-at: block-height, stx-burned: stx-to-burn, claimed: false }
         )
-        ;; Return the block height at which the preorder claimability period will expire, based on NAME-PREORDER-CLAIMABILITY-TTL.
+        ;; Returns the block height at which the preorder's claimability period will expire.
+        ;; This is calculated by adding the NAME-PREORDER-CLAIMABILITY-TTL to the current block height.
         (ok (+ block-height NAME-PREORDER-CLAIMABILITY-TTL))
     )
 )
 
-;; NAME-REGISTRATION
-;; This is the second transaction to be sent. It reveals the salt and the name to all BNS nodes,
-;; and assigns the name an initial public key hash and zone file hash
-
-;; Public function `name-register` for finalizing the registration of a name within a namespace.
-;; This function reveals the salted hash of the name, linking it with its preorder, and sets up initial properties for the name.
-;; @params:
-    ;; namespace (buff 20): The namespace in which the name is being registered.
-    ;; name (buff 48): The actual name being registered.
-    ;; salt (buff 20): The salt used during the preorder to generate the hashed, salted fully-qualified name (FQN).
-    ;; zonefile-hash (buff 20): The hash of the zone file associated with the name.
-(define-public (name-register (namespace (buff 20)) (name (buff 48)) (salt (buff 20)) (zonefile-hash (buff 20)) (send-to principal))
+;; Defines a public function `name-register` that finalizes the registration of a BNS name.
+;; This function uses provided details to verify the preorder, register the name, and assign it initial properties.
+;; This should only allow users from UNMANAGED namespaces to register names
+(define-public (name-register (namespace (buff 20)) (name (buff 48)) (salt (buff 20)) (zonefile-hash (buff 20)))
     (let 
         (
-            ;; Generate the hashed, salted FQN from the provided name, namespace, and salt.
+            ;; Generates the hashed, salted fully-qualified name by concatenating the name, namespace, and salt, then applying a hash160 function.
             (hashed-salted-fqn (hash160 (concat (concat (concat name 0x2e) namespace) salt)))
-            ;; Retrieve the preorder information using the hashed, salted FQN to verify the preorder exists and belongs to the tx sender.
+            ;; Retrieves the preorder details from the `name-preorders` map using the hashed-salted FQN to ensure the preorder exists and belongs to the tx-sender.
             (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }) ERR-NAME-PREORDER-NOT-FOUND))
-            ;; Retrieves existing properties of the namespace to confirm its existence and management details.
+            ;; Retrieves the properties of the namespace to confirm its existence and check its management settings.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Extracts the current manager of the namespace to verify the authority of the caller.
+            ;; Extracts the current manager of the namespace to ensure only authorized actions are performed.
             (current-namespace-manager (get namespace-manager namespace-props))
-            ;; Calculates the ID for the new name to be minted, incrementing the last used ID.
+            ;; Generates a new ID for the name to be registered, incrementing the last used ID in the BNS system.
             (id-to-be-minted (+ (var-get bns-index) u1))
-            ;; Retrieves a list of all names currently owned by the recipient. Defaults to an empty list if none are found.
-            (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal send-to)))
-            ;; Tries to retrieve the name and namespace to see if it already exists
+            ;; Retrieves a list of all names currently owned by the tx-sender, defaults to an empty list if none exist.
+            (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal tx-sender)))
+            ;; Checks if the name and namespace combination already exists in the system.
             (name-props (map-get? name-properties {name: name, namespace: namespace}))
-            ;; Gets the index, if it is some, then the name already exists
+            ;; Retrieves the index of the name if it exists, to check for prior registrations.
             (name-index (map-get? name-to-index {name: name, namespace: namespace}))
         )
-        ;; New
-        ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
-        (match current-namespace-manager 
-            manager 
-            (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
-            (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
-        )
-        ;; Changed this
-        ;; Verify the name is eligible for registration within the given namespace.
+        ;; Ensures that the namespace does not have a manager.
+        (asserts! (is-none current-namespace-manager) ERR-NOT-AUTHORIZED)
+        ;; Ensures the name is not already registered by checking if it lacks an existing index.
         (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
-        ;; Ensure the preorder was made after the namespace was launched to be valid.
+        ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap-panic (get launched-at namespace-props))) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
-        ;; Check that the preorder has not already been claimed to prevent duplicate registrations.
+        ;; Checks that the preorder has not already been claimed to avoid duplicate name registrations.
         (asserts! (is-eq (get claimed preorder) false) ERR-NAME-ALREADY-CLAIMED)
-        ;; Ensure the registration is completed within the claimability period after the preorder.
+        ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
         (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
-        ;; Confirm the amount of STX burned with the preorder meets or exceeds the cost of registering the name.
+        ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
         (asserts! (>= (get stx-burned preorder) (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
-        ;; Updates the list of all names owned by the recipient to include the new name ID.
-        (map-set bns-ids-by-principal send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
-        ;; Conditionally sets the newly minted name as the primary name if the recipient does not already have one.
-        (match (map-get? primary-name send-to) 
+        ;; Updates the list of names owned by the recipient to include the new name ID.
+        (map-set bns-ids-by-principal tx-sender (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
+        ;; Sets the newly registered name as the primary name for the recipient if they do not already have one.
+        (match (map-get? primary-name tx-sender) 
             receiver
+            ;; If it has a primary-name then do nothing
             false
-            (map-set primary-name send-to id-to-be-minted)
+            ;; If it is none, then assign the ID being minted as the primary-name
+            (map-set primary-name tx-sender id-to-be-minted)
         )
         ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
         (map-set name-properties
@@ -1025,24 +1017,150 @@
                 name: name, namespace: namespace
             } 
             {
-               
                 registered-at: (some block-height),
                 imported-at: none,
                 revoked-at: none,
                 zonefile-hash: (some zonefile-hash),
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
-                price: (get stx-burned preorder),
+                stx-burn: (get stx-burned preorder),
+                owner: tx-sender,
+            }
+        )
+        ;; Updates the preorder to mark it as claimed.
+        (map-set name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender } 
+            (merge 
+                preorder 
+                {claimed: true}
+            )
+        )
+        ;; Links the new ID to the name and namespace.
+        (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
+        ;; Links the name and namespace to the new ID.
+        (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
+        ;; Updates the BNS-index var
+        (var-set bns-index id-to-be-minted)
+        ;; Mints the BNS name as an NFT and assigns it to the tx sender.
+        (unwrap! (nft-mint? BNS-V2 id-to-be-minted tx-sender) ERR-NAME-COULD-NOT-BE-MINTED)
+        ;; Confirms successful registration of the name.
+        (ok true)
+    )
+)
+
+
+;; Defines a public function called `mng-name-preorder`.
+;; This function is similar to `name-preorder` but only for namespace managers, without the burning of STX tokens.
+;; This function is intended only for managers, but in reality anyone can call this, but the mng-name-register and name-register will validate everything
+(define-public (mng-name-preorder (hashed-salted-fqn (buff 20)))
+    (let 
+        (
+            ;; Attempt to retrieve a previous preorder from the 'name-preorders' map using the hashed-salted FQN and the contract-caller address as keys.
+            ;; This checks if the same user has already preordered the same name.
+            (former-preorder (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: contract-caller }))
+        )
+        ;; Checks if there was a previous preorder and if it has expired.
+        (asserts! 
+            (match former-preorder
+                preorder
+                ;; Checks if the current block height is greater than or equal to the creation time of the previous preorder plus the TTL.
+                ;; This determines if the previous preorder has expired.
+                (>= block-height (+ NAME-PREORDER-CLAIMABILITY-TTL (unwrap! (get created-at former-preorder) ERR-UNWRAP)))
+                ;; If no previous preorder is found, then true, allowing the process to continue.
+                true
+            )
+            ;; If a previous preorder is still valid/not expired, return an error indicating that a duplicate active preorder exists.
+            ERR-NAME-PREORDER-ALREADY-EXISTS
+        )
+        ;; Validates that the length of the hashed and salted FQN is exactly 20 bytes.
+        ;; This ensures that the salt conforms to the expected hash160 output length.
+        (asserts! (is-eq (len hashed-salted-fqn) HASH160LEN) ERR-NAME-HASH-MALFORMED)
+        ;; Records the preorder in the 'name-preorders' map.
+        ;; It includes the hashed-salted FQN, the contract-caller as the buyer, the current block height, the amount of STX burned is set to u0, and marks the preorder as not yet claimed.
+        (map-set name-preorders
+            { hashed-salted-fqn: hashed-salted-fqn, buyer: contract-caller }
+            { created-at: block-height, stx-burned: u0, claimed: false }
+        )
+        ;; Returns the block height at which the preorder's claimability period will expire.
+        ;; This is calculated by adding the NAME-PREORDER-CLAIMABILITY-TTL to the current block height.
+        (ok (+ block-height NAME-PREORDER-CLAIMABILITY-TTL))
+    )
+)
+
+;; Defines a public function `name-register` that finalizes the registration of a BNS name.
+;; This function uses provided details to verify the preorder, register the name, and assign it initial properties.
+;; This should only allow Managers from MANAGED namespaces to register names
+(define-public (mng-name-register (namespace (buff 20)) (name (buff 48)) (salt (buff 20)) (zonefile-hash (buff 20)) (send-to principal))
+    (let 
+        (
+            ;; Generates the hashed, salted fully-qualified name by concatenating the name, namespace, and salt, then applying a hash160 function.
+            (hashed-salted-fqn (hash160 (concat (concat (concat name 0x2e) namespace) salt)))
+            ;; Retrieves the existing properties of the namespace to confirm its existence and management details.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; Extracts the current manager of the namespace to verify the authority of the caller, ensuring only the namespace manager can perform this action.
+            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
+            ;; Retrieves the preorder information using the hashed-salted FQN to verify the preorder exists and is associated with the current namespace manager.
+            (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: current-namespace-manager }) ERR-NAME-PREORDER-NOT-FOUND))
+            ;; Calculates the ID for the new name to be minted, incrementing the last used ID in the BNS system.
+            (id-to-be-minted (+ (var-get bns-index) u1))
+            ;; Retrieves a list of all names currently owned by the send-to address, defaults to an empty list if none exist.
+            (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal send-to)))
+            ;; Checks if the name is already registered within the namespace.
+            (name-props (map-get? name-properties {name: name, namespace: namespace}))
+            ;; Retrieves the index of the name, if it exists, to check for prior registrations.
+            (name-index (map-get? name-to-index {name: name, namespace: namespace}))
+        )
+        ;; Verifies that the caller of the contract is the namespace manager.
+        (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
+        ;; Ensures the name is not already registered by checking if it lacks an existing index.
+        (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
+        ;; Validates that the preorder was made after the namespace was officially launched.
+        (asserts! (> (get created-at preorder) (unwrap-panic (get launched-at namespace-props))) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
+        ;; Checks that the preorder has not already been claimed to avoid duplicate name registrations.
+        (asserts! (is-eq (get claimed preorder) false) ERR-NAME-ALREADY-CLAIMED)
+        ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
+        (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
+        ;; Updates the list of all names owned by the recipient to include the new name ID.
+        (map-set bns-ids-by-principal send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
+        ;; Sets the newly registered name as the primary name for the recipient if they do not already have one.
+        (match (map-get? primary-name send-to) 
+            receiver
+            ;; If it has a primary-name then do nothing
+            false
+            ;; If it is none, then assign the ID being minted as the primary-name
+            (map-set primary-name tx-sender id-to-be-minted)
+        )
+        ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
+        (map-set name-properties
+            {
+                name: name, namespace: namespace
+            } 
+            {
+                registered-at: (some block-height),
+                imported-at: none,
+                revoked-at: none,
+                zonefile-hash: (some zonefile-hash),
+                locked: false,
+                renewal-height: (+ (get lifetime namespace-props) block-height),
+                stx-burn: u0,
                 owner: send-to,
             }
         )
-        ;; Links the newly minted ID to the name and namespace combination for reverse lookup.
+        ;; Marks the preorder as claimed in the 'name-preorders' map to prevent reuse.
+        (map-set name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: current-namespace-manager} 
+            (merge 
+                preorder 
+                {claimed: true}
+            )
+        )
+        ;; Links the newly minted ID to the name and namespace.
         (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
-        ;; Links the name and namespace combination to the newly minted ID for forward lookup.
+        ;; Links the name and namespace combination to the newly minted ID.
         (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
-        ;; Mints the new BNS name as an NFT, assigned to the 'send-to' principal.
+        ;; Updates BNS-index variable to the newly minted ID.
+        (var-set bns-index id-to-be-minted)
+        ;; Mints the BNS name as an NFT to the send-to address, finalizing the registration.
         (unwrap! (nft-mint? BNS-V2 id-to-be-minted send-to) ERR-NAME-COULD-NOT-BE-MINTED)
-        ;; Confirm successful registration of the name.
+        ;; Confirms successful registration of the name.
         (ok true)
     )
 )
@@ -1247,13 +1365,13 @@
                     ;; If no properties are found, the name is considered available, and no renewal or price info is applicable.
                     available: true,
                     renews-at: none,
-                    price: none
+                    stx-burn: none
                 }
                 {
                     ;; If properties are found, the name is not available, and the function returns its renewal height and price.
                     available: false,
                     renews-at: (get renewal-height name-props),  ;; The block height at which the name needs to be renewed.
-                    price: (get price name-props)  ;; The current registration price for the name.
+                    stx-burn: (get stx-burn name-props)  ;; The current registration price for the name.
                 }
             )
         )
@@ -1536,7 +1654,7 @@
 )
 
 ;; Calculates the block height at which a name's lease started, considering if it was registered or imported.
-(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (optional (buff 20)), locked: bool, renewal-height: uint, price: uint, owner: principal}))
+(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (optional (buff 20)), locked: bool, renewal-height: uint, stx-burn: uint, owner: principal}))
     (let 
         (
             ;; Extract the registration and importation times from the name properties.
