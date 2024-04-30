@@ -995,6 +995,7 @@
         ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap-panic (get launched-at namespace-props))) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Checks that the preorder has not already been claimed to avoid duplicate name registrations.
+        ;; I think we can remove this... since it already checks for a name
         (asserts! (is-eq (get claimed preorder) false) ERR-NAME-ALREADY-CLAIMED)
         ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
         (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
@@ -1115,6 +1116,7 @@
         ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap-panic (get launched-at namespace-props))) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Checks that the preorder has not already been claimed to avoid duplicate name registrations.
+        ;; I don't think this is needed
         (asserts! (is-eq (get claimed preorder) false) ERR-NAME-ALREADY-CLAIMED)
         ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
         (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
@@ -1201,13 +1203,17 @@
         ;; Asserts the name has not been revoked.
         (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
         ;; See if the namespace has a manager
-        (match namespace-manager 
-            manager 
-            ;; If it does, then check contract caller is the manager
-            (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
-            ;; If not then check that the tx-sender is the owner
-            (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
+        (asserts! 
+            (match namespace-manager 
+                manager 
+                ;; If it does, then check contract caller is the manager
+                (is-eq contract-caller manager)
+                ;; If not then check that the tx-sender is the owner
+                (is-eq tx-sender owner)
+            ) 
+            ERR-NOT-AUTHORIZED
         )
+        
         ;; Assert that the name is in valid time or grace period
         (asserts! (<= block-height (+ renewal NAME-GRACE-PERIOD-DURATION)) ERR-NAME-OPERATION-UNAUTHORIZED)
         ;; Update the zonefile hash
@@ -1243,10 +1249,19 @@
             ;; retreive the name props
             (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-NO-NAME))
         )
+        (asserts! 
+            (match namespace-manager 
+                manager 
+                (is-eq contract-caller manager)
+                (is-eq tx-sender (get namespace-import namespace-props))
+            ) 
+            ERR-NOT-AUTHORIZED
+        )
+            
         (map-set name-properties {name: name, namespace: namespace}
             (merge 
-                {revoked-at: (some block-height)} 
                 name-props
+                {revoked-at: (some block-height)} 
             )
         )
         ;; Return a success response indicating the name has been successfully revoked.
