@@ -547,7 +547,7 @@
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
 
             ;; Extracts the current manager of the namespace from the retrieved properties.
-            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
+            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
         ) 
         ;; Verifies that the caller of the function is the current namespace manager to authorize the management transfer.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
@@ -722,7 +722,6 @@
     )
 )
 
-;; We can get rid of this, since namespace managers can do that on their own contract
 ;; NAME-IMPORT
 ;; Once a namespace is revealed, the user has the option to populate it with a set of names. Each imported name is given
 ;; both an owner and some off-chain state. This step is optional; Namespace creators are not required to import names.
@@ -781,6 +780,8 @@
         (map-set index-to-name current-mint {name: name, namespace: namespace})
         ;; Set the map name-to-index
         (map-set name-to-index {name: name, namespace: namespace} current-mint)
+        ;; Update the index of the minting
+        (var-set bns-index current-mint)
          ;; Mint the name to the beneficiary
         (unwrap! (nft-mint? BNS-V2 current-mint beneficiary) ERR-NAME-COULD-NOT-BE-MINTED)
         ;; Confirm successful import of the name.
