@@ -667,21 +667,38 @@
             { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }
             { created-at: (get created-at preorder), claimed: true, stx-burned: (get stx-burned preorder) }
         )
-        ;; Register the namespace as revealed with its pricing function, lifetime, and import principal details.
-        (map-set namespaces namespace
+        ;; Check if the namespace manager is assigned
+        (if (is-none namespace-manager) 
+        ;; If it is then assign everything
+            (map-set namespaces namespace
+                {
+                    ;; Added manager here
+                    namespace-manager: namespace-manager,
+                    manager-transferable: transfers,
+                    namespace-import: namespace-import,
+                    revealed-at: block-height,
+                    launched-at: none,
+                    lifetime: lifetime,
+                    can-update-price-function: true,
+                    price-function: price-function 
+                }
+            )
+            ;; If it is not, then assign everything except the lifetime, that is set to u0 sinces renewals will be made in the namespace manager contract and set the can update price function to false, since no changes will ever need to be made there
+            (map-set namespaces namespace
             {
-                ;; New
                 ;; Added manager here
                 namespace-manager: namespace-manager,
                 manager-transferable: transfers,
                 namespace-import: namespace-import,
                 revealed-at: block-height,
                 launched-at: none,
-                lifetime: lifetime,
-                can-update-price-function: true,
+                lifetime: u0,
+                can-update-price-function: false,
                 price-function: price-function 
             }
         )
+        )
+        
         ;; Confirm successful reveal of the namespace
         (ok true)
     )
@@ -1283,36 +1300,63 @@
     ;; namespace (buff 20): The namespace of the name to be renewed.
     ;; name (buff 48): The actual name to be renewed.
     ;; stx-to-burn (uint): The amount of STX tokens to be burned for renewal.
-    ;;;;;;;;;
-;; New ;;
-;;;;;;;;;-owner (optional principal): The new owner of the name, if changing ownership.
-    ;; zonefile-hash (optional (buff 20)): The new zone file hash for the name, if updating.
-(define-public (name-renewal (namespace (buff 20)) (name (buff 48)) (stx-to-burn uint) (new-owner (optional principal)) (zonefile-hash (optional (buff 20))))
+(define-public (name-renewal (namespace (buff 20)) (name (buff 48)) (stx-to-burn uint) (zonefile-hash (optional (buff 20))))
     (let 
         (
+            ;; Get the index of the name
+            (name-index (unwrap! (map-get? name-to-index {name: name, namespace: namespace}) ERR-NO-NAME))
             ;; Fetch the namespace properties from the `namespaces` map.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Get the current owner of the name from the `names` map.
-            (owner (unwrap! (nft-get-owner? names { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
+            ;; Get the current owner of the name.
+            (owner (unwrap! (nft-get-owner? BNS-V2 name-index) ERR-NO-NAME))
             ;; Fetch the name properties from the `name-properties` map.
             (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
-            ;; New
             ;; Retrieve namespace manager if any
             (namespace-manager (get namespace-manager namespace-props))
         )
-        ;; New
-        ;; Assert that the namespace doesn't have a manager, if it does then only the manager can register names
+        ;; Assert that the namespace doesn't have a manager, if it does then only the manager can renew names
         (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
         ;; Asserts that the namespace has been launched.
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Asserts that renewals are required for names in this namespace
         (asserts! (> (get lifetime namespace-props) u0) ERR-NAME-OPERATION-UNAUTHORIZED)
-        ;; Asserts that the sender of the transaction matches the current owner of the name.
-        (asserts! (is-eq owner tx-sender) ERR-NAME-OPERATION-UNAUTHORIZED)
-        ;; Checks if the name's lease has expired and if it is currently within the grace period for renewal.
-        (if (try! (is-name-lease-expired namespace name))
-            (asserts! (is-eq (try! (is-name-in-grace-period namespace name)) true) ERR-NAME-EXPIRED)
-            true
+        ;; Checks if the name's lease has expired.
+        (if (unwrap! (is-name-lease-expired namespace name) ERR-UNWRAP)
+            ;; If it has, Check that the name is in grace period
+            (if (is-eq true (unwrap! (is-name-in-grace-period namespace name) ERR-UNWRAP))
+                ;; If the name is in grace period
+                (begin 
+                    ;; Asserts that the sender of the transaction matches the current owner of the name.
+                    (asserts! (is-eq owner tx-sender) ERR-NOT-AUTHORIZED) 
+                    ;; Update the renewal-height to be the current block-height + the lifetime of the namespace, to start from scratch
+                    (map-set name-properties {name: name, namespace: namespace}
+                        (merge 
+                            name-props 
+                            {renewal-height: (+ block-height (get lifetime namespace-props))}
+                        )
+                    )
+                )
+                ;; If the name is not in grace period then anyone can claim the name?
+                ;; First check that it is not listed on the market
+                (if (is-none (map-get? market name-index)) 
+                    ;; If true then transfer the name and update everything
+                    (unwrap! (purchase-transfer name-index owner tx-sender) ERR-UNWRAP)
+                    ;; If false then
+                    (begin 
+                        ;; Deletes the listing from the market map
+                        (map-delete market name-index) 
+                        ;; Then transfers the name and updates everything
+                        (unwrap! (purchase-transfer name-index owner tx-sender) ERR-UNWRAP)
+                    )
+                )   
+            )
+            ;; If the name lease has not expired, then increase the renewal height + the lifetime of the namespace, and everything else stays the same
+            (map-set name-properties {name: name, namespace: namespace} 
+                (merge 
+                    name-props
+                    {renewal-height: (+ (get renewal-height name-props) (get lifetime namespace-props))}
+                )
+            )
         )
         ;; Asserts that the amount of STX to be burned is at least equal to the renewal price of the name.
         (asserts! (>= stx-to-burn (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
@@ -1321,15 +1365,11 @@
         ;; Burns the STX provided
         (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-UNWRAP)
         ;; Checks if a new zone file hash is specified
-        (match zonefile-hash
-            z-hash
-            (map-set name-properties {name: name, namespace: namespace}
-                (merge name-props {zonefile-hash: zonefile-hash, renewal-height: (+ (get lifetime namespace-props) block-height)})
-            )
-            ;; If no new zone file hash then keep existing hash
-            (map-set name-properties {name: name, namespace: namespace}
-                (merge name-props {renewal-height: (+ (get lifetime namespace-props) block-height)})
-            )
+        (if (is-some zonefile-hash) 
+            ;; If it is then update it
+            (unwrap! (update-zonefile-hash namespace name (unwrap! zonefile-hash ERR-UNWRAP)) ERR-UNWRAP)
+            ;; If there isn't then continue
+            false
         )
         ;; Successfully completes the renewal process.
         (ok true)
