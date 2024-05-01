@@ -1399,16 +1399,26 @@
                 ;; If the name is not in grace period then anyone can claim the name?
                 ;; First check that it is not listed on the market
                 (if (is-none (map-get? market name-index)) 
-                    (begin 
-                        ;; If true then transfer the name and update everything
-                        (unwrap! (purchase-transfer name-index owner tx-sender) ERR-UNWRAP)
-                        ;; Update the renewal-height
+                    ;; Check if the owner is the tx-sender
+                    (if (is-eq tx-sender owner)
+                        ;; If it is true then update the renewal-height to be the current block-height + the lifetime of the namespace, to start from scratch
                         (map-set name-properties {name: name, namespace: namespace}
                             (merge 
-                                (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-UNWRAP)
+                                name-props 
                                 {renewal-height: (+ block-height (get lifetime namespace-props))}
                             )
                         )
+                        ;; If false then transfer the name and update everything
+                        (begin 
+                            (unwrap! (purchase-transfer name-index owner tx-sender) ERR-UNWRAP)
+                            ;; Update the renewal-height
+                            (map-set name-properties {name: name, namespace: namespace}
+                                (merge 
+                                    (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-UNWRAP)
+                                    {renewal-height: (+ block-height (get lifetime namespace-props))}
+                                )
+                            )
+                        ) 
                     )
                     ;; If false then
                     (begin 
@@ -1434,7 +1444,7 @@
                 )
             )
         )
-        ;; Asserts that the amount of STX to be burned is at least equal to the renewal price of the name.
+        ;; Asserts that the amount of STX to be burned is at least equal to the price of the name.
         (asserts! (>= stx-to-burn (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Asserts that the name has not been revoked.
         (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
