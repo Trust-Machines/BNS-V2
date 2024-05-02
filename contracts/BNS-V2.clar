@@ -266,6 +266,9 @@
     { created-at: uint, claimed: bool, stx-burned: uint }
 )
 
+;; Defines a map to keep track of the imported names by namespace
+(define-map imported-names (buff 20) (list 1000 uint))
+
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;; Public ;;;;;
@@ -717,27 +720,27 @@
         (
             ;; Retrieve the properties of the namespace to ensure it exists and to check its current state.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            ;; Fetch the list of imported names for the namespace
+            (imported-list-of-names (default-to (list) (map-get? imported-names namespace)))
         )
         ;; Ensure the transaction sender is the namespace's designated import principal, confirming their authority to launch it.
         (asserts! (is-eq (get namespace-import namespace-props) tx-sender) ERR-NAMESPACE-OPERATION-UNAUTHORIZED)
         ;; Verify the namespace has not already been launched to prevent re-launching.
         (asserts! (is-none (get launched-at namespace-props)) ERR-NAMESPACE-ALREADY-LAUNCHED)
         ;; Confirm that the action is taken within the permissible time frame since the namespace was revealed.
-        (asserts! (< block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)      
-        (let 
-            (
-                ;; Update the namespace properties to include the launch timestamp, effectively marking it as "launched".
-                (namespace-props-updated (merge namespace-props { launched-at: (some block-height) }))
-            )
-            ;; Update the `namespaces` map with the newly launched status of the namespace.
-            (map-set namespaces namespace namespace-props-updated)
-            ;; Emit an event to indicate the namespace is now ready and launched.
-            (print { namespace: namespace, status: "ready", properties: namespace-props-updated })
-            ;; Confirm the successful launch of the namespace.
-            (ok true)
-        )
+        (asserts! (< block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)
+        ;; Update the `namespaces` map with the newly launched status of the namespace.
+        (map-set namespaces namespace (merge namespace-props { launched-at: (some block-height) }))      
+        ;; Update all the imported names renewal height to start with the launched-at block height
+        (map update-renewal-height imported-list-of-names)
+        ;; Emit an event to indicate the namespace is now ready and launched.
+        (print { namespace: namespace, status: "ready", properties: (map-get? namespaces namespace) })
+        ;; Confirm the successful launch of the namespace.
+        (ok true)
     )
 )
+
+
 
 ;; NAME-IMPORT
 ;; Once a namespace is revealed, the user has the option to populate it with a set of names. Each imported name is given
@@ -761,6 +764,8 @@
             (beneficiary-primary-name (map-get? primary-name beneficiary))
             ;; Fetch names owned by the beneficiary
             (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal beneficiary)))
+            ;; Fetch the list of imported names for the namespace
+            (imported-list-of-names (default-to (list) (map-get? imported-names namespace)))
         )
         ;; Verify that the name contains only valid characters to ensure compliance with naming conventions.
         (asserts! (not (has-invalid-chars name)) ERR-NAME-CHARSET-INVALID)
@@ -799,7 +804,9 @@
         (map-set name-to-index {name: name, namespace: namespace} current-mint)
         ;; Update the index of the minting
         (var-set bns-index current-mint)
-         ;; Mint the name to the beneficiary
+        ;; Update the imported names list for the namespace
+        (map-set imported-names namespace (unwrap! (as-max-len? (append imported-list-of-names current-mint) u1000) ERR-OVERFLOW))
+        ;; Mint the name to the beneficiary
         (unwrap! (nft-mint? BNS-V2 current-mint beneficiary) ERR-NAME-COULD-NOT-BE-MINTED)
         ;; Confirm successful import of the name.
         (ok true)
@@ -1373,6 +1380,8 @@
             (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
             ;; Retrieve namespace manager if any
             (namespace-manager (get namespace-manager namespace-props))
+            ;; Get if the name was registered
+            (name-registered (get registered-at name-props))
         )
         ;; Assert that the namespace doesn't have a manager, if it does then only the manager can renew names
         (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
@@ -1380,69 +1389,75 @@
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Asserts that renewals are required for names in this namespace
         (asserts! (> (get lifetime namespace-props) u0) ERR-NAME-OPERATION-UNAUTHORIZED)
-        ;; Checks if the name's lease has expired.
-        (if (unwrap! (is-name-lease-expired namespace name) ERR-UNWRAP)
-            ;; If it has, Check that the name is in grace period
-            (if (is-eq true (unwrap! (is-name-in-grace-period namespace name) ERR-UNWRAP))
-                ;; If the name is in grace period
+        ;; Checks if the name's grace period has expired.
+        (if (< block-height (+ (get renewal-height name-props) NAME-GRACE-PERIOD-DURATION))
+            ;; If it has not expired also check if the name is in its lifetime period
+            (if (< block-height (get renewal-height name-props))
+                ;; If the name is in lifetime period
                 (begin 
                     ;; Asserts that the sender of the transaction matches the current owner of the name.
                     (asserts! (is-eq owner tx-sender) ERR-NOT-AUTHORIZED) 
-                    ;; Update the renewal-height to be the current block-height + the lifetime of the namespace, to start from scratch
+                    ;; Increase the renewal height + the lifetime of the namespace, and everything else stays the same
+                    (map-set name-properties {name: name, namespace: namespace} 
+                        (merge 
+                            name-props
+                            {renewal-height: (+ (get renewal-height name-props) (get lifetime namespace-props))}
+                        )
+                    )
+                )
+                ;; If the name is not in the lifetime period, but is on the grace period
+                (begin 
+                    ;; Asserts that the sender of the transaction matches the current owner of the name.
+                    (asserts! (is-eq owner tx-sender) ERR-NOT-AUTHORIZED)
+                    ;; Increase the renewal height by adding the lifetime of the namespace + the current block-height, and everything else stays the same
+                    (map-set name-properties {name: name, namespace: namespace} 
+                        (merge 
+                            name-props
+                            {renewal-height: (+ block-height (get lifetime namespace-props))}
+                        )
+                    )
+                )
+            )
+            ;; If the name is not in grace period then anyone can claim the name
+            ;; First check that it is not listed on the market
+            (if (is-none (map-get? market name-index)) 
+                ;; Check if the current owner is the tx-sender
+                (if (is-eq tx-sender owner)
+                    ;; If it is true then update the renewal-height to be the current block-height + the lifetime of the namespace, to start from scratch
                     (map-set name-properties {name: name, namespace: namespace}
                         (merge 
                             name-props 
                             {renewal-height: (+ block-height (get lifetime namespace-props))}
                         )
                     )
-                )
-                ;; If the name is not in grace period then anyone can claim the name?
-                ;; First check that it is not listed on the market
-                (if (is-none (map-get? market name-index)) 
-                    ;; Check if the owner is the tx-sender
-                    (if (is-eq tx-sender owner)
-                        ;; If it is true then update the renewal-height to be the current block-height + the lifetime of the namespace, to start from scratch
-                        (map-set name-properties {name: name, namespace: namespace}
-                            (merge 
-                                name-props 
-                                {renewal-height: (+ block-height (get lifetime namespace-props))}
-                            )
-                        )
-                        ;; If false then transfer the name and update everything
-                        (begin 
-                            (unwrap! (purchase-transfer name-index owner tx-sender) ERR-UNWRAP)
-                            ;; Update the renewal-height
-                            (map-set name-properties {name: name, namespace: namespace}
-                                (merge 
-                                    (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-UNWRAP)
-                                    {renewal-height: (+ block-height (get lifetime namespace-props))}
-                                )
-                            )
-                        ) 
-                    )
-                    ;; If false then
+                    ;; If the tx-sender is not the owner
                     (begin 
-                        ;; Deletes the listing from the market map
-                        (map-delete market name-index) 
-                        ;; Then transfers the name and updates everything
+                        ;; transfer the name and update all maps 
                         (unwrap! (purchase-transfer name-index owner tx-sender) ERR-UNWRAP)
-                        ;; Update the renewal-height
+                        ;; Update the renewal-height to be the current block-height + the lifetime of the namespace
                         (map-set name-properties {name: name, namespace: namespace}
                             (merge 
                                 (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-UNWRAP)
                                 {renewal-height: (+ block-height (get lifetime namespace-props))}
                             )
                         )
-                    )
-                )   
-            )
-            ;; If the name lease has not expired, then increase the renewal height + the lifetime of the namespace, and everything else stays the same
-            (map-set name-properties {name: name, namespace: namespace} 
-                (merge 
-                    name-props
-                    {renewal-height: (+ (get renewal-height name-props) (get lifetime namespace-props))}
+                    ) 
                 )
-            )
+                ;; If false then it means that the name is listed 
+                (begin 
+                    ;; Deletes the listing from the market map
+                    (map-delete market name-index) 
+                    ;; Then transfers the name and updates every map
+                    (unwrap! (purchase-transfer name-index owner tx-sender) ERR-UNWRAP)
+                    ;; Update the renewal-height
+                    (map-set name-properties {name: name, namespace: namespace}
+                        (merge 
+                            (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-UNWRAP)
+                            {renewal-height: (+ block-height (get lifetime namespace-props))}
+                        )
+                    )
+                )
+            )  
         )
         ;; Asserts that the amount of STX to be burned is at least equal to the price of the name.
         (asserts! (>= stx-to-burn (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
@@ -1578,63 +1593,6 @@
 (define-read-only (can-namespace-be-registered (namespace (buff 20)))
     ;; Returns the result of `is-namespace-available` directly, indicating if the namespace can be registered.
     (ok (is-namespace-available namespace))
-)
-
-;; Read-only function `is-name-lease-expired` checks if the lease for a specific name has expired.
-;; @params:
-    ;; namespace (buff 20): The namespace of the name being checked.
-    ;; name (buff 48): The name being checked for lease expiration.
-(define-read-only (is-name-lease-expired (namespace (buff 20)) (name (buff 48)))
-    (let 
-        (
-            ;; Fetch properties of the namespace, ensuring the namespace exists.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Fetch properties of the name, ensuring the name exists.
-            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
-            ;; Determine the lease start date based on namespace launch and name properties.
-            (lease-started-at (try! (name-lease-started-at? (get launched-at namespace-props) (get revealed-at namespace-props) name-props)))
-            ;; Retrieve the lifetime of names within this namespace.
-            (lifetime (get lifetime namespace-props))
-        )
-        ;; If the namespace's lifetime for names is set to 0 (indicating names do not expire)
-        (if (is-eq lifetime u0)
-            ;; Return false.
-            (ok false)
-            ;; Otherwise, check if the current block height is greater than the sum of the lease start and lifetime, indicating expiration.
-            (ok (> block-height (+ lifetime lease-started-at)))
-        )
-    )
-)
-
-;; Read-only function `is-name-in-grace-period` checks if a specific name within a namespace is currently in its grace period.
-;; @params:
-    ;; namespace (buff 20): The namespace of the name being checked.
-    ;; name (buff 48): The specific name being checked for grace period status.
-(define-read-only (is-name-in-grace-period (namespace (buff 20)) (name (buff 48)))
-    (let 
-        (
-            ;; Fetch properties of the specified namespace.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Fetch properties of the specific name.
-            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
-            ;; Determine the start of the lease for the name based on its namespace's launch and the name's specific properties.
-            (lease-ends-at (get renewal-height name-props))
-            ;; Retrieve the lifetime duration of names within this namespace.
-            (lifetime (get lifetime namespace-props))
-        )
-        ;; If the namespace's lifetime for names is set to 0 (indicating names do not expire).
-        (if (is-eq lifetime u0)
-            ;; Return false as names cannot be in a grace period.
-            (ok false)
-            ;; Otherwise, check if the current block height is lower than the lease-ends-at or renewal height of the name
-            (ok 
-                (or 
-                    (< block-height lease-ends-at) 
-                    (<= block-height (+ lease-ends-at NAME-GRACE-PERIOD-DURATION))
-                )
-            )
-        )
-    )
 )
 
 ;; Read-only function `get-namespace-properties` for retrieving properties of a specific namespace.
@@ -1794,50 +1752,6 @@
     (< (len (filter is-char-valid name)) (len name))
 )
 
-;; Calculates the block height at which a name's lease started, considering if it was registered or imported.
-(define-private (name-lease-started-at? (namespace-launched-at (optional uint)) (namespace-revealed-at uint) (name-props { registered-at: (optional uint), imported-at: (optional uint), revoked-at: (optional uint), zonefile-hash: (optional (buff 20)), locked: bool, renewal-height: uint, stx-burn: uint, owner: principal}))
-    (let 
-        (
-            ;; Extract the registration and importation times from the name properties.
-            (registered-at (get registered-at name-props))
-            (imported-at (get imported-at name-props))
-        )
-        (if (is-none namespace-launched-at)
-            ;; If the namespace has not been launched:
-            (begin
-                ;; Ensure the namespace has not expired by comparing the current block height with the namespace reveal time plus TTL.
-                (asserts! (> (+ namespace-revealed-at NAMESPACE-LAUNCHABILITY-TTL) block-height) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED) 
-                ;; Return the block height at which the name was imported if the namespace is yet to launch.
-                (ok (unwrap! imported-at ERR-UNWRAP))
-            )
-            ;; If the namespace has been launched:
-            (begin
-                ;; Confirm the namespace is launched by checking the launch timestamp is set.
-                (asserts! (is-some namespace-launched-at) ERR-NAMESPACE-NOT-LAUNCHED)
-                ;; Ensure the name has been either registered or imported, but not both.
-                (asserts! (is-eq (xor 
-                    (match registered-at res 1 0)
-                    (match imported-at   res 1 0)) 1) 
-                    ERR-PANIC
-                )
-                ;; Determine the lease start based on registration or importation:
-                (if (is-some registered-at)
-                    ;; If the name was registered, return the registration block height.
-                    (ok (unwrap-panic registered-at))
-                    ;; If the name was imported, check if it was between the namespace reveal and launch.
-                    (if (and (>= (unwrap-panic imported-at) namespace-revealed-at) (<= (unwrap-panic imported-at) (unwrap-panic namespace-launched-at)))
-                        ;; If imported correctly, return the namespace launch block height as the lease start.
-                        (ok (unwrap-panic namespace-launched-at))
-                        ;; If the importation timing does not match criteria, return 0.
-                        (ok u0)
-                    )
-                )
-            )
-        )
-    )
-)
-
-
 ;; Private helper function `is-namespace-available` checks if a namespace is available for registration or other operations.
 ;; It considers if the namespace has been launched and whether it has expired.
 ;; @params:
@@ -1966,5 +1880,28 @@
         ;; If it is not equal then do nothing
         false
         )
+    )
+)
+
+;; Function to update all the imported names' renewal-height on a namespace 
+(define-private (update-renewal-height (id uint)) 
+    (let 
+        (
+            ;; Get the name and namespace from the id uint
+            (name-namespace (unwrap! (map-get? index-to-name id) ERR-UNWRAP))
+            ;; Get the name-properties
+            (name-props (unwrap! (map-get? name-properties name-namespace) ERR-UNWRAP))
+            ;; Get the namespace properties
+            (namespace-props (unwrap! (map-get? namespaces (get namespace name-namespace)) ERR-UNWRAP))
+        )
+        (ok 
+            (map-set name-properties name-namespace 
+                (merge 
+                    name-props 
+                    ;; Only update the renewal-height to be the launched-at from the namespace + the lifetime of the namespace
+                    {renewal-height: (+ (unwrap! (get launched-at namespace-props) ERR-UNWRAP) (get lifetime namespace-props))}
+                )
+            )
+        ) 
     )
 )

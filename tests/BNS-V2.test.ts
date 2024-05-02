@@ -9466,7 +9466,393 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // Called from owner address
       address1
     );
-    // Expect a successful response
-    expect(renewName.result).toBeOk(Cl.bool(true));
+    // Return err ERR-NO-NAME
+    expect(renewName.result).toBeErr(Cl.uint(107));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail to renew a name in a managed namespace", () => {
+    successfullyTwoStepRegisterANameInAManagedNamespace();
+    // Renew the name
+    const renewName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-renewal",
+      // Pass 4 arguments
+      // 1. namespace
+      // 2. name
+      // 3. stx-to-burn
+      // 4. zonefile-hash
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.uint(20000000),
+        Cl.none(),
+      ],
+      // Called from owner address
+      address1
+    );
+    // Return err ERR-NAMESPACE-HAS-MANAGER
+    expect(renewName.result).toBeErr(Cl.uint(150));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail to renew a name if the namespace is not launched", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+        // 3. Are transfers allowed on the namespace
+        Cl.bool(true),
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Import a name
+    const importName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-import",
+      // Passing 5 arguments:
+      // 1. the namespace
+      // 2. the name
+      // 3. the beneficiary
+      // 4. the zonefile
+      // 5. stx-burn
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.principal(address2),
+        Cl.buffer(zonefileBuff),
+        Cl.uint(1000000000),
+      ],
+      // Called by the import address
+      address1
+    );
+    // This should give ok true
+    expect(importName.result).toBeOk(Cl.bool(true));
+
+    // Renew the name
+    const renewName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-renewal",
+      // Pass 4 arguments
+      // 1. namespace
+      // 2. name
+      // 3. stx-to-burn
+      // 4. zonefile-hash
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.uint(20000000),
+        Cl.none(),
+      ],
+      // Called from owner address
+      address1
+    );
+    // Return err ERR-NAMESPACE-NOT-LAUNCHED
+    expect(renewName.result).toBeErr(Cl.uint(121));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail to renew a name if the namespace does not require renewals", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+        // 3. Are transfers allowed on the namespace
+        Cl.bool(true),
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(0),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-ready",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    // Register the name
+    const registerName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(registerName.result).toBeOk(Cl.bool(true));
+
+    // Renew the name
+    const renewName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-renewal",
+      // Pass 4 arguments
+      // 1. namespace
+      // 2. name
+      // 3. stx-to-burn
+      // 4. zonefile-hash
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.uint(20000000),
+        Cl.none(),
+      ],
+      // Called from owner address
+      address1
+    );
+    // Return err ERR-NAME-OPERATION-UNAUTHORIZED
+    expect(renewName.result).toBeErr(Cl.uint(122));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current grace period", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+
+    // Mine blocks to be on the grace period
+    simnet.mineEmptyBlocks(7500);
+
+    // Renew the name
+    const renewName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-renewal",
+      // Pass 4 arguments
+      // 1. namespace
+      // 2. name
+      // 3. stx-to-burn
+      // 4. zonefile-hash
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.uint(20000000),
+        Cl.none(),
+      ],
+      // Called from non owner address
+      address2
+    );
+    // Return err ERR-NOT-AUTHORIZED
+    expect(renewName.result).toBeErr(Cl.uint(102));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current lifetime", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+
+    // Renew the name
+    const renewName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-renewal",
+      // Pass 4 arguments
+      // 1. namespace
+      // 2. name
+      // 3. stx-to-burn
+      // 4. zonefile-hash
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.uint(20000000),
+        Cl.none(),
+      ],
+      // Called from non owner address
+      address2
+    );
+    // Return err ERR-NOT-AUTHORIZED
+    expect(renewName.result).toBeErr(Cl.uint(102));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail to renew a name if the stx-burn is not sufficient for the price", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+
+    // Renew the name
+    const renewName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-renewal",
+      // Pass 4 arguments
+      // 1. namespace
+      // 2. name
+      // 3. stx-to-burn
+      // 4. zonefile-hash
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.uint(2), Cl.none()],
+      // Called from owner address
+      address1
+    );
+    // Return err ERR-NAME-STX-BURNT-INSUFFICIENT
+    expect(renewName.result).toBeErr(Cl.uint(133));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail to renew a name if the name is revoked", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+
+    // Revoke the name
+    const revokeName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-revoke",
+      // Pass 2 arguments
+      // 1. namespace
+      // 2. name
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff)],
+      // Called from the import address
+      address1
+    );
+    expect(revokeName.result).toBeOk(Cl.bool(true));
+
+    // Renew the name
+    const renewName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-renewal",
+      // Pass 4 arguments
+      // 1. namespace
+      // 2. name
+      // 3. stx-to-burn
+      // 4. zonefile-hash
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.uint(200000000),
+        Cl.none(),
+      ],
+      // Called from owner address
+      address1
+    );
+    // Return err ERR-NAME-REVOKED
+    expect(renewName.result).toBeErr(Cl.uint(139));
   });
 });
