@@ -339,11 +339,11 @@
         ;; Set the helper variable to remove the id being transferred from the list of currently owned nfts by owner
         (var-set uint-helper-to-remove id)
         ;; Updates currently owned names of the owner by removing the id being transferred
-        (map-set bns-ids-by-principal name-current-owner (filter is-not-removeable all-nfts-owned-by-owner))
+        (map-set bns-ids-by-principal name-current-owner (get new-list (try! (fold remove-uint-from-list all-nfts-owned-by-owner (ok {found: false, compare-uint: id, new-list: (list )})))))
         ;; Updates currently owned names of the recipient by adding the id being transferred
         (map-set bns-ids-by-principal recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
         ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
-        (shift-primary-name id name-current-owner)
+        (unwrap! (shift-primary-name id name-current-owner) ERR-UNWRAP)
         ;; Updates the primary name of the receiver if needed, if the receiver doesn't have a name assign it as primary
         (match recipient-primary-name
             name-match
@@ -529,14 +529,14 @@
         ;; Set the helper variable to remove the id being burned from the list of currently owned nfts by owner
         (var-set uint-helper-to-remove id)
         ;; Updates currently owned names of the owner by removing the id being burned
-        (map-set bns-ids-by-principal current-name-owner (filter is-not-removeable all-nfts-owned-by-owner))
+        (map-set bns-ids-by-principal current-name-owner (get new-list (try! (fold remove-uint-from-list all-nfts-owned-by-owner (ok {found: false, compare-uint: id, new-list: (list )})))))
         ;; Deletes the maps
         (map-delete name-properties name-and-namespace)
         (map-delete index-to-name id)
         (map-delete name-to-index name-and-namespace)
         ;; Checks if the id being burned is the primary name of the owner
         ;; Updates the primary name of the owner if needed, in the case that the id being burned is the primary name
-        (shift-primary-name id current-name-owner)
+        (unwrap! (shift-primary-name id current-name-owner) ERR-UNWRAP)
         ;; Executes the burn operation for the specified NFT, effectively removing it from circulation.
         (nft-burn? BNS-V2 id current-name-owner)
     )
@@ -1777,11 +1777,11 @@
         ;; Set the helper variable to remove the id being transferred from the list of currently owned nfts by owner
         (var-set uint-helper-to-remove id)
         ;; Updates currently owned names of the owner by removing the id being transferred
-        (map-set bns-ids-by-principal owner (filter is-not-removeable all-nfts-owned-by-owner))
+        (map-set bns-ids-by-principal owner (get new-list (try! (fold remove-uint-from-list all-nfts-owned-by-owner (ok {found: false, compare-uint: id, new-list: (list )})))))
         ;; Updates currently owned names of the recipient by adding the id being transferred
         (map-set bns-ids-by-principal recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
         ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
-        (shift-primary-name id owner)
+        (unwrap! (shift-primary-name id owner) ERR-UNWRAP)
         ;; Updates the primary name of the receiver if needed, if the receiver doesn't have a name assign it as primary
         (match recipient-primary-name
             name-match
@@ -1797,6 +1797,7 @@
     )
 )
 
+
 (define-private (shift-primary-name (nft uint) (owner principal)) 
     (let 
         (
@@ -1805,18 +1806,17 @@
             ;; Gets the currently owned NFTs by the owner
             (all-nfts-owned-by-owner (default-to (list) (map-get? bns-ids-by-principal owner)))
         ) 
-        (if (is-eq (some nft) owner-primary-name) 
-        ;; If the id is the primary name, then check if there are other names owned by the user
-        (match (element-at? (filter is-not-removeable all-nfts-owned-by-owner) u0) 
-            next-name 
-            ;; If the user does have more names then set it to the index0 name
-            (map-set primary-name owner next-name) 
-            ;; If the user doesn't have more names then delete the primary-name map associated to that user
-            (map-delete primary-name owner)
-        )
-        ;; If it is not equal then do nothing
-        false
-        )
+        (ok (if (is-eq (some nft) owner-primary-name) 
+            ;; If the id is the primary name, then check if the length of the list is bigger than 0
+            (if (< u0 (len all-nfts-owned-by-owner)) 
+                ;; If it is then set the index u0 to the primary name
+                (map-set primary-name owner (unwrap! (element-at? all-nfts-owned-by-owner u0) ERR-UNWRAP))
+                ;; If it is not then there is no more names then delete the map
+                (map-delete primary-name owner)
+            )
+            ;; If it is not equal then do nothing
+            false
+        ))
     )
 )
 
@@ -1842,3 +1842,40 @@
         ) 
     )
 )
+
+(define-private (remove-uint-from-list (list-uint uint) (helper-tuple-response (response {found: bool, compare-uint: uint, new-list: (list 1000 uint)} uint)))
+    (match helper-tuple-response
+        helper-tuple
+            (let 
+                (
+                    (current-found (get found helper-tuple))
+                    (current-compare-uint (get compare-uint helper-tuple))
+                    (current-new-list (get new-list helper-tuple))
+                )
+                ;; check if uint was found
+                (if current-found
+                    ;; uint was found & skipped, continue appending existing list-uints to new-list
+                    (ok (merge 
+                        helper-tuple
+                        {new-list: (unwrap! (as-max-len? (append current-new-list list-uint) u1000) ERR-OVERFLOW)}
+                    ))
+                    ;; uint was not found, continue searching for compare-uint
+                    (if (is-eq list-uint current-compare-uint)
+                        ;; uint was found, skip appending to new-list & set found to true
+                        (ok (merge 
+                            helper-tuple
+                            {found: true, new-list: current-new-list}
+                        ))
+                        ;; uint was not found, continue appending existing list-principal to new-list
+                        (ok (merge 
+                            helper-tuple
+                            {new-list: (unwrap! (as-max-len? (append current-new-list list-uint) u1000) ERR-OVERFLOW)}
+                        ))
+                    )
+                )
+            )
+        err-response
+            ERR-OVERFLOW
+    )
+)
+
