@@ -1016,71 +1016,8 @@
         (asserts! (is-none current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Ensure the name is available
         (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        ;; ;; Check if the name is-none 
-        ;; (match name-index 
-        ;;     name-exists
-        ;;     ;; If the name exists then do name-renewal
-        ;;     (unwrap! (name-renewal namespace name (unwrap! (get stx-burn name-props) ERR-UNWRAP) (some zonefile-hash)) ERR-UNWRAP)
-        ;;     ;; If the name does not exist, then do everything as it is right now
-        ;;     (begin
-        ;;         ;; Validates that the preorder was made after the namespace was officially launched.
-        ;;         (asserts! (> (get created-at preorder) (unwrap-panic (get launched-at namespace-props))) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
-        ;;         ;; Checks that the preorder has not already been claimed to avoid duplicate name registrations.
-        ;;         ;; I think we can remove this... since it already checks for a name
-        ;;         (asserts! (is-eq (get claimed preorder) false) ERR-NAME-ALREADY-CLAIMED)
-        ;;         ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
-        ;;         (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
-        ;;         ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
-        ;;         (asserts! (>= (get stx-burned preorder) (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
-        ;;         ;; Updates the list of names owned by the recipient to include the new name ID.
-        ;;         (map-set bns-ids-by-principal tx-sender (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
-        ;;         ;; Sets the newly registered name as the primary name for the recipient if they do not already have one.
-        ;;         (match (map-get? primary-name tx-sender) 
-        ;;             receiver
-        ;;             ;; If it has a primary-name then do nothing
-        ;;             false
-        ;;             ;; If it is none, then assign the ID being minted as the primary-name
-        ;;             (map-set primary-name tx-sender id-to-be-minted)
-        ;;         )
-        ;;         ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
-        ;;         (map-set name-properties
-        ;;             {
-        ;;                 name: name, namespace: namespace
-        ;;             } 
-        ;;             {
-        ;;                 registered-at: (some block-height),
-        ;;                 imported-at: none,
-        ;;                 revoked-at: none,
-        ;;                 zonefile-hash: (some zonefile-hash),
-        ;;                 locked: false,
-        ;;                 renewal-height: (+ (get lifetime namespace-props) block-height),
-        ;;                 stx-burn: (get stx-burned preorder),
-        ;;                 owner: tx-sender,
-        ;;             }
-        ;;         )
-        ;;         ;; Updates the preorder to mark it as claimed.
-        ;;         (map-set name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender } 
-        ;;             (merge 
-        ;;                 preorder 
-        ;;                 {claimed: true}
-        ;;             )
-        ;;         )
-        ;;         ;; Links the new ID to the name and namespace.
-        ;;         (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
-        ;;         ;; Links the name and namespace to the new ID.
-        ;;         (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
-        ;;         ;; Updates the BNS-index var
-        ;;         (var-set bns-index id-to-be-minted)
-        ;;         ;; Mints the BNS name as an NFT and assigns it to the tx sender.
-        ;;         (unwrap! (nft-mint? BNS-V2 id-to-be-minted tx-sender) ERR-NAME-COULD-NOT-BE-MINTED)
-        ;;     )
-        ;; )
         ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap-panic (get launched-at namespace-props))) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
-        ;; Checks that the preorder has not already been claimed to avoid duplicate name registrations.
-        ;; I think we can remove this... since it already checks for a name
-        (asserts! (is-eq (get claimed preorder) false) ERR-NAME-ALREADY-CLAIMED)
         ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
         (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
         ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
@@ -1212,7 +1149,6 @@
             ;; If it has a primary-name then do nothing
             false
             ;; If it is none, then assign the ID being minted as the primary-name
-            ;; Updated this major bug haha 
             (map-set primary-name send-to id-to-be-minted)
         )
         ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
@@ -1405,7 +1341,7 @@
                         )
                     )
                 )
-                ;; If the name is not in the lifetime period, but is on the grace period
+                ;; If the name is not in the lifetime period, but is in the grace period
                 (begin 
                     ;; Asserts that the sender of the transaction matches the current owner of the name.
                     (asserts! (is-eq owner tx-sender) ERR-NOT-AUTHORIZED)
@@ -1466,9 +1402,10 @@
         ;; Burns the STX provided
         (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-UNWRAP)
         ;; Checks if a new zone file hash is specified
-        (if (is-some zonefile-hash) 
+        (match zonefile-hash
+            zonefile
             ;; If it is then update it
-            (unwrap! (update-zonefile-hash namespace name (unwrap! zonefile-hash ERR-UNWRAP)) ERR-UNWRAP)
+            (unwrap! (update-zonefile-hash namespace name zonefile) ERR-UNWRAP)
             ;; If there isn't then continue
             false
         )
