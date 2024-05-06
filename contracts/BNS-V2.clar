@@ -298,12 +298,14 @@
             (imported-at-value (get imported-at name-props))
             ;; Gets the current owner of the name from the name-props
             (name-current-owner (get owner name-props))
+            ;; Revalidate the name current owner
+            (nft-current-owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP))
             ;; Gets the currently owned NFTs by the owner
-            (all-nfts-owned-by-owner (default-to (list) (map-get? bns-ids-by-principal owner)))
+            (all-nfts-owned-by-owner (default-to (list) (map-get? bns-ids-by-principal name-current-owner)))
             ;; Gets the currently owned NFTs by the recipient
             (all-nfts-owned-by-recipient (default-to (list) (map-get? bns-ids-by-principal recipient)))
             ;; Checks if the owner has a primary name
-            (owner-primary-name (map-get? primary-name owner))
+            (owner-primary-name (map-get? primary-name name-current-owner))
             ;; Checks if the recipient has a primary name
             (recipient-primary-name (map-get? primary-name recipient))
         )
@@ -312,7 +314,7 @@
             is-imported 
             ;; If it was imported, then do nothing
             true 
-            ;; If it was not imported then it was registered, so check if registered-at + 1 is lower than current blockheight
+            ;; If it was not imported then it was registered, so check if registered-at is lower than current blockheight
             (asserts! (<= (+ (unwrap! registered-at-value ERR-UNWRAP) u1) block-height) ERR-NAME-OPERATION-UNAUTHORIZED)
         )
 
@@ -327,18 +329,18 @@
                 (asserts! (get manager-transferable namespace-props) ERR-NOT-AUTHORIZED)
             )
             ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
-            (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
+            (asserts! (is-eq tx-sender name-current-owner nft-current-owner) ERR-NOT-AUTHORIZED)
         ) 
         ;; Ensures the NFT is not currently listed in the market, which would block transfers.
         (asserts! (is-none (map-get? market id)) ERR-LISTED)
         ;; Set the helper variable to remove the id being transferred from the list of currently owned nfts by owner
         (var-set uint-helper-to-remove id)
         ;; Updates currently owned names of the owner by removing the id being transferred
-        (map-set bns-ids-by-principal owner (filter is-not-removeable all-nfts-owned-by-owner))
+        (map-set bns-ids-by-principal name-current-owner (filter is-not-removeable all-nfts-owned-by-owner))
         ;; Updates currently owned names of the recipient by adding the id being transferred
         (map-set bns-ids-by-principal recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
         ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
-        (shift-primary-name id owner)
+        (shift-primary-name id name-current-owner)
         ;; Updates the primary name of the receiver if needed, if the receiver doesn't have a name assign it as primary
         (match recipient-primary-name
             name-match
@@ -350,7 +352,7 @@
         ;; Updates the name-props map with the new information, everything stays the same, we only change the zonefile to none for a clean slate and the owner
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
         ;; Executes the NFT transfer from owner to recipient if all conditions are met.
-        (nft-transfer? BNS-V2 id owner recipient)
+        (nft-transfer? BNS-V2 id name-current-owner recipient)
     )
 )
 
@@ -387,7 +389,7 @@
             ;; If it was imported, then do nothing
             true 
             ;; If it was not imported then it was registered, so check if registered-at + 1 is lower than current blockheight
-            (asserts! (< (+ (unwrap! registered-at-value ERR-UNWRAP) u1) block-height) ERR-NAME-OPERATION-UNAUTHORIZED)
+            (asserts! (< (unwrap! registered-at-value ERR-UNWRAP) block-height) ERR-NAME-OPERATION-UNAUTHORIZED)
         )
         ;; Check if there is a namespace manager
         (match namespace-manager 
@@ -415,6 +417,8 @@
         (
             ;; Attempts to retrieve the name and namespace associated with the given NFT ID. If not found, it returns an error.
             (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
+            ;; Attempts to retrieve market map of the name
+            (market-map (unwrap! (map-get? market id) ERR-NOT-LISTED))
             ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
             (namespace (get namespace name-and-namespace))
             ;; Extracts the name part from the retrieved name-and-namespace tuple.
@@ -448,7 +452,7 @@
     (let
         (
             ;; Retrieves current owner and listing details
-            (owner (unwrap! (unwrap! (get-owner id) ERR-UNWRAP) ERR-UNWRAP))
+            (owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-NO-NAME))
             (listing (unwrap! (map-get? market id) ERR-NOT-LISTED))
             (price (get price listing))
         )
@@ -472,20 +476,16 @@
     (let 
         (
             ;; Retrieves the owner of the specified name ID
-            (owner (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NO-OWNER-FOR-NFT))
+            (owner (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NO-NAME))
             ;; Retrieves the current primary name for the caller, to check if an update is necessary. This should never cause an error unless the user doesn't own any BNS names
             (current-primary-name (unwrap! (map-get? primary-name tx-sender) ERR-NO-BNS-NAMES-OWNED))
             ;; Retrieves the name and namespace from the uint/index
             (name-and-namespace (unwrap! (map-get? index-to-name primary-name-id) ERR-NO-NAME))
-            ;; Retrieves the current locked status of the name, this should not cause and error, if the previous didn't
-            (is-locked (unwrap! (get locked (map-get? name-properties name-and-namespace)) ERR-NAME-LOCKED))
         ) 
         ;; Verifies that the caller (`tx-sender`) is indeed the owner of the name they wish to set as primary.
         (asserts! (is-eq owner tx-sender) ERR-NOT-AUTHORIZED)
         ;; Ensures the new primary name is different from the current one to avoid redundant updates.
         (asserts! (not (is-eq primary-name-id current-primary-name)) ERR-ALREADY-PRIMARY-NAME)
-        ;; Asserts that the name is not locked
-        (asserts! (is-eq false is-locked) ERR-NAME-LOCKED)
         ;; Updates the mapping of the caller's principal to the new primary name ID.
         (map-set primary-name tx-sender primary-name-id)
         ;; Returns 'true' upon successful execution of the function.
@@ -547,7 +547,7 @@
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
 
             ;; Extracts the current manager of the namespace from the retrieved properties.
-            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-UNWRAP))
+            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
         ) 
         ;; Verifies that the caller of the function is the current namespace manager to authorize the management transfer.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
@@ -722,7 +722,6 @@
     )
 )
 
-;; We can get rid of this, since namespace managers can do that on their own contract
 ;; NAME-IMPORT
 ;; Once a namespace is revealed, the user has the option to populate it with a set of names. Each imported name is given
 ;; both an owner and some off-chain state. This step is optional; Namespace creators are not required to import names.
@@ -781,6 +780,8 @@
         (map-set index-to-name current-mint {name: name, namespace: namespace})
         ;; Set the map name-to-index
         (map-set name-to-index {name: name, namespace: namespace} current-mint)
+        ;; Update the index of the minting
+        (var-set bns-index current-mint)
          ;; Mint the name to the beneficiary
         (unwrap! (nft-mint? BNS-V2 current-mint beneficiary) ERR-NAME-COULD-NOT-BE-MINTED)
         ;; Confirm successful import of the name.
@@ -875,8 +876,6 @@
            
             ;; If it doesn't
             (begin 
-                ;; Asserts a positive amount of STX to be burnt
-                (asserts! (> stx-burn u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
                 ;; Asserts tx-sender is the send-to
                 (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
                 ;; Burns the STX from the user
@@ -996,6 +995,7 @@
         ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap-panic (get launched-at namespace-props))) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Checks that the preorder has not already been claimed to avoid duplicate name registrations.
+        ;; I think we can remove this... since it already checks for a name
         (asserts! (is-eq (get claimed preorder) false) ERR-NAME-ALREADY-CLAIMED)
         ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
         (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
@@ -1116,6 +1116,7 @@
         ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap-panic (get launched-at namespace-props))) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Checks that the preorder has not already been claimed to avoid duplicate name registrations.
+        ;; I don't think this is needed
         (asserts! (is-eq (get claimed preorder) false) ERR-NAME-ALREADY-CLAIMED)
         ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
         (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
@@ -1127,7 +1128,8 @@
             ;; If it has a primary-name then do nothing
             false
             ;; If it is none, then assign the ID being minted as the primary-name
-            (map-set primary-name tx-sender id-to-be-minted)
+            ;; Updated this major bug haha 
+            (map-set primary-name send-to id-to-be-minted)
         )
         ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
         (map-set name-properties
@@ -1201,13 +1203,17 @@
         ;; Asserts the name has not been revoked.
         (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
         ;; See if the namespace has a manager
-        (match namespace-manager 
-            manager 
-            ;; If it does, then check contract caller is the manager
-            (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
-            ;; If not then check that the tx-sender is the owner
-            (asserts! (is-eq tx-sender owner) ERR-NOT-AUTHORIZED)
+        (asserts! 
+            (match namespace-manager 
+                manager 
+                ;; If it does, then check contract caller is the manager
+                (is-eq contract-caller manager)
+                ;; If not then check that the tx-sender is the owner
+                (is-eq tx-sender owner)
+            ) 
+            ERR-NOT-AUTHORIZED
         )
+        
         ;; Assert that the name is in valid time or grace period
         (asserts! (<= block-height (+ renewal NAME-GRACE-PERIOD-DURATION)) ERR-NAME-OPERATION-UNAUTHORIZED)
         ;; Update the zonefile hash
@@ -1243,10 +1249,19 @@
             ;; retreive the name props
             (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-NO-NAME))
         )
+        (asserts! 
+            (match namespace-manager 
+                manager 
+                (is-eq contract-caller manager)
+                (is-eq tx-sender (get namespace-import namespace-props))
+            ) 
+            ERR-NOT-AUTHORIZED
+        )
+            
         (map-set name-properties {name: name, namespace: namespace}
             (merge 
-                {revoked-at: (some block-height)} 
                 name-props
+                {revoked-at: (some block-height)} 
             )
         )
         ;; Return a success response indicating the name has been successfully revoked.
