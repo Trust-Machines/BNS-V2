@@ -70,6 +70,11 @@ plan:
             path: contracts/gamma-bns-v2-commission-container.clar
             clarity-version: 2
         - emulated-contract-publish:
+            contract-name: locker
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/locker.clar
+            clarity-version: 2
+        - emulated-contract-publish:
             contract-name: wrong-bns-v2-commission-container
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/wrong-bns-v2-commission-container.clar
