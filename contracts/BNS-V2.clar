@@ -302,7 +302,7 @@
             ;; Gets the current owner of the name from the name-props
             (name-current-owner (get owner name-props))
             ;; Revalidate the name current owner
-            (nft-current-owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP))
+            (nft-current-owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-NO-NAME))
             ;; Gets the currently owned NFTs by the owner
             (all-nfts-owned-by-owner (default-to (list) (map-get? bns-ids-by-principal name-current-owner)))
             ;; Gets the currently owned NFTs by the recipient
@@ -343,7 +343,7 @@
         ;; Updates currently owned names of the recipient by adding the id being transferred
         (map-set bns-ids-by-principal recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
         ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
-        (unwrap! (shift-primary-name id name-current-owner) ERR-UNWRAP)
+        (try! (shift-primary-name id name-current-owner))
         ;; Updates the primary name of the receiver if needed, if the receiver doesn't have a name assign it as primary
         (match recipient-primary-name
             name-match
@@ -400,7 +400,7 @@
             ;; If there is then check that the contract-caller is the manager
             (asserts! (is-eq manager contract-caller) ERR-NOT-AUTHORIZED)
             ;; If there isn't assert that the owner is the tx-sender
-            (asserts! (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+            (asserts! (is-eq (some tx-sender) (nft-get-owner? BNS-V2 id)) ERR-NOT-AUTHORIZED)
         )
         
         ;; Updates the market map with the new listing details
@@ -437,7 +437,7 @@
             ;; If there is then check that the contract-caller is the manager
             (asserts! (is-eq manager contract-caller) ERR-NOT-AUTHORIZED)
             ;; If there isn't assert that the owner is the tx-sender
-            (asserts! (is-eq (some tx-sender) (unwrap! (get-owner id) ERR-UNWRAP)) ERR-NOT-AUTHORIZED)
+            (asserts! (is-eq (some tx-sender) (nft-get-owner? BNS-V2 id)) ERR-NOT-AUTHORIZED)
         )
         ;; Deletes the listing from the market map
         (map-delete market id)
@@ -523,7 +523,7 @@
         (match is-listed
             listed
             ;; If it is listed then unlist
-            (unwrap! (unlist-in-ustx id) ERR-UNWRAP)
+            (try! (unlist-in-ustx id))
             {a: "not-listed", id: id}
         )
         ;; Set the helper variable to remove the id being burned from the list of currently owned nfts by owner
@@ -536,7 +536,7 @@
         (map-delete name-to-index name-and-namespace)
         ;; Checks if the id being burned is the primary name of the owner
         ;; Updates the primary name of the owner if needed, in the case that the id being burned is the primary name
-        (unwrap! (shift-primary-name id current-name-owner) ERR-UNWRAP)
+        (try! (shift-primary-name id current-name-owner))
         ;; Executes the burn operation for the specified NFT, effectively removing it from circulation.
         (nft-burn? BNS-V2 id current-name-owner)
     )
@@ -607,7 +607,7 @@
         ;; Confirm that the STX amount to be burned is positive
         (asserts! (> stx-to-burn u0) ERR-NAMESPACE-STX-BURNT-INSUFFICIENT)
         ;; Execute the token burn operation, deducting the specified STX amount from the buyer's balance.
-        (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-INSUFFICIENT-FUNDS)
+        (try! (stx-burn? stx-to-burn tx-sender))
         ;; Record the preorder details in the `namespace-preorders` map, marking it as not yet claimed.
         (map-set namespace-preorders
             { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }
@@ -807,7 +807,7 @@
         ;; Update the imported names list for the namespace
         (map-set imported-names namespace (unwrap! (as-max-len? (append imported-list-of-names current-mint) u1000) ERR-OVERFLOW))
         ;; Mint the name to the beneficiary
-        (unwrap! (nft-mint? BNS-V2 current-mint beneficiary) ERR-NAME-COULD-NOT-BE-MINTED)
+        (try! (nft-mint? BNS-V2 current-mint beneficiary))
         ;; Confirm successful import of the name.
         (ok true)
     )
@@ -903,7 +903,7 @@
                 ;; Asserts tx-sender is the send-to
                 (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
                 ;; Burns the STX from the user
-                (unwrap! (stx-burn? stx-burn send-to) ERR-INSUFFICIENT-FUNDS)
+                (try! (stx-burn? stx-burn send-to))
                 ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
                 (asserts! (>= stx-burn (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
             )
@@ -940,7 +940,7 @@
         ;; Links the name and namespace combination to the newly minted ID for forward lookup.
         (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
         ;; Mints the new BNS name as an NFT, assigned to the 'send-to' principal.
-        (unwrap! (nft-mint? BNS-V2 id-to-be-minted send-to) ERR-NAME-COULD-NOT-BE-MINTED)
+        (try! (nft-mint? BNS-V2 id-to-be-minted send-to))
         ;; Signals successful completion of the registration process.
         (ok true)
     )
@@ -976,7 +976,7 @@
         (asserts! (> stx-to-burn u0) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Burns the specified amount of STX tokens from the tx-sender
         ;; This operation fails if the sender does not have enough tokens, returns an insufficient funds error.
-        (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-INSUFFICIENT-FUNDS)
+        (try! (stx-burn? stx-to-burn tx-sender))
         ;; Records the preorder in the 'name-preorders' map.
         ;; It includes the hashed-salted FQN, the tx-sender as the buyer, the current block height, the amount of STX burned, and marks the preorder as not yet claimed.
         (map-set name-preorders
@@ -1017,7 +1017,7 @@
         ;; Ensure the name is available
         (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
         ;; Validates that the preorder was made after the namespace was officially launched.
-        (asserts! (> (get created-at preorder) (unwrap-panic (get launched-at namespace-props))) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
+        (asserts! (> (get created-at preorder) (unwrap! (get launched-at namespace-props) ERR-UNWRAP)) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
         (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
         ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
@@ -1062,7 +1062,7 @@
         ;; Updates the BNS-index var
         (var-set bns-index id-to-be-minted)
         ;; Mints the BNS name as an NFT and assigns it to the tx sender.
-        (unwrap! (nft-mint? BNS-V2 id-to-be-minted tx-sender) ERR-NAME-COULD-NOT-BE-MINTED)
+        (try! (nft-mint? BNS-V2 id-to-be-minted tx-sender))
         ;; Confirms successful registration of the name.
         (ok true)
     )
@@ -1135,7 +1135,7 @@
         ;; Ensures the name is not already registered by checking if it lacks an existing index.
         (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
         ;; Validates that the preorder was made after the namespace was officially launched.
-        (asserts! (> (get created-at preorder) (unwrap-panic (get launched-at namespace-props))) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
+        (asserts! (> (get created-at preorder) (unwrap! (get launched-at namespace-props) ERR-UNWRAP)) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Checks that the preorder has not already been claimed to avoid duplicate name registrations.
         ;; I don't think this is needed
         (asserts! (is-eq (get claimed preorder) false) ERR-NAME-ALREADY-CLAIMED)
@@ -1181,7 +1181,7 @@
         ;; Updates BNS-index variable to the newly minted ID.
         (var-set bns-index id-to-be-minted)
         ;; Mints the BNS name as an NFT to the send-to address, finalizing the registration.
-        (unwrap! (nft-mint? BNS-V2 id-to-be-minted send-to) ERR-NAME-COULD-NOT-BE-MINTED)
+        (try! (nft-mint? BNS-V2 id-to-be-minted send-to))
         ;; Confirms successful registration of the name.
         (ok true)
     )
@@ -1369,7 +1369,7 @@
                     ;; If the tx-sender is not the owner
                     (begin 
                         ;; transfer the name and update all maps 
-                        (unwrap! (purchase-transfer name-index owner tx-sender) ERR-UNWRAP)
+                        (try! (purchase-transfer name-index owner tx-sender))
                         ;; Update the renewal-height to be the current block-height + the lifetime of the namespace
                         (map-set name-properties {name: name, namespace: namespace}
                             (merge 
@@ -1384,7 +1384,7 @@
                     ;; Deletes the listing from the market map
                     (map-delete market name-index) 
                     ;; Then transfers the name and updates every map
-                    (unwrap! (purchase-transfer name-index owner tx-sender) ERR-UNWRAP)
+                    (try! (purchase-transfer name-index owner tx-sender))
                     ;; Update the renewal-height
                     (map-set name-properties {name: name, namespace: namespace}
                         (merge 
@@ -1400,12 +1400,12 @@
         ;; Asserts that the name has not been revoked.
         (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
         ;; Burns the STX provided
-        (unwrap! (stx-burn? stx-to-burn tx-sender) ERR-UNWRAP)
+        (try! (stx-burn? stx-to-burn tx-sender))
         ;; Checks if a new zone file hash is specified
         (match zonefile-hash
             zonefile
             ;; If it is then update it
-            (unwrap! (update-zonefile-hash namespace name zonefile) ERR-UNWRAP)
+            (try! (update-zonefile-hash namespace name zonefile))
             ;; If there isn't then continue
             false
         )
@@ -1485,7 +1485,7 @@
         (asserts! (> namespace-len u0) ERR-NAMESPACE-BLANK)
         ;; Retrieve the price for the namespace based on its length from the NAMESPACE-PRICE-TIERS list.
         ;; The price tier is determined by the minimum of 7 or the namespace length minus one.
-        (ok (unwrap-panic (element-at NAMESPACE-PRICE-TIERS (min u7 (- namespace-len u1)))))
+        (ok (unwrap! (element-at NAMESPACE-PRICE-TIERS (min u7 (- namespace-len u1))) ERR-UNWRAP))
     )
 )
 
@@ -1781,7 +1781,7 @@
         ;; Updates currently owned names of the recipient by adding the id being transferred
         (map-set bns-ids-by-principal recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
         ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
-        (unwrap! (shift-primary-name id owner) ERR-UNWRAP)
+        (try! (shift-primary-name id owner))
         ;; Updates the primary name of the receiver if needed, if the receiver doesn't have a name assign it as primary
         (match recipient-primary-name
             name-match

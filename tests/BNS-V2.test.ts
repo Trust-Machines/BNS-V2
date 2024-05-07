@@ -2814,7 +2814,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       address1
     );
     // This should give err ERR-INSUFFICIENT-FUNDS
-    expect(preorderNamespace.result).toBeErr(Cl.uint(112));
+    expect(preorderNamespace.result).toBeErr(Cl.uint(1));
   });
 });
 
@@ -5454,7 +5454,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       address1
     );
     // Return err ERR-INSUFFICIENT-FUNDS
-    expect(fastClaimName.result).toBeErr(Cl.uint(112));
+    expect(fastClaimName.result).toBeErr(Cl.uint(1));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -6355,7 +6355,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // Return err ERR-INSUFFICIENT-FUNDS
-    expect(preorderName.result).toBeErr(Cl.uint(112));
+    expect(preorderName.result).toBeErr(Cl.uint(1));
   });
 });
 
