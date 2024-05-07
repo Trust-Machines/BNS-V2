@@ -26,10 +26,20 @@
 ;;;;;;;;;;;;;;
 
 ;; Map of admin principals
-(define-map admin-principals principal bool)
+(define-map admin-principals principal 
+    {
+        authorized: bool,
+        signer-pubkey-hash: (buff 20)
+    }
+)
 
 ;; Set the contract deployer as an initial admin principal
-(map-set admin-principals contract-deployer true)
+(map-set admin-principals contract-deployer 
+    {
+        authorized: true,
+        signer-pubkey-hash: (get-pubkey-hash contract-deployer)
+    }
+)
 
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;
@@ -45,7 +55,7 @@
 
 ;; Is the caller an admin principal?
 (define-read-only (is-admin (who principal))
-	(ok (asserts! (default-to false (map-get? admin-principals who)) ERR-NOT-AUTH))
+	(ok (asserts! (get authorized (default-to {authorized: false, signer-pubkey-hash: (get-pubkey-hash who)} (map-get? admin-principals who))) ERR-NOT-AUTH))
 )
 
 ;;;;;;;;;;;;;;;;
@@ -82,20 +92,29 @@
 		;; check that the caller is an admin principal
 		(try! (is-admin contract-caller))
 		;; map set the new admin principal
-		(ok (map-set admin-principals new-admin-principal true))
+		(ok (map-set admin-principals new-admin-principal {authorized: true, signer-pubkey-hash: (get-pubkey-hash new-admin-principal)}))
 	)
 )
 
-;; remove-privileged-protocol-principal
-;; description: Allows a privileged protocol principal to remove a privileged protocol principal
-;; inputs: protocol-principal/principal - The privileged protocol principal to remove
-(define-public (remove-privileged-protocol-principal (protocol-principal principal))
+;; remove-admin-principal
+;; description: Allows an admin principal to remove an admin principal
+;; inputs: admin-principal/principal - The admin principal to remove
+(define-public (remove-admin-principal (admin-principal principal))
 	(begin 
 		;; check that the caller is a privileged protocol principal
 		(try! (is-admin contract-caller))
 		;; map remove the protocol principal
-		(ok (map-delete admin-principals  protocol-principal))
+		(ok (map-delete admin-principals admin-principal))
 	)
 )
 
+;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;
+;;;; Private ;;;;
+;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;
+
+(define-private (get-pubkey-hash (addr principal))
+  (get hash-bytes (unwrap-panic (principal-destruct? addr)))
+)
 
