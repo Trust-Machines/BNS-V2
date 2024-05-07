@@ -1866,7 +1866,7 @@
                             helper-tuple
                             {found: true, new-list: current-new-list}
                         ))
-                        ;; uint was not found, continue appending existing list-principal to new-list
+                        ;; uint was not found, continue appending existing list-uint to new-list
                         (ok (merge 
                             helper-tuple
                             {new-list: (unwrap! (as-max-len? (append current-new-list list-uint) u1000) ERR-OVERFLOW)}
@@ -1878,4 +1878,5 @@
             ERR-OVERFLOW
     )
 )
+
 

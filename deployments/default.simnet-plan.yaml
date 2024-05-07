@@ -39,6 +39,7 @@ genesis:
     - pox
     - pox-2
     - pox-3
+    - pox-4
     - lockup
     - costs-2
     - costs-3
