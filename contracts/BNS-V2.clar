@@ -137,6 +137,16 @@
 (define-constant ERR-NO-OWNER-FOR-NFT (err u152))
 (define-constant ERR-NO-BNS-NAMES-OWNED (err u153))
 (define-constant ERR-NO-NAMESPACE-MANAGER (err u154))
+(define-constant ERR-SAME-OWNER (err u155))
+(define-constant ERR-UNWRAP-PREORDER-OWNER (err u156))
+(define-constant ERR-UNWRAP-CREATED-AT-HEIGHT (err u157))
+(define-constant ERR-UNWRAP-NAME-INDEX (err u158))
+(define-constant ERR-UNWRAP-CURRENT-OWNER (err u159))
+(define-constant ERR-UNWRAP-CURRENT-OWNER-PREORDER-HEIGHT (err u160))
+(define-constant ERR-OWNER-IS-THE-SAME (err u161))
+(define-constant ERR-FAST-MINTED-BEFORE (err u162))
+(define-constant ERR-PREORDERED-BEFORE (err u163))
+(define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u164))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -203,6 +213,7 @@
         imported-at: (optional uint),
         revoked-at: (optional uint),
         zonefile-hash: (optional (buff 20)),
+        fqn-for-preorder: (optional (buff 20)),
         locked: bool, 
         renewal-height: uint,
         stx-burn: uint,
@@ -263,7 +274,7 @@
 ;; Tracks preorders for names, including their creation times, claim status, and STX burned.
 (define-map name-preorders
     { hashed-salted-fqn: (buff 20), buyer: principal }
-    { created-at: uint, claimed: bool, stx-burned: uint }
+    { created-at: uint, claimed: bool, stx-burned: uint}
 )
 
 ;; Defines a map to keep track of the imported names by namespace
@@ -792,6 +803,7 @@
                 imported-at: (some block-height),
                 revoked-at: none,
                 zonefile-hash: (some zonefile-hash),
+                fqn-for-preorder: none,
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 stx-burn: stx-burn,
@@ -929,6 +941,7 @@
                 imported-at: none,
                 revoked-at: none,
                 zonefile-hash: (some zonefile-hash),
+                fqn-for-preorder: none,
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 stx-burn: stx-burn,
@@ -1009,60 +1022,125 @@
             (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal tx-sender)))
             ;; Checks if the name and namespace combination already exists in the system.
             (name-props (map-get? name-properties {name: name, namespace: namespace}))
+            ;; Gets the registered-at height to further checks
+            (created-at-height (get registered-at name-props))
             ;; Retrieves the index of the name if it exists, to check for prior registrations.
             (name-index (map-get? name-to-index {name: name, namespace: namespace}))
+            ;; Get the height of my preorder
+            (tx-sender-preorder-height (get created-at preorder))
+            ;; Get name current owner
+            (name-current-owner 
+                ;; Check if name props exist
+                (match name-props n-props
+                    ;; If they do assign the owner of the name props
+                    (get owner name-props)
+                    ;; If it doesn't 
+                    none
+                )
+            )
+            ;; Get the current owners preorder
+            (preorder-current-owner 
+                ;; Check if there is name-current-owner
+                (match name-current-owner n-c-owner 
+                    (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: n-c-owner}) 
+                    none
+                )
+            )
+            ;; Get the current owners peorder height if any
+            (current-owners-preorder-height 
+                ;; Check if the preorder of the current owner actually exists
+                (match preorder-current-owner preorder-owner 
+                    ;; If it does then assign the created-at value
+                    (get created-at preorder-current-owner) 
+                    ;; If it doesn't then assing u0
+                    (some u0)
+                )
+            )
         )
         ;; Ensures that the namespace does not have a manager.
         (asserts! (is-none current-namespace-manager) ERR-NOT-AUTHORIZED)
-        ;; Ensure the name is available
-        (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
+        ;; Ensure the name is available, and if it is not then validate other scenarios
+        ;; (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
+        ;; Check if the name is registered or not
+        (if (is-none name-index) 
+            ;; If it is not registered then execute all actions required 
+            (begin
+                ;; Updates the list of names owned by the recipient to include the new name ID.
+                (map-set bns-ids-by-principal tx-sender (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
+                ;; Sets the newly registered name as the primary name for the recipient if they do not already have one.
+                (match (map-get? primary-name tx-sender) 
+                    receiver
+                    ;; If it has a primary-name then do nothing
+                    false
+                    ;; If it is none, then assign the ID being minted as the primary-name
+                    (map-set primary-name tx-sender id-to-be-minted)
+                )
+                ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
+                (map-set name-properties
+                    {
+                        name: name, namespace: namespace
+                    } 
+                    {
+                        registered-at: (some block-height),
+                        imported-at: none,
+                        revoked-at: none,
+                        zonefile-hash: (some zonefile-hash),
+                        fqn-for-preorder: (some hashed-salted-fqn),
+                        locked: false,
+                        renewal-height: (+ (get lifetime namespace-props) block-height),
+                        stx-burn: (get stx-burned preorder),
+                        owner: tx-sender,
+                    }
+                )
+                ;; Updates the preorder to mark it as claimed.
+                (map-set name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender } 
+                    (merge 
+                        preorder 
+                        {claimed: true}
+                    )
+                )
+                ;; Links the new ID to the name and namespace.
+                (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
+                ;; Links the name and namespace to the new ID.
+                (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
+                ;; Updates the BNS-index var
+                (var-set bns-index id-to-be-minted)
+                ;; Mints the BNS name as an NFT and assigns it to the tx sender.
+                (try! (nft-mint? BNS-V2 id-to-be-minted tx-sender))
+            )
+            ;; If it is false, then it is registered... we need to do further checks
+            ;; First check that the owner is not the tx-sender
+            (if (is-eq (some tx-sender) name-current-owner)
+                ;; If the owner and the tx-sender are the same then exit
+                (asserts! false ERR-OWNER-IS-THE-SAME)
+                ;; If the owner and the tx sender are not the same then
+                ;; Check if the current owners preorder happened by checking it is eq to some u0
+                (if (is-eq current-owners-preorder-height (some u0)) 
+                    ;; If it is true then it means that there was no preorder, so it was fast minted, so we need to check if the created-at of the current owner is higher than my preorder
+                    (if (< (- (unwrap! (unwrap! created-at-height ERR-UNWRAP-CREATED-AT-HEIGHT) ERR-UNWRAP-CREATED-AT-HEIGHT) u1) tx-sender-preorder-height) 
+                        ;; If the created at height is lower than the tx-sender preorder height then return false because the name can not be resitered
+                        (asserts! false ERR-FAST-MINTED-BEFORE)
+                        ;; If it is false then it means that tx-sender's preorder happened before the fast claim, so the name belongs to the tx-sender
+                        (try! (purchase-transfer (unwrap! name-index ERR-UNWRAP-NAME-INDEX) (unwrap! name-current-owner ERR-UNWRAP-CURRENT-OWNER) tx-sender))
+                    )
+                    ;; If the current owners preorder height is not equal to some u0 it means that a preorder happened, so we need to check which preorder was made first
+                    (if (< (unwrap! current-owners-preorder-height ERR-UNWRAP-CURRENT-OWNER-PREORDER-HEIGHT) tx-sender-preorder-height) 
+                        ;; If the owners preorder is lower than the tx-sender's then false, the name belongs to the current owner
+                        (asserts! false ERR-PREORDERED-BEFORE)
+                        ;; If the owners preorder is higher than the tx-sender's then send the name to the tx-sender
+                        (try! (purchase-transfer (unwrap! name-index ERR-UNWRAP-NAME-INDEX) (unwrap! name-current-owner ERR-UNWRAP-CURRENT-OWNER) tx-sender))
+                    )
+                )
+            )
+        )
         ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap! (get launched-at namespace-props) ERR-UNWRAP)) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
         (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
+        ;; Verifies that 1 block has passed from when the preorder was made
+        (asserts! (> block-height (+ (get created-at preorder) u1)) ERR-NAME-NOT-CLAIMABLE-YET)
         ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
         (asserts! (>= (get stx-burned preorder) (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
-        ;; Updates the list of names owned by the recipient to include the new name ID.
-        (map-set bns-ids-by-principal tx-sender (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
-        ;; Sets the newly registered name as the primary name for the recipient if they do not already have one.
-        (match (map-get? primary-name tx-sender) 
-            receiver
-            ;; If it has a primary-name then do nothing
-            false
-            ;; If it is none, then assign the ID being minted as the primary-name
-            (map-set primary-name tx-sender id-to-be-minted)
-        )
-        ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
-        (map-set name-properties
-            {
-                name: name, namespace: namespace
-            } 
-            {
-                registered-at: (some block-height),
-                imported-at: none,
-                revoked-at: none,
-                zonefile-hash: (some zonefile-hash),
-                locked: false,
-                renewal-height: (+ (get lifetime namespace-props) block-height),
-                stx-burn: (get stx-burned preorder),
-                owner: tx-sender,
-            }
-        )
-        ;; Updates the preorder to mark it as claimed.
-        (map-set name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender } 
-            (merge 
-                preorder 
-                {claimed: true}
-            )
-        )
-        ;; Links the new ID to the name and namespace.
-        (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
-        ;; Links the name and namespace to the new ID.
-        (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
-        ;; Updates the BNS-index var
-        (var-set bns-index id-to-be-minted)
-        ;; Mints the BNS name as an NFT and assigns it to the tx sender.
-        (try! (nft-mint? BNS-V2 id-to-be-minted tx-sender))
         ;; Confirms successful registration of the name.
         (ok true)
     )
@@ -1161,6 +1239,7 @@
                 imported-at: none,
                 revoked-at: none,
                 zonefile-hash: (some zonefile-hash),
+                fqn-for-preorder: (some hashed-salted-fqn),
                 locked: false,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 stx-burn: u0,
