@@ -120,8 +120,8 @@ const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
     // Called by any address, in this case address1
     address1
   );
-  // This should give ok u146 since the blockheight is 2 + 144 TTL
-  expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+  // This should give ok u147 since the blockheight is 2 + 144 TTL
+  expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
   // Reveal the namespace
   const revealNamespace = simnet.callPublicFn(
@@ -197,7 +197,7 @@ const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
     address1
   );
   // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(149));
+  expect(preorderName.result).toBeOk(Cl.uint(150));
 
   // Register the name
   const registerName = simnet.callPublicFn(
@@ -234,7 +234,7 @@ const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace = () => {
     address1
   );
   // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(151));
+  expect(preorderName.result).toBeOk(Cl.uint(152));
 
   // Register the name
   const registerName = simnet.callPublicFn(
@@ -270,8 +270,8 @@ const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
     // Called by any address, in this case address1
     address1
   );
-  // This should give ok u146 since the blockheight is 2 + 144 TTL
-  expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+  // This should give ok u147 since the blockheight is 2 + 144 TTL
+  expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
   // Reveal the namespace
   const revealNamespace = simnet.callPublicFn(
@@ -346,7 +346,7 @@ const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
     managerAddress
   );
   // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(149));
+  expect(preorderName.result).toBeOk(Cl.uint(150));
 
   // Register the name
   const registerName = simnet.callPublicFn(
@@ -384,7 +384,7 @@ const successfullyTwoStepRegisterASecondNameInAManagedNamespace = () => {
     managerAddress
   );
   // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(151));
+  expect(preorderName.result).toBeOk(Cl.uint(152));
 
   // Register the name
   const registerName = simnet.callPublicFn(
@@ -422,8 +422,8 @@ const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
     // Called by any address, in this case address1
     address1
   );
-  // This should give ok u146 since the blockheight is 2 + 144 TTL
-  expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+  // This should give ok u147 since the blockheight is 2 + 144 TTL
+  expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
   // Reveal the namespace
   const revealNamespace = simnet.callPublicFn(
@@ -547,8 +547,8 @@ const successfullyFastClaimANameInAManagedNamespace = () => {
     // Called by any address, in this case address1
     address1
   );
-  // This should give ok u146 since the blockheight is 2 + 144 TTL
-  expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+  // This should give ok u147 since the blockheight is 2 + 144 TTL
+  expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
   // Reveal the namespace
   const revealNamespace = simnet.callPublicFn(
@@ -858,8 +858,8 @@ describe("TRANSFER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -1718,8 +1718,8 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Call the namespace-reveal function from the BNS-V2 contract
     const revealNamespace = simnet.callPublicFn(
@@ -1842,8 +1842,8 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Call the namespace-reveal function from the BNS-V2 contract
     const revealNamespace = simnet.callPublicFn(
@@ -2665,8 +2665,8 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
   });
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2683,8 +2683,8 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // mine 144 empty blocks so that TTL is passed
     simnet.mineEmptyBlocks(144);
@@ -2701,7 +2701,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       address1
     );
     // This should give ok u291 since the blockheight is 2 + 144 of time passed + 1 of the current block mined + 144 TTL
-    expect(preorderNamespace2.result).toBeOk(Cl.uint(291));
+    expect(preorderNamespace2.result).toBeOk(Cl.uint(292));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2717,8 +2717,8 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Preorder the same Namespace again before the 144 ttl has passed
     const preorderNamespace2 = simnet.callPublicFn(
@@ -2748,8 +2748,8 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Preorder the same Namespace again but with a different address
     const preorderNamespace2 = simnet.callPublicFn(
@@ -2763,7 +2763,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       address2
     );
     // This should give ok u147 since the blockheight is 3 + 144 TTL
-    expect(preorderNamespace2.result).toBeOk(Cl.uint(147));
+    expect(preorderNamespace2.result).toBeOk(Cl.uint(148));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2842,8 +2842,8 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -2909,8 +2909,8 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3029,8 +3029,8 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3096,8 +3096,8 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3213,8 +3213,8 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3280,11 +3280,11 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Mine 148 blocks to make sure TTL has passed
-    simnet.mineEmptyBlocks(148);
+    simnet.mineEmptyBlocks(149);
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3362,8 +3362,8 @@ describe("NAMESPACE-READY FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3441,8 +3441,8 @@ describe("NAMESPACE-READY FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3535,8 +3535,8 @@ describe("NAMESPACE-READY FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3614,8 +3614,8 @@ describe("NAMESPACE-READY FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3705,8 +3705,8 @@ describe("NAMESPACE-READY FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3799,8 +3799,8 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3915,8 +3915,8 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4005,8 +4005,8 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4095,8 +4095,8 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4197,8 +4197,8 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4560,8 +4560,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4662,8 +4662,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4764,8 +4764,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4889,8 +4889,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5039,8 +5039,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5148,7 +5148,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAME-ALREADY-CLAIMED
-    expect(fastClaimName2.result).toBeErr(Cl.uint(137));
+    expect(fastClaimName2.result).toBeErr(Cl.uint(123));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5164,8 +5164,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5266,8 +5266,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5368,8 +5368,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5470,8 +5470,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5584,8 +5584,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5661,7 +5661,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5677,8 +5677,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5754,7 +5754,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Mine blocks for order to expire
     simnet.mineEmptyBlocks(145);
@@ -5771,7 +5771,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 295, the current blockheight 151 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(295));
+    expect(preorderName2.result).toBeOk(Cl.uint(296));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5787,8 +5787,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5863,7 +5863,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -5879,8 +5879,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5956,7 +5956,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -5986,8 +5986,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6062,7 +6062,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -6092,8 +6092,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6185,8 +6185,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6278,8 +6278,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6383,8 +6383,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6460,7 +6460,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -6497,8 +6497,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6574,7 +6574,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -6609,7 +6609,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(151));
+    expect(preorderName2.result).toBeOk(Cl.uint(152));
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -6646,8 +6646,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6747,7 +6747,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 146, the current blockheight 2 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(146));
+    expect(preorderName.result).toBeOk(Cl.uint(147));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -6784,8 +6784,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6861,7 +6861,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -6898,8 +6898,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6975,7 +6975,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -7010,7 +7010,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 151, current block 7 plus 144 of the TTL
-    expect(preorderName2.result).toBeOk(Cl.uint(151));
+    expect(preorderName2.result).toBeOk(Cl.uint(152));
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -7031,7 +7031,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-UNAVAILABLE
-    expect(registerName2.result).toBeErr(Cl.uint(132));
+    expect(registerName2.result).toBeErr(Cl.uint(123));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -7047,8 +7047,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7109,7 +7109,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
       address1
     );
-    expect(preorderName.result).toBeOk(Cl.uint(148));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
@@ -7158,8 +7158,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7235,7 +7235,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Mine blocks to pass TTL
     simnet.mineEmptyBlocks(150);
@@ -7275,8 +7275,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7352,7 +7352,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -7400,8 +7400,8 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7476,7 +7476,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -7492,8 +7492,8 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7568,7 +7568,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -7584,8 +7584,8 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7660,7 +7660,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Mine blocks to pass ttl
     simnet.mineEmptyBlocks(144);
@@ -7676,7 +7676,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 294, the current blockheight 150 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(294));
+    expect(preorderName2.result).toBeOk(Cl.uint(295));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -7692,8 +7692,8 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7768,7 +7768,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -7797,8 +7797,8 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7874,7 +7874,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -7903,8 +7903,8 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8007,8 +8007,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8083,7 +8083,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8122,8 +8122,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8198,7 +8198,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8234,7 +8234,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(151));
+    expect(preorderName2.result).toBeOk(Cl.uint(152));
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -8273,7 +8273,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 146, the current blockheight 2 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(146));
+    expect(preorderName.result).toBeOk(Cl.uint(147));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8312,8 +8312,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8388,7 +8388,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8427,8 +8427,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8529,8 +8529,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8605,7 +8605,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8644,8 +8644,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8720,7 +8720,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8759,7 +8759,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 295, the current blockheight 151 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(295));
+    expect(preorderName2.result).toBeOk(Cl.uint(296));
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -8782,7 +8782,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAME-UNAVAILABLE
-    expect(registerName2.result).toBeErr(Cl.uint(132));
+    expect(registerName2.result).toBeErr(Cl.uint(123));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -8798,8 +8798,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8862,7 +8862,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 148, the current blockheight 4 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(148));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
@@ -8913,8 +8913,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8989,7 +8989,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Mine blocks to pass ttl
     simnet.mineEmptyBlocks(150);
@@ -9508,8 +9508,8 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -9619,8 +9619,8 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+    // This should give ok u147 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -9696,7 +9696,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(

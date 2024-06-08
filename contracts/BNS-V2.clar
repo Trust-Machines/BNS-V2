@@ -33,10 +33,6 @@
 ;; Define the non-fungible token (NFT) called BNS-V2 with unique identifiers as unsigned integers
 (define-non-fungible-token BNS-V2 uint)
 
-;; To be removed
-;; A non-fungible token (NFT) representing a specific name within a namespace.
-(define-non-fungible-token names { name: (buff 48), namespace: (buff 20) })
-
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;; Constants ;;;;;
@@ -137,7 +133,7 @@
 (define-constant ERR-NO-OWNER-FOR-NFT (err u152))
 (define-constant ERR-NO-BNS-NAMES-OWNED (err u153))
 (define-constant ERR-NO-NAMESPACE-MANAGER (err u154))
-
+(define-constant ERR-BURN-UPDATES-FAILED (err u155))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -157,19 +153,12 @@
 ;; Variable to store the token URI, allowing for metadata association with the NFT
 (define-data-var token-uri (string-ascii 246) "")
 
-;; Variable helper to remove an NFT from the list of owned NFTs by a user
-(define-data-var uint-helper-to-remove uint u0)
 
 ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;
 ;;;;;; Maps ;;;;;
 ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;
-
-;; Rule 1-1 -> 1 principal, 1 name
-
-;; Maps a principal to the name they own, enforcing a one-to-one relationship between principals and names.
-(define-map owner-name principal { name: (buff 48), namespace: (buff 20) })
 
 ;;;;;;;;;
 ;; New ;;
@@ -183,14 +172,6 @@
 ;; This map tracks the primary name chosen by a user who owns multiple BNS names.
 ;; It maps a user's principal to the ID of their primary name.
 (define-map primary-name principal uint)
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; Tracks all the BNS names owned by a user. Each user is mapped to a list of name IDs.
-;; This allows for easy enumeration of all names owned by a particular user.
-(define-map bns-ids-by-principal principal (list 1000 uint))
-
 
 ;;;;;;;;;;;;;
 ;; Updated ;;
@@ -269,6 +250,18 @@
 ;; Defines a map to keep track of the imported names by namespace
 (define-map imported-names (buff 20) (list 1000 uint))
 
+;; Define maps for managing the linked list and name ownership
+;; Maps principal to the last name ID in their list
+(define-map owner-last-name-map principal uint) 
+;; Maps name ID to the next name ID in the list
+(define-map owner-name-next-map uint uint) 
+;; Maps name ID to the previous name ID in the list
+(define-map owner-name-prev-map uint uint) 
+;; Maps name ID to the owner principal
+(define-map name-owner-map uint principal) 
+;; Maps principal to the count of names they own
+(define-map owner-balance-map principal uint)
+
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;; Public ;;;;;
@@ -303,10 +296,6 @@
             (name-current-owner (get owner name-props))
             ;; Revalidate the name current owner
             (nft-current-owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-NO-NAME))
-            ;; Gets the currently owned NFTs by the owner
-            (all-nfts-owned-by-owner (default-to (list) (map-get? bns-ids-by-principal name-current-owner)))
-            ;; Gets the currently owned NFTs by the recipient
-            (all-nfts-owned-by-recipient (default-to (list) (map-get? bns-ids-by-principal recipient)))
             ;; Checks if the owner has a primary name
             (owner-primary-name (map-get? primary-name name-current-owner))
             ;; Checks if the recipient has a primary name
@@ -336,14 +325,8 @@
         ) 
         ;; Ensures the NFT is not currently listed in the market, which would block transfers.
         (asserts! (is-none (map-get? market id)) ERR-LISTED)
-        ;; Set the helper variable to remove the id being transferred from the list of currently owned nfts by owner
-        (var-set uint-helper-to-remove id)
-        ;; Updates currently owned names of the owner by removing the id being transferred
-        (map-set bns-ids-by-principal name-current-owner (get new-list (try! (fold remove-uint-from-list all-nfts-owned-by-owner (ok {found: false, compare-uint: id, new-list: (list )})))))
-        ;; Updates currently owned names of the recipient by adding the id being transferred
-        (map-set bns-ids-by-principal recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
-        ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
-        (try! (shift-primary-name id name-current-owner))
+        ;; Transfer ownership
+        (transfer-ownership-updates id owner recipient)
         ;; Updates the primary name of the receiver if needed, if the receiver doesn't have a name assign it as primary
         (match recipient-primary-name
             name-match
@@ -510,8 +493,6 @@
             (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
             ;; Retrieves the current owner of the NFT, necessary to authorize the burn operation.
             (current-name-owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP))
-            ;; Gets the currently owned NFTs by the owner
-            (all-nfts-owned-by-owner (default-to (list) (map-get? bns-ids-by-principal current-name-owner)))
             ;; Get if it is listed
             (is-listed (map-get? market id))
             ;; Checks if the owner has a primary name
@@ -526,17 +507,11 @@
             (try! (unlist-in-ustx id))
             {a: "not-listed", id: id}
         )
-        ;; Set the helper variable to remove the id being burned from the list of currently owned nfts by owner
-        (var-set uint-helper-to-remove id)
-        ;; Updates currently owned names of the owner by removing the id being burned
-        (map-set bns-ids-by-principal current-name-owner (get new-list (try! (fold remove-uint-from-list all-nfts-owned-by-owner (ok {found: false, compare-uint: id, new-list: (list )})))))
+        ;; Burn the name
+        (unwrap! (burn-name-updates id) ERR-BURN-UPDATES-FAILED)
+
         ;; Deletes the maps
         (map-delete name-properties name-and-namespace)
-        (map-delete index-to-name id)
-        (map-delete name-to-index name-and-namespace)
-        ;; Checks if the id being burned is the primary name of the owner
-        ;; Updates the primary name of the owner if needed, in the case that the id being burned is the primary name
-        (try! (shift-primary-name id current-name-owner))
         ;; Executes the burn operation for the specified NFT, effectively removing it from circulation.
         (nft-burn? BNS-V2 id current-name-owner)
     )
@@ -762,11 +737,13 @@
             (current-mint (+ (var-get bns-index) u1))
             ;; Fetch the primary name of the beneficiary
             (beneficiary-primary-name (map-get? primary-name beneficiary))
-            ;; Fetch names owned by the beneficiary
-            (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal beneficiary)))
             ;; Fetch the list of imported names for the namespace
             (imported-list-of-names (default-to (list) (map-get? imported-names namespace)))
         )
+        ;; Ensure the name is not already registered, triple check
+        (asserts! (map-insert name-to-index {name: name, namespace: namespace} current-mint) ERR-NAME-NOT-AVAILABLE)
+        (asserts! (map-insert index-to-name current-mint {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
+        (asserts! (map-insert name-owner-map current-mint beneficiary) ERR-NAME-NOT-AVAILABLE) 
         ;; Verify that the name contains only valid characters to ensure compliance with naming conventions.
         (asserts! (not (has-invalid-chars name)) ERR-NAME-CHARSET-INVALID)
         ;; Ensure the transaction sender is the namespace's designated import principal, confirming their authority to import names.
@@ -783,8 +760,7 @@
             ;; If not, then set this as primary name
             (map-set primary-name beneficiary current-mint)
         )
-        ;; Add the name into the all-users-name map
-        (map-set bns-ids-by-principal beneficiary (unwrap! (as-max-len? (append all-users-names-owned current-mint) u1000) ERR-OVERFLOW))
+
         ;; Set the name properties
         (map-set name-properties {name: name, namespace: namespace}
             {
@@ -798,16 +774,22 @@
                 owner: beneficiary,
             }
         )
-        ;; Set the map index-to-name
-        (map-set index-to-name current-mint {name: name, namespace: namespace})
-        ;; Set the map name-to-index
-        (map-set name-to-index {name: name, namespace: namespace} current-mint)
         ;; Update the index of the minting
         (var-set bns-index current-mint)
         ;; Update the imported names list for the namespace
         (map-set imported-names namespace (unwrap! (as-max-len? (append imported-list-of-names current-mint) u1000) ERR-OVERFLOW))
+        (add-name-to-principal-updates beneficiary current-mint)
         ;; Mint the name to the beneficiary
         (try! (nft-mint? BNS-V2 current-mint beneficiary))
+        ;; Log the new name registration
+        (print 
+            {
+                topic: "new-name",
+                owner: beneficiary,
+                name: {name: name, namespace: namespace},
+                id: current-mint,
+            }
+        )
         ;; Confirm successful import of the name.
         (ok true)
     )
@@ -885,11 +867,13 @@
             (current-namespace-manager (get namespace-manager namespace-props))
             ;; Calculates the ID for the new name to be minted, incrementing the last used ID.
             (id-to-be-minted (+ (var-get bns-index) u1))
-            ;; Retrieves a list of all names currently owned by the recipient. Defaults to an empty list if none are found.
-            (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal send-to)))
             ;; Tries to retrieve the name and namespace to see if it already exists
             (name-props (map-get? name-properties {name: name, namespace: namespace}))
-        ) 
+        )
+        ;; Ensure the name is not already registered, triple check
+        (asserts! (map-insert name-to-index {name: name, namespace: namespace} id-to-be-minted) ERR-NAME-NOT-AVAILABLE)
+        (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
+        (asserts! (map-insert name-owner-map id-to-be-minted send-to) ERR-NAME-NOT-AVAILABLE) 
         ;; Checks if that name already exists for the namespace if it does, then don't mint
         (asserts! (is-none name-props) ERR-NAME-ALREADY-CLAIMED)
         ;; Verifies if the namespace has a manager
@@ -908,8 +892,6 @@
                 (asserts! (>= stx-burn (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
             )
         )
-        ;; Updates the list of all names owned by the recipient to include the new name ID.
-        (map-set bns-ids-by-principal send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
         ;; Set the index 
         (var-set bns-index id-to-be-minted)
         ;; Conditionally sets the newly minted name as the primary name if the recipient does not already have one.
@@ -935,12 +917,18 @@
                 owner: send-to,
             }
         )
-        ;; Links the newly minted ID to the name and namespace combination for reverse lookup.
-        (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
-        ;; Links the name and namespace combination to the newly minted ID for forward lookup.
-        (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
+        (add-name-to-principal-updates send-to id-to-be-minted)
         ;; Mints the new BNS name as an NFT, assigned to the 'send-to' principal.
         (try! (nft-mint? BNS-V2 id-to-be-minted send-to))
+        ;; Log the new name registration
+        (print 
+            {
+                topic: "new-name",
+                owner: send-to,
+                name: {name: name, namespace: namespace},
+                id: id-to-be-minted,
+            }
+        )
         ;; Signals successful completion of the registration process.
         (ok true)
     )
@@ -1005,13 +993,15 @@
             (current-namespace-manager (get namespace-manager namespace-props))
             ;; Generates a new ID for the name to be registered, incrementing the last used ID in the BNS system.
             (id-to-be-minted (+ (var-get bns-index) u1))
-            ;; Retrieves a list of all names currently owned by the tx-sender, defaults to an empty list if none exist.
-            (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal tx-sender)))
             ;; Checks if the name and namespace combination already exists in the system.
             (name-props (map-get? name-properties {name: name, namespace: namespace}))
             ;; Retrieves the index of the name if it exists, to check for prior registrations.
             (name-index (map-get? name-to-index {name: name, namespace: namespace}))
         )
+        ;; Ensure the name is not already registered, triple check
+        (asserts! (map-insert name-to-index {name: name, namespace: namespace} id-to-be-minted) ERR-NAME-NOT-AVAILABLE)
+        (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
+        (asserts! (map-insert name-owner-map id-to-be-minted tx-sender) ERR-NAME-NOT-AVAILABLE)
         ;; Ensures that the namespace does not have a manager.
         (asserts! (is-none current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Ensure the name is available
@@ -1022,8 +1012,6 @@
         (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
         ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
         (asserts! (>= (get stx-burned preorder) (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
-        ;; Updates the list of names owned by the recipient to include the new name ID.
-        (map-set bns-ids-by-principal tx-sender (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
         ;; Sets the newly registered name as the primary name for the recipient if they do not already have one.
         (match (map-get? primary-name tx-sender) 
             receiver
@@ -1055,14 +1043,20 @@
                 {claimed: true}
             )
         )
-        ;; Links the new ID to the name and namespace.
-        (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
-        ;; Links the name and namespace to the new ID.
-        (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
         ;; Updates the BNS-index var
         (var-set bns-index id-to-be-minted)
+        (add-name-to-principal-updates tx-sender id-to-be-minted)
         ;; Mints the BNS name as an NFT and assigns it to the tx sender.
         (try! (nft-mint? BNS-V2 id-to-be-minted tx-sender))
+        ;; Log the new name registration
+        (print 
+            {
+                topic: "new-name",
+                owner: tx-sender,
+                name: {name: name, namespace: namespace},
+                id: id-to-be-minted,
+            }
+        )
         ;; Confirms successful registration of the name.
         (ok true)
     )
@@ -1123,13 +1117,15 @@
             (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: current-namespace-manager }) ERR-NAME-PREORDER-NOT-FOUND))
             ;; Calculates the ID for the new name to be minted, incrementing the last used ID in the BNS system.
             (id-to-be-minted (+ (var-get bns-index) u1))
-            ;; Retrieves a list of all names currently owned by the send-to address, defaults to an empty list if none exist.
-            (all-users-names-owned (default-to (list) (map-get? bns-ids-by-principal send-to)))
             ;; Checks if the name is already registered within the namespace.
             (name-props (map-get? name-properties {name: name, namespace: namespace}))
             ;; Retrieves the index of the name, if it exists, to check for prior registrations.
             (name-index (map-get? name-to-index {name: name, namespace: namespace}))
         )
+        ;; Ensure the name is not already registered, triple check
+        (asserts! (map-insert name-to-index {name: name, namespace: namespace} id-to-be-minted) ERR-NAME-NOT-AVAILABLE)
+        (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
+        (asserts! (map-insert name-owner-map id-to-be-minted send-to) ERR-NAME-NOT-AVAILABLE) 
         ;; Verifies that the caller of the contract is the namespace manager.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Ensures the name is not already registered by checking if it lacks an existing index.
@@ -1141,8 +1137,6 @@
         (asserts! (is-eq (get claimed preorder) false) ERR-NAME-ALREADY-CLAIMED)
         ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
         (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
-        ;; Updates the list of all names owned by the recipient to include the new name ID.
-        (map-set bns-ids-by-principal send-to (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
         ;; Sets the newly registered name as the primary name for the recipient if they do not already have one.
         (match (map-get? primary-name send-to) 
             receiver
@@ -1174,14 +1168,20 @@
                 {claimed: true}
             )
         )
-        ;; Links the newly minted ID to the name and namespace.
-        (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
-        ;; Links the name and namespace combination to the newly minted ID.
-        (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
         ;; Updates BNS-index variable to the newly minted ID.
         (var-set bns-index id-to-be-minted)
+        (add-name-to-principal-updates send-to id-to-be-minted)
         ;; Mints the BNS name as an NFT to the send-to address, finalizing the registration.
         (try! (nft-mint? BNS-V2 id-to-be-minted send-to))
+        ;; Log the new name registration
+        (print 
+            {
+                topic: "new-name",
+                owner: send-to,
+                name: {name: name, namespace: namespace},
+                id: id-to-be-minted,
+            }
+        )
         ;; Confirms successful registration of the name.
         (ok true)
     )
@@ -1504,26 +1504,6 @@
     )
 )
 
-;; Read-only function `check-name-ops-preconditions` ensures that all necessary conditions are met for operations on a specific name.
-;; @params:
-    ;; namespace (buff 20): The namespace of the name being checked.
-    ;; name (buff 48): The name being checked for operation preconditions.
-(define-read-only (check-name-ops-preconditions (namespace (buff 20)) (name (buff 48)))
-    (let 
-        (
-            ;; Retrieve the owner of the name from the `names` map, ensuring the name exists.
-            (owner (unwrap! (nft-get-owner? names { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
-            ;; Fetch properties of the namespace, ensuring the namespace exists.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Fetch properties of the name, ensuring the name exists.
-            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
-        ) 
-        
-        ;; Returns a tuple containing the namespace properties, name properties, and the owner of the name if all checks pass.
-        (ok { namespace-props: namespace-props, name-props: name-props, owner: owner })
-    )
-)
-
 ;; Read-only function `can-namespace-be-registered` checks if a namespace is available for registration.
 ;; @params:
     ;; namespace (buff 20): The namespace being checked for availability.
@@ -1559,22 +1539,170 @@
     (map-get? index-to-name id)
 )
 
-;; Fetcher for all BNS ids owned by a principal
-(define-read-only (get-all-names-owned-by-principal (owner principal))
-    (map-get? bns-ids-by-principal owner)
-)
-
 ;; Fetcher for primary name
 (define-read-only (get-primary-name (owner principal))
     (map-get? primary-name owner)
 )
 
+;; Define read-only function to get the balance of names for a principal
+(define-read-only (get-balance (account principal))
+    ;; Return balance or 0 if not found
+    (default-to u0 (map-get? owner-balance-map account)) 
+)
 
 ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;
 ;;;;; Private ;;;;
 ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;
+
+;; Define private function to transfer ownership of a name
+(define-private (transfer-ownership-updates (id uint) (sender principal) (recipient principal))
+    (begin
+        ;; Update the owner map
+        (map-set name-owner-map id recipient)
+        
+        ;; Log the transfer action
+        (print 
+            {
+                topic: "transfer-ownership",
+                id: id,
+                recipient: recipient,
+            }
+        )
+        ;; Remove the name from the sender's list and add it to the recipient's list
+        (remove-name-from-principal-updates sender id)
+        (add-name-to-principal-updates recipient id)
+    )
+)
+
+;; Define private function to remove a name from a principal's list
+(define-private (remove-name-from-principal-updates (account principal) (id uint))
+    (let
+        (
+            ;; Get the previous name ID in the list
+            (prev-opt (map-get? owner-name-prev-map id)) 
+            ;; Get the next name ID in the list
+            (next-opt (map-get? owner-name-next-map id)) 
+            ;; Get the primary name ID for the account
+            (first (unwrap-panic (map-get? primary-name account))) 
+            ;; Get the last name ID for the account
+            (last (unwrap-panic (map-get? owner-last-name-map account))) 
+            ;; Get the balance of names for the account
+            (balance (unwrap-panic (map-get? owner-balance-map account))) 
+        )
+        ;; Log the removal action
+        (print 
+            {
+                topic: "remove", 
+                account: account
+            }
+        ) 
+        ;; Update the balance map to decrease the balance by 1
+        (map-set owner-balance-map account (- balance u1))
+        ;; If the name being removed is the first name in the list
+        (and 
+            (is-eq first id)
+            ;; Check if there is a name
+            (match next-opt next-name
+                ;; If there is a next name, update the primary name to the next name      
+                ;; Set the next name as the primary name
+                (map-set primary-name account next-name) 
+                ;; Delete the primary name entry
+                (map-delete primary-name account) 
+            )
+        )
+        ;; If the name being removed is the last name in the list
+        (and 
+            (is-eq last id)
+            (match prev-opt prev-name
+                ;; If there is a previous name, update the last name to the previous name
+                (map-set owner-last-name-map account prev-name)
+                ;; If there is no previous name, remove the last name entry 
+                (map-delete owner-last-name-map account)
+            )
+        )
+        ;; Update the next and previous maps to bypass the removed name
+        (match next-opt next 
+            (match prev-opt prev-name
+                ;; If there is a previous name, set its next name to the next name of the removed name
+                (map-set owner-name-prev-map next prev-name)
+                ;; If there is no previous name, delete the next name entry from the map
+                (map-delete owner-name-prev-map next)
+            )
+            ;; If there is no next name then return true
+            true
+        )
+        
+        (match prev-opt prev 
+            (match next-opt next-name
+                ;; If there is a next name, set its previous name to the previous name of the removed node
+                (map-set owner-name-next-map prev next-name)
+                ;; If there is no next name, delete the previous name entry from the map
+                (map-delete owner-name-next-map prev)
+            )
+            true
+        )
+        
+        ;; Delete the name from the next and previous maps
+        (map-delete owner-name-next-map id)
+        (map-delete owner-name-prev-map id)
+
+        true ;; Return true indicating successful removal
+    )
+)
+
+;; Define private function to burn a name
+(define-private (burn-name-updates (id uint))
+    (let
+        (
+            ;; Get the name details
+            (name (unwrap! (map-get? index-to-name id) ERR-NAME-NOT-FOUND)) 
+            ;; Get the owner
+            (owner (unwrap! (map-get? name-owner-map id) ERR-NOT-AUTHORIZED)) 
+        )
+        ;; Remove the name from the owner's linked list
+        (remove-name-from-principal-updates owner id)
+        
+        ;; Delete the name from all maps
+        (map-delete name-to-index name)
+        (map-delete index-to-name id)
+        (map-delete name-owner-map id)
+        ;; Log the burn action
+        (print 
+            {
+                topic: "burn",
+                id: id,
+            }
+        )
+        ;; Return true indicating successful burn
+        (ok true) 
+    )
+)
+
+;; Define private function to add a name to a principal's list
+(define-private (add-name-to-principal-updates (account principal) (id uint))
+    (let
+        (
+            ;; Get the last name ID for the account
+            (last-owner-name (map-get? owner-last-name-map account)) 
+        )
+        ;; Update the balance map to increase the balance by 1
+        (map-set owner-balance-map account (+ (get-balance account) u1))
+        ;; Update the last name map to the new name
+        (map-set owner-last-name-map account id)
+        ;; Link the new name to the end of the list if there is a last name
+        (match last-owner-name last 
+            (begin
+                (map-set owner-name-next-map last id)
+                (map-set owner-name-prev-map id last)
+            )
+            true
+        )
+        ;; Return true indicating successful addition
+        true 
+    )
+)
 
 
 ;; Returns the minimum of two uint values.
@@ -1737,11 +1865,6 @@
     )
 )
 
-;; @desc - Helper function for removing a specific NFT from the NFTs list
-(define-private (is-not-removeable (nft uint))
-  (not (is-eq nft (var-get uint-helper-to-remove)))
-)
-
 ;; @desc SIP-09 compliant function to transfer a token from one owner to another
 ;; @param id: the id of the nft being transferred, owner: the principal of the owner of the nft being transferred, recipient: the principal the nft is being transferred to
 (define-private (purchase-transfer (id uint) (owner principal) (recipient principal))
@@ -1765,23 +1888,13 @@
             (imported-at-value (get imported-at name-props))
             ;; Gets the current owner of the name from the name-props
             (name-current-owner (get owner name-props))
-            ;; Gets the currently owned NFTs by the owner
-            (all-nfts-owned-by-owner (default-to (list) (map-get? bns-ids-by-principal owner)))
-            ;; Gets the currently owned NFTs by the recipient
-            (all-nfts-owned-by-recipient (default-to (list) (map-get? bns-ids-by-principal recipient)))
             ;; Checks if the owner has a primary name
             (owner-primary-name (map-get? primary-name owner))
             ;; Checks if the recipient has a primary name
             (recipient-primary-name (map-get? primary-name recipient))
         )
-        ;; Set the helper variable to remove the id being transferred from the list of currently owned nfts by owner
-        (var-set uint-helper-to-remove id)
-        ;; Updates currently owned names of the owner by removing the id being transferred
-        (map-set bns-ids-by-principal owner (get new-list (try! (fold remove-uint-from-list all-nfts-owned-by-owner (ok {found: false, compare-uint: id, new-list: (list )})))))
-        ;; Updates currently owned names of the recipient by adding the id being transferred
-        (map-set bns-ids-by-principal recipient (unwrap! (as-max-len? (append all-nfts-owned-by-recipient id) u1000) ERR-OVERFLOW))
-        ;; Updates the primary name of the owner if needed, in the case that the id being transferred is the primary name
-        (try! (shift-primary-name id owner))
+
+        (transfer-ownership-updates id owner recipient)
         ;; Updates the primary name of the receiver if needed, if the receiver doesn't have a name assign it as primary
         (match recipient-primary-name
             name-match
@@ -1797,28 +1910,6 @@
     )
 )
 
-
-(define-private (shift-primary-name (nft uint) (owner principal)) 
-    (let 
-        (
-            ;; Checks if the owner has a primary name
-            (owner-primary-name (map-get? primary-name owner))
-            ;; Gets the currently owned NFTs by the owner
-            (all-nfts-owned-by-owner (default-to (list) (map-get? bns-ids-by-principal owner)))
-        ) 
-        (ok (if (is-eq (some nft) owner-primary-name) 
-            ;; If the id is the primary name, then check if the length of the list is bigger than 0
-            (if (< u0 (len all-nfts-owned-by-owner)) 
-                ;; If it is then set the index u0 to the primary name
-                (map-set primary-name owner (unwrap! (element-at? all-nfts-owned-by-owner u0) ERR-UNWRAP))
-                ;; If it is not then there is no more names then delete the map
-                (map-delete primary-name owner)
-            )
-            ;; If it is not equal then do nothing
-            false
-        ))
-    )
-)
 
 ;; Function to update all the imported names' renewal-height on a namespace 
 (define-private (update-renewal-height (id uint)) 
@@ -1880,3 +1971,36 @@
 )
 
 
+
+;; Linked Lists Approach Suggested by Hank
+;; Maps
+;; owner-primary-name-map: Maps a principal to its primary name ID.
+;; owner-last-name-map: Maps a principal to the ID of the last name in their list.
+;; owner-name-next-map: Maps a name ID to the next name ID in the list.
+;; owner-name-prev-map: Maps a name ID to the previous name ID in the list.
+;; owner-balance-map: Maps a principal to the count of names they own.
+
+;; Private functions
+;; add-name-to-principal: Adds a name ID to an account's list.
+    ;; Parameters: principal, id
+    ;; Logic:
+        ;; Updates the owner-balance-map to increase the balance by 1.
+        ;; Sets the owner-primary-name-map to the new name if it's the first name.
+        ;; Updates the owner-last-name-map to the new name.
+        ;; If the account already has a last name, updates the owner-name-next-map and owner-name-prev-map to link the new name to the end of the list.
+
+;; remove-name-from-principal: Removes a name ID to an account's list.
+    ;; Parameters: principal, id
+    ;; Logic:
+        ;; Updates the owner-balance-map to decrease the balance by 1.
+        ;; Checks if the name being removed is the primary name and updates owner-primary-name-map if necessary.
+        ;; Checks if the name being removed is the last name and updates owner-last-name-map if necessary.
+        ;; Updates the owner-name-next-map and owner-name-prev-map to bypass the removed name in the list.
+
+;; set-primary-name: Sets a specific name as the primary name for a principal.
+    ;; Parameters: principal, id
+    ;; Logic:
+        ;; Ensures the name is not already the primary name.
+        ;; Removes the name from its current position using remove-name-from-principal.
+        ;; Updates owner-primary-name-map to the new primary name.
+        ;; Updates the linked list to place the new primary name at the start.
