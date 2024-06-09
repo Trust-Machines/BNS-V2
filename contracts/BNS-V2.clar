@@ -1559,10 +1559,10 @@
 ;; Define private function to transfer ownership of a name
 (define-private (transfer-ownership-updates (id uint) (sender principal) (recipient principal))
     (begin
-        ;; Update the owner map
+        ;; Update the owner map to set the new owner for the name ID
         (map-set name-owner-map id recipient)
         
-        ;; Log the transfer action
+        ;; Log the transfer action with the topic "transfer-ownership"
         (print 
             {
                 topic: "transfer-ownership",
@@ -1570,8 +1570,9 @@
                 recipient: recipient,
             }
         )
-        ;; Remove the name from the sender's list and add it to the recipient's list
+        ;; Remove the name from the sender's list
         (remove-name-from-principal-updates sender id)
+        ;; Add the name to the recipient's list
         (add-name-to-principal-updates recipient id)
     )
 )
@@ -1581,9 +1582,9 @@
     (let
         (
             ;; Get the previous name ID in the list
-            (prev-opt (map-get? owner-name-prev-map id)) 
+            (prev-name (map-get? owner-name-prev-map id)) 
             ;; Get the next name ID in the list
-            (next-opt (map-get? owner-name-next-map id)) 
+            (next-name (map-get? owner-name-next-map id)) 
             ;; Get the primary name ID for the account
             (first (unwrap-panic (map-get? primary-name account))) 
             ;; Get the last name ID for the account
@@ -1591,7 +1592,7 @@
             ;; Get the balance of names for the account
             (balance (unwrap-panic (map-get? owner-balance-map account))) 
         )
-        ;; Log the removal action
+        ;; Log the removal action with the topic "remove"
         (print 
             {
                 topic: "remove", 
@@ -1600,55 +1601,64 @@
         ) 
         ;; Update the balance map to decrease the balance by 1
         (map-set owner-balance-map account (- balance u1))
+
         ;; If the name being removed is the first name in the list
-        (and 
-            (is-eq first id)
-            ;; Check if there is a name
-            (match next-opt next-name
-                ;; If there is a next name, update the primary name to the next name      
-                ;; Set the next name as the primary name
-                (map-set primary-name account next-name) 
-                ;; Delete the primary name entry
+        (if (is-eq first id)
+            ;; If id equal first
+            ;; Check if there is a next name
+            (match next-name next-n
+                ;; If there is a next name, update the primary name to the next name
+                (map-set primary-name account next-n)
+                ;; If there is no next name, delete the primary name entry
                 (map-delete primary-name account) 
             )
+            ;; If id not equal first
+            false
         )
+        
         ;; If the name being removed is the last name in the list
-        (and 
-            (is-eq last id)
-            (match prev-opt prev-name
+        (if (is-eq last id)
+            ;; If last equal to id
+            ;; Check if there is a previous name
+            (match prev-name prev-n
                 ;; If there is a previous name, update the last name to the previous name
-                (map-set owner-last-name-map account prev-name)
-                ;; If there is no previous name, remove the last name entry 
+                (map-set owner-last-name-map account prev-n)
+                ;; If there is no previous name, remove the last name entry
                 (map-delete owner-last-name-map account)
             )
+            ;; If last not equal to id
+            false
         )
+        
         ;; Update the next and previous maps to bypass the removed name
-        (match next-opt next 
-            (match prev-opt prev-name
+        (match next-name next-n 
+            (match prev-name prev-n
                 ;; If there is a previous name, set its next name to the next name of the removed name
-                (map-set owner-name-prev-map next prev-name)
+                (map-set owner-name-prev-map next-n prev-n)
                 ;; If there is no previous name, delete the next name entry from the map
-                (map-delete owner-name-prev-map next)
+                (map-delete owner-name-prev-map next-n)
             )
-            ;; If there is no next name then return true
+            ;; If there is no next name, then return true
             true
         )
         
-        (match prev-opt prev 
-            (match next-opt next-name
+        (match prev-name prev-n 
+            (match next-name next-n
                 ;; If there is a next name, set its previous name to the previous name of the removed node
-                (map-set owner-name-next-map prev next-name)
+                (map-set owner-name-next-map prev-n next-n)
                 ;; If there is no next name, delete the previous name entry from the map
-                (map-delete owner-name-next-map prev)
+                (map-delete owner-name-next-map prev-n)
             )
+            ;; If there is no previous name, then return true
             true
         )
         
         ;; Delete the name from the next and previous maps
         (map-delete owner-name-next-map id)
         (map-delete owner-name-prev-map id)
-
-        true ;; Return true indicating successful removal
+        
+        ;; Return true indicating successful removal
+        true 
     )
 )
 
