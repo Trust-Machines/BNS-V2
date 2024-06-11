@@ -1041,10 +1041,13 @@
                 (match (map-get? name-preorders {hashed-salted-fqn: hashed-salted-fqn, buyer: (unwrap-panic (get owner name-props))}) 
                     unwrapped-preorder 
                     ;; If it did then we have to compare which one was made before, if the current owner's or the tx-sender's
-                    (asserts! (< (get created-at unwrapped-preorder) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
+                    ;; If created-at from the owners preorder is bigger than the tx-sender-preorder-height then return true and continue, if it not bigger then return false, indicating that the owners preorder happened before
+                    (asserts! (> (get created-at unwrapped-preorder) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
                     ;; If name-preorders for the current owner doesn't exist it means it was fast minted, so we need to compare registered-at from the name props to the tx-sender's preorder height
-                    (asserts! (< (unwrap-panic (get registered-at (unwrap-panic name-props))) tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)
+                    ;; If registered-at is bigger than tx-sender-preorder-height then return true and continue, if it is not bigger then return false because the fast mint happened before the preorder
+                    (asserts! (> (unwrap-panic (get registered-at (unwrap-panic name-props))) tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)
                 )
+                ;; If any of both scenarios are true then purchase-transfer the name
                 (try! (purchase-transfer name-index-exists (unwrap-panic (get owner name-props)) tx-sender))
             ) 
             ;; If it is none then it is not registered then execute all actions required to mint a new name

@@ -199,6 +199,8 @@ const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
   // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
   expect(preorderName.result).toBeOk(Cl.uint(149));
 
+  simnet.mineEmptyBlock();
+
   // Register the name
   const registerName = simnet.callPublicFn(
     "BNS-V2",
@@ -234,7 +236,9 @@ const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace = () => {
     address1
   );
   // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(151));
+  expect(preorderName.result).toBeOk(Cl.uint(152));
+
+  simnet.mineEmptyBlock();
 
   // Register the name
   const registerName = simnet.callPublicFn(
@@ -6462,6 +6466,8 @@ describe("NAME-REGISTER FUNCTION", () => {
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(149));
 
+    simnet.mineEmptyBlock();
+
     // Register the name
     const registerName = simnet.callPublicFn(
       "BNS-V2",
@@ -6717,6 +6723,8 @@ describe("NAME-REGISTER FUNCTION", () => {
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderSameName.result).toBeOk(Cl.uint(150));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerSameName = simnet.callPublicFn(
@@ -7034,6 +7042,8 @@ describe("NAME-REGISTER FUNCTION", () => {
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(149));
 
+    simnet.mineEmptyBlock();
+
     // Register the name
     const registerName = simnet.callPublicFn(
       "BNS-V2",
@@ -7067,7 +7077,9 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(151));
+    expect(preorderName2.result).toBeOk(Cl.uint(152));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -7435,6 +7447,8 @@ describe("NAME-REGISTER FUNCTION", () => {
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(149));
 
+    simnet.mineEmptyBlock();
+
     // Register the name
     const registerName = simnet.callPublicFn(
       "BNS-V2",
@@ -7741,6 +7755,8 @@ describe("NAME-REGISTER FUNCTION", () => {
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(150));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -8083,6 +8099,8 @@ describe("NAME-REGISTER FUNCTION", () => {
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -10427,6 +10445,8 @@ describe("NAME-RENEWAL FUNCTION", () => {
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerName = simnet.callPublicFn(
