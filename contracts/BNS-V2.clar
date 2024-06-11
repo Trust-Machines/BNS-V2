@@ -33,10 +33,6 @@
 ;; Define the non-fungible token (NFT) called BNS-V2 with unique identifiers as unsigned integers
 (define-non-fungible-token BNS-V2 uint)
 
-;; To be removed
-;; A non-fungible token (NFT) representing a specific name within a namespace.
-(define-non-fungible-token names { name: (buff 48), namespace: (buff 20) })
-
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;; Constants ;;;;;
@@ -175,11 +171,6 @@
 ;;;;;; Maps ;;;;;
 ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;
-
-;; Rule 1-1 -> 1 principal, 1 name
-
-;; Maps a principal to the name they own, enforcing a one-to-one relationship between principals and names.
-(define-map owner-name principal { name: (buff 48), namespace: (buff 20) })
 
 ;;;;;;;;;
 ;; New ;;
@@ -1052,7 +1043,7 @@
                 (match preorder-current-owner preorder-owner 
                     ;; If it does then assign the created-at value
                     (get created-at preorder-current-owner) 
-                    ;; If it doesn't then assing u0
+                    ;; If it doesn't then assign u0
                     (some u0)
                 )
             )
@@ -1110,27 +1101,36 @@
             )
             ;; If it is false, then it is registered... we need to do further checks
             ;; First check that the owner is not the tx-sender
-            (if (is-eq (some tx-sender) name-current-owner)
-                ;; If the owner and the tx-sender are the same then exit
-                (asserts! false ERR-OWNER-IS-THE-SAME)
-                ;; If the owner and the tx sender are not the same then
-                ;; Check if the current owners preorder happened by checking it is eq to some u0
-                (if (is-eq current-owners-preorder-height (some u0)) 
-                    ;; If it is true then it means that there was no preorder, so it was fast minted, so we need to check if the created-at of the current owner is higher than my preorder
-                    (if (< (- (unwrap! (unwrap! created-at-height ERR-UNWRAP-CREATED-AT-HEIGHT) ERR-UNWRAP-CREATED-AT-HEIGHT) u1) tx-sender-preorder-height) 
-                        ;; If the created at height is lower than the tx-sender preorder height then return false because the name can not be resitered
-                        (asserts! false ERR-FAST-MINTED-BEFORE)
-                        ;; If it is false then it means that tx-sender's preorder happened before the fast claim, so the name belongs to the tx-sender
-                        (try! (purchase-transfer (unwrap! name-index ERR-UNWRAP-NAME-INDEX) (unwrap! name-current-owner ERR-UNWRAP-CURRENT-OWNER) tx-sender))
-                    )
-                    ;; If the current owners preorder height is not equal to some u0 it means that a preorder happened, so we need to check which preorder was made first
-                    (if (< (unwrap! current-owners-preorder-height ERR-UNWRAP-CURRENT-OWNER-PREORDER-HEIGHT) tx-sender-preorder-height) 
-                        ;; If the owners preorder is lower than the tx-sender's then false, the name belongs to the current owner
-                        (asserts! false ERR-PREORDERED-BEFORE)
-                        ;; If the owners preorder is higher than the tx-sender's then send the name to the tx-sender
-                        (try! (purchase-transfer (unwrap! name-index ERR-UNWRAP-NAME-INDEX) (unwrap! name-current-owner ERR-UNWRAP-CURRENT-OWNER) tx-sender))
+            (asserts!
+                (if (is-eq (some tx-sender) name-current-owner)
+                    ;; If the owner and the tx-sender are the same then exit
+                    false 
+                    ;; If the owner and the tx sender are not the same then
+                    ;; Check if the current owners preorder happened by checking it is eq to some u0
+                    (if (is-eq current-owners-preorder-height (some u0)) 
+                        ;; If it is true then it means that there was no preorder, so it was fast minted, so we need to check if the created-at of the current owner is higher than my preorder
+                        (asserts!
+                            (if (< (- (unwrap! (unwrap! created-at-height ERR-UNWRAP-CREATED-AT-HEIGHT) ERR-UNWRAP-CREATED-AT-HEIGHT) u1) tx-sender-preorder-height) 
+                                ;; If the created at height is lower than the tx-sender preorder height then return false because the name can not be registered
+                                false 
+                                ;; If it is false then it means that tx-sender's preorder happened before the fast claim, so the name belongs to the tx-sender
+                                (try! (purchase-transfer (unwrap-panic name-index) (unwrap-panic name-current-owner) tx-sender))
+                            )
+                            ERR-FAST-MINTED-BEFORE
+                        )
+                        ;; If the current owners preorder height is not equal to some u0 it means that a preorder happened, so we need to check which preorder was made first
+                        (asserts!
+                            (if (< (unwrap! current-owners-preorder-height ERR-UNWRAP-CURRENT-OWNER-PREORDER-HEIGHT) tx-sender-preorder-height) 
+                                ;; If the owners preorder is lower than the tx-sender's then false, the name belongs to the current owner
+                                false 
+                                ;; If the owners preorder is higher than the tx-sender's then send the name to the tx-sender
+                                (try! (purchase-transfer (unwrap-panic name-index) (unwrap-panic name-current-owner) tx-sender))
+                            )
+                            ERR-PREORDERED-BEFORE
+                        )
                     )
                 )
+                ERR-OWNER-IS-THE-SAME
             )
         )
         ;; Validates that the preorder was made after the namespace was officially launched.
@@ -1590,8 +1590,10 @@
 (define-read-only (check-name-ops-preconditions (namespace (buff 20)) (name (buff 48)))
     (let 
         (
+            ;; Get index from name and namespace
+            (name-index (unwrap! (map-get? name-to-index { name: name, namespace: namespace }) ERR-NO-NAME))
             ;; Retrieve the owner of the name from the `names` map, ensuring the name exists.
-            (owner (unwrap! (nft-get-owner? names { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
+            (owner (unwrap! (nft-get-owner? BNS-V2 name-index) ERR-NAME-NOT-FOUND))
             ;; Fetch properties of the namespace, ensuring the namespace exists.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
             ;; Fetch properties of the name, ensuring the name exists.
