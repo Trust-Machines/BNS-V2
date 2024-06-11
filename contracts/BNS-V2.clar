@@ -55,9 +55,8 @@
 (define-constant NAME-PREORDER-CLAIMABILITY-TTL u144) 
 ;; The grace period duration for name renewals post-expiration.
 (define-constant NAME-GRACE-PERIOD-DURATION u5000) 
-
+;; Constant for the length of the hash
 (define-constant HASH160LEN u20)
-
 
 ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;
@@ -78,6 +77,8 @@
 ;;;; Errors ;;;;
 ;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;
+
+
 
 (define-constant ERR-UNWRAP (err u101))
 (define-constant ERR-NOT-AUTHORIZED (err u102))
@@ -102,38 +103,39 @@
 (define-constant ERR-NAMESPACE-NOT-LAUNCHED (err u121))
 (define-constant ERR-NAME-OPERATION-UNAUTHORIZED (err u122))
 (define-constant ERR-NAME-NOT-AVAILABLE (err u123))
-(define-constant ERR-NAME-NOT-FOUND (err u124))
-(define-constant ERR-NAMESPACE-PREORDER-EXPIRED (err u125))
-(define-constant ERR-NAMESPACE-UNAVAILABLE (err u126))
-(define-constant ERR-NAMESPACE-PRICE-FUNCTION-INVALID (err u127))
-(define-constant ERR-NAMESPACE-BLANK (err u128))
-(define-constant ERR-NAME-PREORDER-NOT-FOUND (err u129))
-(define-constant ERR-NAME-PREORDER-EXPIRED (err u130))
-(define-constant ERR-NAME-PREORDER-FUNDS-INSUFFICIENT (err u131))
-(define-constant ERR-NAME-UNAVAILABLE (err u132))
-(define-constant ERR-NAME-STX-BURNT-INSUFFICIENT (err u133))
-(define-constant ERR-NAME-EXPIRED (err u134))
-(define-constant ERR-NAME-GRACE-PERIOD (err u135))
-(define-constant ERR-NAME-BLANK (err u136))
-(define-constant ERR-NAME-ALREADY-CLAIMED (err u137))
-(define-constant ERR-NAME-CLAIMABILITY-EXPIRED (err u138))
-(define-constant ERR-NAME-REVOKED (err u139))
-(define-constant ERR-NAME-TRANSFER-FAILED (err u140))
-(define-constant ERR-NAME-PREORDER-ALREADY-EXISTS (err u141))
-(define-constant ERR-NAME-HASH-MALFORMED (err u142))
-(define-constant ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH (err u143))
-(define-constant ERR-NAME-NOT-RESOLVABLE (err u144))
-(define-constant ERR-NAME-COULD-NOT-BE-MINTED (err u145))
-(define-constant ERR-NAME-COULD-NOT-BE-TRANSFERED (err u146))
-(define-constant ERR-NAME-CHARSET-INVALID (err u147))
-(define-constant ERR-PRINCIPAL-ALREADY-ASSOCIATED (err u148))
-(define-constant ERR-PANIC (err u149))
-(define-constant ERR-NAMESPACE-HAS-MANAGER (err u150))
-(define-constant ERR-OVERFLOW (err u151))
-(define-constant ERR-NO-OWNER-FOR-NFT (err u152))
-(define-constant ERR-NO-BNS-NAMES-OWNED (err u153))
-(define-constant ERR-NO-NAMESPACE-MANAGER (err u154))
-(define-constant ERR-BURN-UPDATES-FAILED (err u155))
+(define-constant ERR-NAMESPACE-PREORDER-EXPIRED (err u124))
+(define-constant ERR-NAMESPACE-PRICE-FUNCTION-INVALID (err u125))
+(define-constant ERR-NAMESPACE-BLANK (err u126))
+(define-constant ERR-NAME-PREORDER-NOT-FOUND (err u127))
+(define-constant ERR-NAME-PREORDER-EXPIRED (err u128))
+(define-constant ERR-NAME-PREORDER-FUNDS-INSUFFICIENT (err u129))
+(define-constant ERR-NAME-STX-BURNT-INSUFFICIENT (err u130))
+(define-constant ERR-NAME-EXPIRED (err u131))
+(define-constant ERR-NAME-GRACE-PERIOD (err u132))
+(define-constant ERR-NAME-BLANK (err u133))
+(define-constant ERR-NAME-ALREADY-CLAIMED (err u134))
+(define-constant ERR-NAME-CLAIMABILITY-EXPIRED (err u135))
+(define-constant ERR-NAME-REVOKED (err u136))
+(define-constant ERR-NAME-TRANSFER-FAILED (err u137))
+(define-constant ERR-NAME-PREORDER-ALREADY-EXISTS (err u138))
+(define-constant ERR-NAME-HASH-MALFORMED (err u139))
+(define-constant ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH (err u140))
+(define-constant ERR-NAME-NOT-RESOLVABLE (err u141))
+(define-constant ERR-NAME-COULD-NOT-BE-MINTED (err u142))
+(define-constant ERR-NAME-COULD-NOT-BE-TRANSFERED (err u143))
+(define-constant ERR-NAME-CHARSET-INVALID (err u144))
+(define-constant ERR-PANIC (err u145))
+(define-constant ERR-NAMESPACE-HAS-MANAGER (err u146))
+(define-constant ERR-OVERFLOW (err u147))
+(define-constant ERR-NO-OWNER-FOR-NFT (err u148))
+(define-constant ERR-NO-BNS-NAMES-OWNED (err u149))
+(define-constant ERR-NO-NAMESPACE-MANAGER (err u150))
+(define-constant ERR-SAME-OWNER (err u151))
+(define-constant ERR-OWNER-IS-THE-SAME (err u152))
+(define-constant ERR-FAST-MINTED-BEFORE (err u153))
+(define-constant ERR-PREORDERED-BEFORE (err u154))
+(define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u155))
+(define-constant ERR-BURN-UPDATES-FAILED (err u156))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -484,7 +486,7 @@
     (let 
         (
             ;; Retrieves the name and namespace associated with the given NFT ID. If not found, returns an error.
-            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NAME-NOT-FOUND))
+            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
             ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
             (namespace (get namespace name-and-namespace))
             ;; Fetches existing properties of the namespace to confirm its existence and retrieve management details.
@@ -935,7 +937,7 @@
 )
 
 ;; Defines a public function called `name-preorder`.
-;; This function is responsible for preordering BNS name by burning the registration fee and submitting the salted hash of the name with the namesace included.
+;; This function is responsible for preordering BNS name by burning the registration fee and submitting the salted hash of the name with the namespace included.
 ;; This function is callable by ANYONE, regular users or namespace managers, the real check happens in the name-register function. Only regular users who preorder a name through this function should be able to mint a name trough the register-name function
 (define-public (name-preorder (hashed-salted-fqn (buff 20)) (stx-to-burn uint))
     (let 
@@ -1005,7 +1007,7 @@
         ;; Ensures that the namespace does not have a manager.
         (asserts! (is-none current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Ensure the name is available
-        (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
+        (asserts! (is-none name-index) ERR-NAME-NOT-AVAILABLE) 
         ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap! (get launched-at namespace-props) ERR-UNWRAP)) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
@@ -1129,7 +1131,7 @@
         ;; Verifies that the caller of the contract is the namespace manager.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Ensures the name is not already registered by checking if it lacks an existing index.
-        (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
+        (asserts! (is-none name-index) ERR-NAME-NOT-AVAILABLE)
         ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap! (get launched-at namespace-props) ERR-UNWRAP)) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Checks that the preorder has not already been claimed to avoid duplicate name registrations.
@@ -1313,7 +1315,7 @@
             ;; Get the current owner of the name.
             (owner (unwrap! (nft-get-owner? BNS-V2 name-index) ERR-NO-NAME))
             ;; Fetch the name properties from the `name-properties` map.
-            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
+            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NO-NAME))
             ;; Retrieve namespace manager if any
             (namespace-manager (get namespace-manager namespace-props))
             ;; Get if the name was registered
@@ -1526,6 +1528,10 @@
     )
 )
 
+;; Read only function to get name properties
+(define-read-only (get-bns-info (name (buff 48)) (namespace (buff 20)))
+    (map-get? name-properties {name: name, namespace: namespace})
+)
 
 ;; Defines a read-only function to fetch the unique ID of a BNS name given its name and the namespace it belongs to.
 (define-read-only (get-id-from-bns (name (buff 48)) (namespace (buff 20))) 
@@ -1630,8 +1636,10 @@
             false
         )
         
-        ;; Update the next and previous maps to bypass the removed name
+        ;; Check if next-name is some
         (match next-name next-n 
+            ;; If is some
+            ;; Check if prev-name is some
             (match prev-name prev-n
                 ;; If there is a previous name, set its next name to the next name of the removed name
                 (map-set owner-name-prev-map next-n prev-n)
@@ -1644,7 +1652,7 @@
         
         (match prev-name prev-n 
             (match next-name next-n
-                ;; If there is a next name, set its previous name to the previous name of the removed node
+                ;; If there is a next name, set its previous name to the previous name of the removed name
                 (map-set owner-name-next-map prev-n next-n)
                 ;; If there is no next name, delete the previous name entry from the map
                 (map-delete owner-name-next-map prev-n)
@@ -1667,7 +1675,7 @@
     (let
         (
             ;; Get the name details
-            (name (unwrap! (map-get? index-to-name id) ERR-NAME-NOT-FOUND)) 
+            (name (unwrap! (map-get? index-to-name id) ERR-NO-NAME)) 
             ;; Get the owner
             (owner (unwrap! (map-get? name-owner-map id) ERR-NOT-AUTHORIZED)) 
         )
@@ -1943,74 +1951,3 @@
         ) 
     )
 )
-
-(define-private (remove-uint-from-list (list-uint uint) (helper-tuple-response (response {found: bool, compare-uint: uint, new-list: (list 1000 uint)} uint)))
-    (match helper-tuple-response
-        helper-tuple
-            (let 
-                (
-                    (current-found (get found helper-tuple))
-                    (current-compare-uint (get compare-uint helper-tuple))
-                    (current-new-list (get new-list helper-tuple))
-                )
-                ;; check if uint was found
-                (if current-found
-                    ;; uint was found & skipped, continue appending existing list-uints to new-list
-                    (ok (merge 
-                        helper-tuple
-                        {new-list: (unwrap! (as-max-len? (append current-new-list list-uint) u1000) ERR-OVERFLOW)}
-                    ))
-                    ;; uint was not found, continue searching for compare-uint
-                    (if (is-eq list-uint current-compare-uint)
-                        ;; uint was found, skip appending to new-list & set found to true
-                        (ok (merge 
-                            helper-tuple
-                            {found: true, new-list: current-new-list}
-                        ))
-                        ;; uint was not found, continue appending existing list-uint to new-list
-                        (ok (merge 
-                            helper-tuple
-                            {new-list: (unwrap! (as-max-len? (append current-new-list list-uint) u1000) ERR-OVERFLOW)}
-                        ))
-                    )
-                )
-            )
-        err-response
-            ERR-OVERFLOW
-    )
-)
-
-
-
-;; Linked Lists Approach Suggested by Hank
-;; Maps
-;; owner-primary-name-map: Maps a principal to its primary name ID.
-;; owner-last-name-map: Maps a principal to the ID of the last name in their list.
-;; owner-name-next-map: Maps a name ID to the next name ID in the list.
-;; owner-name-prev-map: Maps a name ID to the previous name ID in the list.
-;; owner-balance-map: Maps a principal to the count of names they own.
-
-;; Private functions
-;; add-name-to-principal: Adds a name ID to an account's list.
-    ;; Parameters: principal, id
-    ;; Logic:
-        ;; Updates the owner-balance-map to increase the balance by 1.
-        ;; Sets the owner-primary-name-map to the new name if it's the first name.
-        ;; Updates the owner-last-name-map to the new name.
-        ;; If the account already has a last name, updates the owner-name-next-map and owner-name-prev-map to link the new name to the end of the list.
-
-;; remove-name-from-principal: Removes a name ID to an account's list.
-    ;; Parameters: principal, id
-    ;; Logic:
-        ;; Updates the owner-balance-map to decrease the balance by 1.
-        ;; Checks if the name being removed is the primary name and updates owner-primary-name-map if necessary.
-        ;; Checks if the name being removed is the last name and updates owner-last-name-map if necessary.
-        ;; Updates the owner-name-next-map and owner-name-prev-map to bypass the removed name in the list.
-
-;; set-primary-name: Sets a specific name as the primary name for a principal.
-    ;; Parameters: principal, id
-    ;; Logic:
-        ;; Ensures the name is not already the primary name.
-        ;; Removes the name from its current position using remove-name-from-principal.
-        ;; Updates owner-primary-name-map to the new primary name.
-        ;; Updates the linked list to place the new primary name at the start.
