@@ -1019,42 +1019,35 @@
             (name-index (map-get? name-to-index {name: name, namespace: namespace}))
             ;; Get the height of my preorder
             (tx-sender-preorder-height (get created-at preorder))
-            ;; Get name current owner
-            (name-current-owner 
-                ;; Check if name props exist
-                (match name-props n-props
-                    ;; If they do assign the owner of the name props
-                    (get owner name-props)
-                    ;; If it doesn't 
-                    none
-                )
-            )
-            ;; Get the current owners preorder
-            (preorder-current-owner 
-                ;; Check if there is name-current-owner
-                (match name-current-owner n-c-owner 
-                    (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: n-c-owner}) 
-                    none
-                )
-            )
-            ;; Get the current owners peorder height if any
-            (current-owners-preorder-height 
-                ;; Check if the preorder of the current owner actually exists
-                (match preorder-current-owner preorder-owner 
-                    ;; If it does then assign the created-at value
-                    (get created-at preorder-current-owner) 
-                    ;; If it doesn't then assign u0
-                    (some u0)
-                )
-            )
         )
         ;; Ensures that the namespace does not have a manager.
         (asserts! (is-none current-namespace-manager) ERR-NOT-AUTHORIZED)
-        ;; Ensure the name is available, and if it is not then validate other scenarios
-        ;; (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
+        ;; Validates that the preorder was made after the namespace was officially launched.
+        (asserts! (> (get created-at preorder) (unwrap! (get launched-at namespace-props) ERR-UNWRAP)) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
+        ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
+        (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
+        ;; Verifies that 1 block has passed from when the preorder was made
+        (asserts! (> block-height (+ (get created-at preorder) u1)) ERR-NAME-NOT-CLAIMABLE-YET)
+        ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
+        (asserts! (>= (get stx-burned preorder) (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Check if the name is registered or not
-        (if (is-none name-index) 
-            ;; If it is not registered then execute all actions required 
+        (match name-index
+            name-index-exists 
+            ;; If it is some, then it is registered and the name exists... we need to do further checks
+            (begin
+                ;; First check that the owner is not the tx-sender
+                (asserts! (not (is-eq tx-sender (unwrap-panic (get owner name-props)))) ERR-OWNER-IS-THE-SAME)
+                ;; If the owner and the tx sender are not the same then check if the current owners preorder happened
+                (match (map-get? name-preorders {hashed-salted-fqn: hashed-salted-fqn, buyer: (unwrap-panic (get owner name-props))}) 
+                    unwrapped-preorder 
+                    ;; If it did then we have to compare which one was made before, if the current owner's or the tx-sender's
+                    (asserts! (< (get created-at unwrapped-preorder) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
+                    ;; If name-preorders for the current owner doesn't exist it means it was fast minted, so we need to compare registered-at from the name props to the tx-sender's preorder height
+                    (asserts! (< (unwrap-panic (get registered-at (unwrap-panic name-props))) tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)
+                )
+                (try! (purchase-transfer name-index-exists (unwrap-panic (get owner name-props)) tx-sender))
+            ) 
+            ;; If it is none then it is not registered then execute all actions required to mint a new name
             (begin
                 ;; Updates the list of names owned by the recipient to include the new name ID.
                 (map-set bns-ids-by-principal tx-sender (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
@@ -1098,49 +1091,8 @@
                 (var-set bns-index id-to-be-minted)
                 ;; Mints the BNS name as an NFT and assigns it to the tx sender.
                 (try! (nft-mint? BNS-V2 id-to-be-minted tx-sender))
-            )
-            ;; If it is false, then it is registered... we need to do further checks
-            ;; First check that the owner is not the tx-sender
-            (asserts!
-                (if (is-eq (some tx-sender) name-current-owner)
-                    ;; If the owner and the tx-sender are the same then exit
-                    false 
-                    ;; If the owner and the tx sender are not the same then
-                    ;; Check if the current owners preorder happened by checking it is eq to some u0
-                    (if (is-eq current-owners-preorder-height (some u0)) 
-                        ;; If it is true then it means that there was no preorder, so it was fast minted, so we need to check if the created-at of the current owner is higher than my preorder
-                        (asserts!
-                            (if (< (- (unwrap! (unwrap! created-at-height ERR-UNWRAP-CREATED-AT-HEIGHT) ERR-UNWRAP-CREATED-AT-HEIGHT) u1) tx-sender-preorder-height) 
-                                ;; If the created at height is lower than the tx-sender preorder height then return false because the name can not be registered
-                                false 
-                                ;; If it is false then it means that tx-sender's preorder happened before the fast claim, so the name belongs to the tx-sender
-                                (try! (purchase-transfer (unwrap-panic name-index) (unwrap-panic name-current-owner) tx-sender))
-                            )
-                            ERR-FAST-MINTED-BEFORE
-                        )
-                        ;; If the current owners preorder height is not equal to some u0 it means that a preorder happened, so we need to check which preorder was made first
-                        (asserts!
-                            (if (< (unwrap! current-owners-preorder-height ERR-UNWRAP-CURRENT-OWNER-PREORDER-HEIGHT) tx-sender-preorder-height) 
-                                ;; If the owners preorder is lower than the tx-sender's then false, the name belongs to the current owner
-                                false 
-                                ;; If the owners preorder is higher than the tx-sender's then send the name to the tx-sender
-                                (try! (purchase-transfer (unwrap-panic name-index) (unwrap-panic name-current-owner) tx-sender))
-                            )
-                            ERR-PREORDERED-BEFORE
-                        )
-                    )
-                )
-                ERR-OWNER-IS-THE-SAME
-            )
+            )       
         )
-        ;; Validates that the preorder was made after the namespace was officially launched.
-        (asserts! (> (get created-at preorder) (unwrap! (get launched-at namespace-props) ERR-UNWRAP)) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
-        ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
-        (asserts! (< block-height (+ (get created-at preorder) NAME-PREORDER-CLAIMABILITY-TTL)) ERR-NAME-CLAIMABILITY-EXPIRED)
-        ;; Verifies that 1 block has passed from when the preorder was made
-        (asserts! (> block-height (+ (get created-at preorder) u1)) ERR-NAME-NOT-CLAIMABLE-YET)
-        ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
-        (asserts! (>= (get stx-burned preorder) (compute-name-price name (get price-function namespace-props))) ERR-NAME-STX-BURNT-INSUFFICIENT)
         ;; Confirms successful registration of the name.
         (ok true)
     )
