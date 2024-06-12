@@ -1007,10 +1007,6 @@
             ;; Get the height of my preorder
             (tx-sender-preorder-height (get created-at preorder))
         )
-        ;; Ensure the name is not already registered, triple check
-        (asserts! (map-insert name-to-index {name: name, namespace: namespace} id-to-be-minted) ERR-NAME-NOT-AVAILABLE)
-        (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
-        (asserts! (map-insert name-owner-map id-to-be-minted tx-sender) ERR-NAME-NOT-AVAILABLE)
         ;; Ensures that the namespace does not have a manager.
         (asserts! (is-none current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Validates that the preorder was made after the namespace was officially launched.
@@ -1043,8 +1039,10 @@
             ) 
             ;; If it is none then it is not registered then execute all actions required to mint a new name
             (begin
-                ;; Updates the list of names owned by the recipient to include the new name ID.
-                (map-set bns-ids-by-principal tx-sender (unwrap! (as-max-len? (append all-users-names-owned id-to-be-minted) u1000) ERR-UNWRAP))
+                ;; Ensure the name is not already registered, triple check
+                (asserts! (map-insert name-to-index {name: name, namespace: namespace} id-to-be-minted) ERR-NAME-NOT-AVAILABLE)
+                (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
+                (asserts! (map-insert name-owner-map id-to-be-minted tx-sender) ERR-NAME-NOT-AVAILABLE)
                 ;; Sets the newly registered name as the primary name for the recipient if they do not already have one.
                 (match (map-get? primary-name tx-sender) 
                     receiver
@@ -1547,11 +1545,11 @@
             ;; Get index from name and namespace
             (name-index (unwrap! (map-get? name-to-index { name: name, namespace: namespace }) ERR-NO-NAME))
             ;; Retrieve the owner of the name from the `names` map, ensuring the name exists.
-            (owner (unwrap! (nft-get-owner? BNS-V2 name-index) ERR-NAME-NOT-FOUND))
+            (owner (unwrap! (nft-get-owner? BNS-V2 name-index) ERR-NO-NAME))
             ;; Fetch properties of the namespace, ensuring the namespace exists.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
             ;; Fetch properties of the name, ensuring the name exists.
-            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
+            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NO-NAME))
         ) 
         
         ;; Returns a tuple containing the namespace properties, name properties, and the owner of the name if all checks pass.
