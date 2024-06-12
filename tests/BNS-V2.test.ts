@@ -199,6 +199,8 @@ const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
   // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
   expect(preorderName.result).toBeOk(Cl.uint(149));
 
+  simnet.mineEmptyBlock();
+
   // Register the name
   const registerName = simnet.callPublicFn(
     "BNS-V2",
@@ -234,7 +236,9 @@ const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace = () => {
     address1
   );
   // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(151));
+  expect(preorderName.result).toBeOk(Cl.uint(152));
+
+  simnet.mineEmptyBlock();
 
   // Register the name
   const registerName = simnet.callPublicFn(
@@ -6462,6 +6466,8 @@ describe("NAME-REGISTER FUNCTION", () => {
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(149));
 
+    simnet.mineEmptyBlock();
+
     // Register the name
     const registerName = simnet.callPublicFn(
       "BNS-V2",
@@ -6482,6 +6488,466 @@ describe("NAME-REGISTER FUNCTION", () => {
     );
     // This should give ok true since it should be successful
     expect(registerName.result).toBeOk(Cl.bool(true));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should succesfully register a name on an unmanaged namespace even if someone preordered it after me", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+        // 3. Are transfers allowed on the namespace
+        Cl.bool(true),
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-ready",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    // Preorder the name
+    const preorderSameName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address2
+      address2
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderSameName.result).toBeOk(Cl.uint(150));
+
+    // Register the name
+    const registerName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(registerName.result).toBeOk(Cl.bool(true));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should succesfully register a name on an unmanaged namespace even if someone preordered it after me and registered before me", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+        // 3. Are transfers allowed on the namespace
+        Cl.bool(true),
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-ready",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    // Preorder the name
+    const preorderSameName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address2
+      address2
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderSameName.result).toBeOk(Cl.uint(150));
+
+    simnet.mineEmptyBlock();
+
+    // Register the name
+    const registerSameName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address2
+    );
+    // This should give ok true since it should be successful
+    expect(registerSameName.result).toBeOk(Cl.bool(true));
+
+    // Register the name
+    const registerName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(registerName.result).toBeOk(Cl.bool(true));
+
+    // Get maps info
+    const getNameInfo = simnet.callReadOnlyFn(
+      "BNS-V2",
+      "get-all-names-owned-by-principal",
+      [Cl.principal(address1)],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give some list u1
+    expect(getNameInfo.result).toBeSome(Cl.list([Cl.uint(1)]));
+
+    // Get maps info
+    const getNameInfo2 = simnet.callReadOnlyFn(
+      "BNS-V2",
+      "get-all-names-owned-by-principal",
+      [Cl.principal(address2)],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give none since the name was taken
+    expect(getNameInfo2.result).toBeSome(Cl.list([]));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should succesfully register a name on an unmanaged namespace even if someone fastclaimed it after I made the preorder", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+        // 3. Are transfers allowed on the namespace
+        Cl.bool(true),
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-ready",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    // Fast claim the name
+    const fastClaimName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-claim-fast",
+      // Passing 5 arguments:
+      // 1. the name
+      // 2. the namespace
+      // 3. the zonefile
+      // 4. the stx to burn
+      // 5. the address to receive the name
+      [
+        Cl.buffer(name1Buff),
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(zonefileBuff),
+        Cl.uint(10000000),
+        Cl.principal(address2),
+      ],
+      // Called by the address that is the send-to address in unmanaged namespaces, in this case address2
+      address2
+    );
+    // This should give ok true since it should be successful
+    expect(fastClaimName.result).toBeOk(Cl.bool(true));
+
+    // Register the name
+    const registerName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(registerName.result).toBeOk(Cl.bool(true));
+
+    // Get maps info
+    const getNameInfo = simnet.callReadOnlyFn(
+      "BNS-V2",
+      "get-all-names-owned-by-principal",
+      [Cl.principal(address1)],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give some list u1
+    expect(getNameInfo.result).toBeSome(Cl.list([Cl.uint(1)]));
+
+    // Get maps info
+    const getNameInfo2 = simnet.callReadOnlyFn(
+      "BNS-V2",
+      "get-all-names-owned-by-principal",
+      [Cl.principal(address2)],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give none since the name was taken
+    expect(getNameInfo2.result).toBeSome(Cl.list([]));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -6576,6 +7042,8 @@ describe("NAME-REGISTER FUNCTION", () => {
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(149));
 
+    simnet.mineEmptyBlock();
+
     // Register the name
     const registerName = simnet.callPublicFn(
       "BNS-V2",
@@ -6609,7 +7077,9 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(151));
+    expect(preorderName2.result).toBeOk(Cl.uint(152));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -6977,6 +7447,8 @@ describe("NAME-REGISTER FUNCTION", () => {
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(149));
 
+    simnet.mineEmptyBlock();
+
     // Register the name
     const registerName = simnet.callPublicFn(
       "BNS-V2",
@@ -6998,19 +7470,154 @@ describe("NAME-REGISTER FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(registerName.result).toBeOk(Cl.bool(true));
 
+    // Register the name
+    const registerName2 = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address1
+    );
+    // Return err same owner
+    expect(registerName2.result).toBeErr(Cl.uint(161));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail to register a name if name was preordered before my preorder and registered by the principal of the first preorder", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+        // 3. Are transfers allowed on the namespace
+        Cl.bool(true),
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-ready",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
     // Preorder the name
-    const preorderName2 = simnet.callPublicFn(
+    const preorderSameName = simnet.callPublicFn(
       "BNS-V2",
       "name-preorder",
       // Passing 2 arguments:
       // 1. the name + salt with hash160
       // 2. the amount of STX to burn for the name since it is unmanaged
-      [Cl.buffer(name2BuffSalt), Cl.uint(200000000)],
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address2
+      address2
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderSameName.result).toBeOk(Cl.uint(149));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
       // Called by any address, in this case address1
       address1
     );
-    // This should return 151, current block 7 plus 144 of the TTL
-    expect(preorderName2.result).toBeOk(Cl.uint(151));
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(150));
+
+    // Register the name
+    const registerName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address2
+    );
+    // This should give ok true since it should be successful
+    expect(registerName.result).toBeOk(Cl.bool(true));
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -7030,8 +7637,147 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by the address that preordered the name
       address1
     );
-    // Return err ERR-NAME-UNAVAILABLE
-    expect(registerName2.result).toBeErr(Cl.uint(132));
+    // Return err preordered before
+    expect(registerName2.result).toBeErr(Cl.uint(163));
+  });
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it("This should fail to register a name if name was fast claimed before my preorder", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+        // 3. Are transfers allowed on the namespace
+        Cl.bool(true),
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-ready",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
+    // Fast claim the name
+    const fastClaimName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-claim-fast",
+      // Passing 5 arguments:
+      // 1. the name
+      // 2. the namespace
+      // 3. the zonefile
+      // 4. the stx to burn
+      // 5. the address to receive the name
+      [
+        Cl.buffer(name1Buff),
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(zonefileBuff),
+        Cl.uint(10000000),
+        Cl.principal(address2),
+      ],
+      // Called by the address that is the send-to address in unmanaged namespaces, in this case address1
+      address2
+    );
+    // This should give ok true since it should be successful
+    expect(fastClaimName.result).toBeOk(Cl.bool(true));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(150));
+
+    simnet.mineEmptyBlock();
+
+    // Register the name
+    const registerName2 = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address1
+    );
+    // Return err preordered before
+    expect(registerName2.result).toBeErr(Cl.uint(162));
   });
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -7353,6 +8099,8 @@ describe("NAME-REGISTER FUNCTION", () => {
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -9697,6 +10445,8 @@ describe("NAME-RENEWAL FUNCTION", () => {
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerName = simnet.callPublicFn(
