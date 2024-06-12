@@ -75,16 +75,3 @@ plan:
             path: contracts/wrong-bns-v2-commission-container.clar
             clarity-version: 2
       epoch: "2.4"
-    - id: 1
-      transactions:
-        - emulated-contract-publish:
-            contract-name: example-linked-list
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/example-linked-list.clar
-            clarity-version: 2
-        - emulated-contract-publish:
-            contract-name: linked-lists
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/linked-lists.clar
-            clarity-version: 2
-      epoch: "2.5"
