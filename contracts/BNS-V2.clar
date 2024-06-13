@@ -980,8 +980,8 @@
                     ;; If created-at from the owners preorder is bigger than the tx-sender-preorder-height then return true and continue, if it not bigger then return false, indicating that the owners preorder happened before
                     (asserts! (> (get created-at unwrapped-preorder) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
                     ;; If name-preorders for the current owner doesn't exist it means it was fast minted, so we need to compare registered-at from the name props to the tx-sender's preorder height
-                    ;; If registered-at is bigger than tx-sender-preorder-height then return true and continue, if it is not bigger then return false because the fast mint happened before the preorder
-                    (asserts! (> (unwrap-panic (get registered-at (unwrap-panic name-props))) tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)
+                    ;; If registered-at or imported-at is bigger than tx-sender-preorder-height then return true and continue, if it is not bigger then return false because the fast mint happened before the preorder
+                    (asserts! (or (> (unwrap-panic (get registered-at (unwrap-panic name-props))) tx-sender-preorder-height) (> (unwrap-panic (get imported-at (unwrap-panic name-props))) tx-sender-preorder-height)) ERR-FAST-MINTED-BEFORE)
                 )
                 ;; If any of both scenarios are true then purchase-transfer the name
                 (try! (purchase-transfer name-index-exists (unwrap-panic (get owner name-props)) tx-sender))
@@ -1551,91 +1551,96 @@
 ;; Updates the principal's name list, primary name, and balance.
 ;; Removes the name from the principal's balance.
 ;; Checks if it is the primary name, and updates accordingly:
-;; If it is, assigns the next name as primary if it exists; if not, assigns the previous name.
-;; If neither exists, deletes the primary name map entry.
-;; Updates the linked list by adjusting the next name map of the previous name of the ID being removed and previous name map next name of the ID being removed.
+    ;; If it is, assigns the next name as primary if it exists; if not, assigns the previous name.
+    ;; If neither exists, deletes the primary name map entry.
+;; Updates the linked list by adjusting the next name map of the previous name of the ID being removed and previous name map of the next name of the ID being removed.
 ;; Deletes the linked ID maps of the ID being removed.
 (define-private (remove-name-from-principal-updates (account principal) (id uint))
     (let
         (
-            ;; Get the previous name ID in the list from the ID being removed
+            ;; Get the previous name ID in the list from the ID being removed.
             (prev-name (map-get? owner-name-prev-map id)) 
-            ;; Get the next name ID in the list from the ID being removed
+            ;; Get the next name ID in the list from the ID being removed.
             (next-name (map-get? owner-name-next-map id)) 
-            ;; Get the primary name ID for the account
+            ;; Get the primary name ID for the account.
             (primary (unwrap-panic (map-get? primary-name account))) 
-            ;; Get the last name ID for the account
+            ;; Get the last name ID for the account.
             (last (unwrap-panic (map-get? owner-last-name-map account))) 
-            ;; Get the balance of names for the account
+            ;; Get the balance of names for the account.
             (balance (unwrap-panic (map-get? owner-balance-map account))) 
         )
-
-        ;; If the name being removed is the primary name
+        ;; Check if the name being removed is the primary name.
         (if (is-eq primary id)
-            ;; If the ID being removed is the primary name
-            ;; Then check if there is a next name from the id
+            ;; If the ID being removed is the primary name:
+            ;; Check if there is a next name from the ID.
             (match next-name next-n
-                ;; If there is a next name, update the primary name to the next name
+                ;; If there is a next name, update the primary name to the next name.
                 (map-set primary-name account next-n)
-                ;; If there is no next name, then it means it is the last name, so check if there is a previous name
+                ;; If there is no next name, then it means it is the last name.
+                ;; Check if there is a previous name.
                 (match prev-name prev-n 
-                    ;; If there is a previous name then update the primary-name to the previous name and update the owner-last-name-map
+                    ;; If there is a previous name, update the primary name to the previous name and update the owner-last-name-map.
                     (begin 
                         (map-set primary-name account prev-n) 
                         (map-set owner-last-name-map account prev-n)
                     )
-                    ;; If there is also no previous name, then it must be the only name owned by the principal then delete the maps, so the principal doesn't have more names linked to it
+                    ;; If there is also no previous name, then it must be the only name owned by the principal.
+                    ;; Delete the maps so the principal doesn't have more names linked to it.
                     (begin
                         (map-delete primary-name account)
                         (map-delete owner-last-name-map account)
                     )
-                    
                 )
             )
-            ;; If id not equal to the primary name then continue
+            ;; If the ID is not equal to the primary name, continue.
             true
         )
         
-        ;; Updating the linked list
-        ;; Check if next-name exists for the ID being removed
+        ;; Updating the linked list:
+        ;; Check if the next name exists for the ID being removed.
         (match next-name next-n 
-            ;; If it exists
-            ;; Check if prev-name also exists otherwise it is the first name on the list
+            ;; If it exists:
+            ;; Check if the previous name also exists, otherwise it is the first name on the list.
             (match prev-name prev-n
-                ;; If there is a previous name, then we set the current previous name of the id being removed, to the next name of the id being removed
+                ;; If both names exist
+                ;; Set the current previous name of the ID being removed as the previous name to the next name of the ID being removed.
                 (map-set owner-name-prev-map next-n prev-n)
-                ;; If there is no previous name for the ID being removed, it means that the next name on the list from the id being removed becomes the first name on the list, so we delete the next name's previous name
+                ;; If there is no previous name for the ID being removed, it means that the next name on the list from the ID being removed becomes the first name on the list.
+                ;; Delete the next name's previous name, which should correspond to the ID being removed.
                 (map-delete owner-name-prev-map next-n)
             )
-            ;; If there is no next name, then return true
+            ;; If there is no next name, then return true.
             true
         )
         
-        ;; Now check if previous name exists
+        ;; Now check if the previous name exists.
         (match prev-name prev-n 
-            ;; If it exists
-            ;; Check if next-name exists otherwise this is the last name on the list
+            ;; If it exists:
+            ;; Check if the next name exists, otherwise this is the last name on the list.
             (match next-name next-n
-                ;; If there is a next name, then we set the current next name as the next name of the previous name of the ID being removed
+                ;; If both names exist
+                ;; Set the current next name as the next name of the previous name of the ID being removed.
                 (map-set owner-name-next-map prev-n next-n)
-                ;; If there is no next name to the ID being removed, then it means this was the last name, so we need to delete the previous name's next name map, so the previous name becomes the last name
+                ;; If there is no next name to the ID being removed, then it means this was the last name.
+                ;; Delete the previous name's next name map so the previous name becomes the last name.
                 (map-delete owner-name-next-map prev-n)
             )
-            ;; If there is no previous name, then return true
+            ;; If there is no previous name, then return true.
             true
         )
         
-        ;; Delete the next and prev names from the ID being removed
+        ;; Delete the next and previous name maps of the ID being removed.
         (map-delete owner-name-next-map id)
         (map-delete owner-name-prev-map id)
 
-        ;; Update the balance map to decrease the balance by 1
+        ;; Update the balance map to decrease the balance by 1.
         (map-set owner-balance-map account (- balance u1))
         
-        ;; Return true indicating successful removal
+        ;; Return true indicating successful removal.
         true 
     )
 )
+
 
 ;; Define private function to burn a name.
 ;; This function updates the primary name and linked list by calling `remove-name-from-principal-updates`.
@@ -1652,11 +1657,11 @@
         ;; This function handles removing the name from the principal's linked list and updating the primary name if necessary.
         (remove-name-from-principal-updates owner id)
         ;; Delete the name from all maps:
-        ;; - Remove the name-to-index mapping to completely dissociate the name from the system.
+        ;; Remove the name-to-index.
         (map-delete name-to-index name)
-        ;; - Remove the index-to-name mapping to dissociate the ID from the system.
+        ;; Remove the index-to-name.
         (map-delete index-to-name id)
-        ;; - Remove the name-owner mapping to dissociate the owner from the name.
+        ;; Remove the name-owner.
         (map-delete name-owner-map id)
         ;; Return true indicating the successful burn of the name.
         (ok true) 
