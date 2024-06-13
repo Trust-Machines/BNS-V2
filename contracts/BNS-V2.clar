@@ -114,6 +114,7 @@
 (define-constant ERR-PREORDERED-BEFORE (err u136))
 (define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u137))
 (define-constant ERR-BURN-UPDATES-FAILED (err u138))
+(define-constant ERR-IMPORTED-BEFORE (err u138))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -979,9 +980,15 @@
                     ;; If it did then we have to compare which one was made before, if the current owner's or the tx-sender's
                     ;; If created-at from the owners preorder is bigger than the tx-sender-preorder-height then return true and continue, if it not bigger then return false, indicating that the owners preorder happened before
                     (asserts! (> (get created-at unwrapped-preorder) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
-                    ;; If name-preorders for the current owner doesn't exist it means it was fast minted, so we need to compare registered-at from the name props to the tx-sender's preorder height
-                    ;; If registered-at or imported-at is bigger than tx-sender-preorder-height then return true and continue, if it is not bigger then return false because the fast mint happened before the preorder
-                    (asserts! (or (> (unwrap-panic (get registered-at (unwrap-panic name-props))) tx-sender-preorder-height) (> (unwrap-panic (get imported-at (unwrap-panic name-props))) tx-sender-preorder-height)) ERR-FAST-MINTED-BEFORE)
+                    ;; If name-preorders for the current owner doesn't exist it means it was fast minted or imported, so we need to compare registered-at or imported-at from the name props to the tx-sender's preorder height
+                    ;; First check if registered-at exists
+                    (match (get registered-at (unwrap-panic name-props)) 
+                        registered 
+                        ;; If it does then compare the 2 heights
+                        (asserts! (> registered tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)
+                        ;; If it doesn't then it was imported so we need to check agains that
+                        (asserts! (> (unwrap-panic (get imported-at (unwrap-panic name-props))) tx-sender-preorder-height) ERR-IMPORTED-BEFORE)
+                    )
                 )
                 ;; If any of both scenarios are true then purchase-transfer the name
                 (try! (purchase-transfer name-index-exists (unwrap-panic (get owner name-props)) tx-sender))
