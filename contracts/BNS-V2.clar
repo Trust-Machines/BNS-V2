@@ -134,7 +134,6 @@
 ;; Variable to store the token URI, allowing for metadata association with the NFT
 (define-data-var token-uri (string-ascii 246) "")
 
-
 ;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;
 ;;;;;; Maps ;;;;;

@@ -710,7 +710,7 @@ describe("TRANSFER FUNCTION", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // Transfer the name
@@ -733,7 +733,7 @@ describe("TRANSFER FUNCTION", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block to
     simnet.mineEmptyBlock();
 
     // Transfer the name
@@ -813,7 +813,7 @@ describe("TRANSFER FUNCTION", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // Transfer the name
@@ -932,7 +932,7 @@ describe("TRANSFER FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(fastClaimName.result).toBeOk(Cl.bool(true));
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // Transfer the name
@@ -955,7 +955,7 @@ describe("TRANSFER FUNCTION", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // Transfer the name
@@ -978,7 +978,7 @@ describe("TRANSFER FUNCTION", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // List the name
@@ -1027,7 +1027,7 @@ describe("TRANSFER FUNCTION", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // List the name
@@ -1141,7 +1141,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // List the name
@@ -1175,7 +1175,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // List the name
@@ -1222,7 +1222,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       // Call from a non-owner address
       address2
     );
-    // Err 107 ERR-No-NAME
+    // Err 107 ERR-NO-NAME
     expect(listName.result).toBeErr(Cl.uint(107));
   });
 
@@ -1246,7 +1246,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       // Call from the owner address
       address1
     );
-    // Err
+    // Err ERR-OPERATION-UNAUTHORIZED
     expect(listName.result).toBeErr(Cl.uint(116));
   });
 
@@ -1270,7 +1270,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       // Call from the manager address
       managerAddress
     );
-    // Err
+    // Err ERR-OPERATION-UNAUTHORIZED
     expect(listName.result).toBeErr(Cl.uint(116));
   });
 
@@ -1278,7 +1278,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // List the name
@@ -1305,7 +1305,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // List the name
@@ -1633,7 +1633,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       // Called by the owner address
       address1
     );
-    // Err 103 ERR-NOT-LISTED
+    // Should return err ERR-NOT-LISTED
     expect(unlistName.result).toBeErr(Cl.uint(103));
   });
 
@@ -2114,6 +2114,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       // Called by the buyer address
       address2
     );
+    // Should return err ERR-NO-NAME
     expect(buyName.result).toBeErr(Cl.uint(107));
   });
 
@@ -2132,6 +2133,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       // Called by the buyer address
       address2
     );
+    // Should return err ERR-NOT-LISTED
     expect(buyName.result).toBeErr(Cl.uint(103));
   });
 
@@ -2150,6 +2152,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       // Called by the buyer address
       address2
     );
+    // Should return err ERR-NOT-LISTED
     expect(buyName.result).toBeErr(Cl.uint(103));
   });
 
@@ -2197,6 +2200,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       // Called by the buyer address
       address2
     );
+    // Should return err ERR-WRONG-COMMISSION
     expect(buyName.result).toBeErr(Cl.uint(104));
   });
 });
@@ -2268,6 +2272,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       // Called by the owner address
       address1
     );
+    // Successful response
     expect(changePrimaryName.result).toBeOk(Cl.bool(true));
   });
 
@@ -2281,6 +2286,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       // Called by an address
       address1
     );
+    // This returns err ERR-NO-NAME
     expect(changePrimaryName.result).toBeErr(Cl.uint(107));
   });
 
@@ -2296,6 +2302,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       // Called by a non-owner address
       address2
     );
+    // This returns err ERR-NO-BNS-NAMES-OWNED
     expect(changePrimaryName.result).toBeErr(Cl.uint(132));
   });
 
@@ -2333,6 +2340,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       // Called by a non-owner address
       address2
     );
+    // This returns err ERR-NOT-AUTHORIZED
     expect(changePrimaryName.result).toBeErr(Cl.uint(102));
   });
 
@@ -2348,6 +2356,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       // Called by a non-owner address
       address1
     );
+    // This returns err ERR-ALREADY-PRIMARY-NAME
     expect(changePrimaryName.result).toBeErr(Cl.uint(106));
   });
 });
@@ -2379,7 +2388,7 @@ describe("MNG-BURN FUNCTIONS", () => {
       // Called from the manager address
       managerAddress
     );
-    // This returns err NAME-NOT-FOUND
+    // This returns err ERR-NO-NAME
     expect(burnName.result).toBeErr(Cl.uint(107));
   });
 
@@ -2394,7 +2403,7 @@ describe("MNG-BURN FUNCTIONS", () => {
       // Called from the manager address (which is not assigned in the namespace)
       managerAddress
     );
-    // This returns err NAME-NO-NAMESPACE-MANAGER
+    // This returns err ERR-NO-NAMESPACE-MANAGER
     expect(burnName.result).toBeErr(Cl.uint(133));
   });
 
@@ -2603,7 +2612,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by the same address that created the first order, in this case address1
       address1
     );
-    // This should give err ERR-NAMESPACE-PREORDER-ALREADY-EXISTS
+    // This should give err ERR-PREORDER-ALREADY-EXISTS
     expect(preorderNamespace2.result).toBeErr(Cl.uint(108));
   });
 
@@ -2649,7 +2658,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give err ERR-NAMESPACE-HASH-MALFORMED
+    // This should give err ERR-HASH-MALFORMED
     expect(preorderNamespace.result).toBeErr(Cl.uint(109));
   });
 
@@ -2665,7 +2674,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give err ERR-NAMESPACE-STX-BURNT-INSUFFICIENT
+    // This should give err ERR-STX-BURNT-INSUFFICIENT
     expect(preorderNamespace.result).toBeErr(Cl.uint(110));
   });
 
@@ -2868,7 +2877,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by the address that made the preorder of the namespace
       address1
     );
-    // Return err ERR-NAMESPACE-PREORDER-NOT-FOUND
+    // Return err ERR-PREORDER-NOT-FOUND
     expect(revealNamespace.result).toBeErr(Cl.uint(111));
   });
 
@@ -2934,7 +2943,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by the address that made the preorder of the namespace
       address1
     );
-    // Return err ERR-NAMESPACE-CHARSET-INVALID
+    // Return err ERR-CHARSET-INVALID
     expect(revealNamespace.result).toBeErr(Cl.uint(112));
   });
 
@@ -3116,7 +3125,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by the address that made the preorder of the namespace
       address1
     );
-    // Return err ERR-NAMESPACE-STX-BURNT-INSUFFICIENT
+    // Return err ERR-STX-BURNT-INSUFFICIENT
     expect(revealNamespace.result).toBeErr(Cl.uint(110));
   });
 
@@ -3436,7 +3445,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
       // Called by a different address than the import address assigned in the namespace-reveal function
       address2
     );
-    // Return err ERR-NAMESPACE-OPERATION-UNAUTHORIZED
+    // Return err ERR-OPERATION-UNAUTHORIZED
     expect(launchNamespace.result).toBeErr(Cl.uint(116));
   });
 
@@ -3813,7 +3822,7 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by the import address
       address1
     );
-    // Return err ERR-NAME-CHARSET-INVALID
+    // Return err ERR-CHARSET-INVALID
     expect(importName.result).toBeErr(Cl.uint(112));
   });
 
@@ -3902,7 +3911,7 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by a different address than the import address
       address2
     );
-    // Return err ERR-NAMESPACE-OPERATION-UNAUTHORIZED
+    // Return err ERR-OPERATION-UNAUTHORIZED
     expect(importName.result).toBeErr(Cl.uint(116));
   });
 
@@ -4226,7 +4235,7 @@ describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
       // Called by a different address than the import addess from the namespace
       address2
     );
-    // Return err ERR-NAMESPACE-OPERATION-UNAUTHORIZED
+    // Return err ERR-OPERATION-UNAUTHORIZED
     expect(updatePriceNamespace.result).toBeErr(Cl.uint(116));
   });
 
@@ -4281,7 +4290,7 @@ describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
       // Called by the import addess from the namespace
       address1
     );
-    // Return err ERR-NAMESPACE-OPERATION-UNAUTHORIZED
+    // Return err ERR-OPERATION-UNAUTHORIZED
     expect(updatePriceNamespace.result).toBeErr(Cl.uint(116));
   });
 });
@@ -4328,7 +4337,7 @@ describe("NAMESPACE-REVOKE-FUNCTION-PRICE-EDITION FUNCTION", () => {
       // Call from a different address than the import address
       address2
     );
-    // Return err ERR-NAMESPACE-OPERATION-UNAUTHORIZED
+    // Return err ERR-OPERATION-UNAUTHORIZED
     expect(updatePriceFunctionNamespace.result).toBeErr(Cl.uint(116));
   });
 });
@@ -4929,7 +4938,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by the manager address
       managerAddress
     );
-    // Return err ERR-NAME-ALREADY-CLAIMED
+    // Return err ERR-NAME-NOT-AVAILABLE
     expect(fastClaimName2.result).toBeErr(Cl.uint(120));
   });
 
@@ -5333,7 +5342,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by the send-to address
       address1
     );
-    // Return err ERR-NAME-STX-BURNT-INSUFFICIENT
+    // Return err ERR-STX-BURNT-INSUFFICIENT
     expect(fastClaimName.result).toBeErr(Cl.uint(110));
   });
 });
@@ -5931,7 +5940,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // Return err ERR-NAME-HASH-MALFORMED
+    // Return err ERR-HASH-MALFORMED
     expect(preorderName.result).toBeErr(Cl.uint(109));
   });
 
@@ -6023,7 +6032,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // Return err ERR-NAME-STX-BURNT-INSUFFICIENT
+    // Return err ERR-STX-BURNT-INSUFFICIENT
     expect(preorderName.result).toBeErr(Cl.uint(110));
   });
 
@@ -6897,7 +6906,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by the address that preordered the name
       address1
     );
-    // Return err ERR-NAME-PREORDER-NOT-FOUND
+    // Return err ERR-PREORDER-NOT-FOUND
     expect(registerName.result).toBeErr(Cl.uint(111));
   });
 
@@ -7183,7 +7192,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by the address that preordered the name
       address1
     );
-    // Return err same owner
+    // Return err ERR-OWNER-IS-THE-SAME
     expect(registerName2.result).toBeErr(Cl.uint(134));
   });
 
@@ -7331,7 +7340,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by the address that preordered the name
       address1
     );
-    // Return err preordered before
+    // Return err ERR-PREORDERED-BEFORE
     expect(registerName2.result).toBeErr(Cl.uint(136));
   });
 
@@ -7469,7 +7478,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by the address that preordered the name
       address1
     );
-    // Return err preordered before
+    // Return err ERR-FAST-MINTED-BEFORE
     expect(registerName2.result).toBeErr(Cl.uint(135));
   });
 
@@ -7695,7 +7704,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by the address that preordered the name
       address1
     );
-    // Return err ERR-NAME-CLAIMABILITY-EXPIRED
+    // Return err ERR-PREORDER-CLAIMABILITY-EXPIRED
     expect(registerName.result).toBeErr(Cl.uint(114));
   });
 
@@ -7810,7 +7819,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by the address that preordered the name
       address1
     );
-    // Return err ERR-NAME-STX-BURNT-INSUFFICIENT
+    // Return err ERR-STX-BURNT-INSUFFICIENT
     expect(registerName.result).toBeErr(Cl.uint(110));
   });
 });
@@ -8402,7 +8411,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by the managerAddress
       managerAddress
     );
-    // Return err ERR-NAME-HASH-MALFORMED
+    // Return err ERR-HASH-MALFORMED
     expect(preorderName.result).toBeErr(Cl.uint(109));
   });
 });
@@ -8922,7 +8931,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by the managerAddress
       managerAddress
     );
-    // Return err ER-NAME-PREORDER-NOT-FOUND
+    // Return err ER-PREORDER-NOT-FOUND
     expect(registerName.result).toBeErr(Cl.uint(111));
   });
 
@@ -9036,7 +9045,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by the address 1 not manager
       address1
     );
-    // Return err ERR-NAME-PREORDER-NOT-FOUND
+    // Return err ERR-PREORDER-NOT-FOUND
     expect(registerName.result).toBeErr(Cl.uint(111));
   });
 
@@ -9189,7 +9198,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by the managerAddress
       managerAddress
     );
-    // Return err ERR-NAME-UNAVAILABLE
+    // Return err ERR-NAME-NOT-AVAILABLE
     expect(registerName2.result).toBeErr(Cl.uint(120));
   });
 
@@ -9420,7 +9429,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by the managerAddress
       managerAddress
     );
-    // Return err ERR-NAME-CLAIMABILITY-EXPIRED
+    // Return err ERR-PREORDER-CLAIMABILITY-EXPIRED
     expect(registerName.result).toBeErr(Cl.uint(114));
   });
 });
@@ -9507,7 +9516,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       // Called from the manager address
       managerAddress
     );
-    // Return err ERR-NAME-OPERATION-UNAUTHORIZED
+    // Return err ERR-OPERATION-UNAUTHORIZED
     expect(updateZoneName.result).toBeErr(Cl.uint(116));
   });
 
@@ -9612,7 +9621,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       // Called from a non manager address
       managerAddress
     );
-    // Return err ERR-NAME-OPERATION-UNAUTHORIZED
+    // Return err ERR-OPERATION-UNAUTHORIZED
     expect(updateZoneName.result).toBeErr(Cl.uint(116));
   });
 });
@@ -9663,6 +9672,7 @@ describe("NAME-REVOKE FUNCTION", () => {
       // Called from the manager address
       managerAddress
     );
+    // Return err ERR-NAMESPACE-NOT-FOUND
     expect(revokeName.result).toBeErr(Cl.uint(115));
   });
 
@@ -10100,7 +10110,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // Called from owner address
       address1
     );
-    // Return err ERR-NAME-OPERATION-UNAUTHORIZED
+    // Return err ERR-OPERATION-UNAUTHORIZED
     expect(renewName.result).toBeErr(Cl.uint(116));
   });
 
