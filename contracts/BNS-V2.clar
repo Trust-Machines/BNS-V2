@@ -683,8 +683,6 @@
     )
 )
 
-
-
 ;; NAME-IMPORT
 ;; Once a namespace is revealed, the user has the option to populate it with a set of names. Each imported name is given
 ;; both an owner and some off-chain state. This step is optional; Namespace creators are not required to import names.
@@ -1029,7 +1027,6 @@
         (ok true)
     )
 )
-
 
 ;; Defines a public function called `mng-name-preorder`.
 ;; This function is similar to `name-preorder` but only for namespace managers, without the burning of STX tokens.
@@ -1452,7 +1449,6 @@
     )
 )
 
-
 ;; Read-only function `check-name-ops-preconditions` ensures that all necessary conditions are met for operations on a specific name.
 ;; @params:
     ;; namespace (buff 20): The namespace of the name being checked.
@@ -1647,7 +1643,6 @@
     )
 )
 
-
 ;; Define private function to burn a name.
 ;; This function updates the primary name and linked list by calling `remove-name-from-principal-updates`.
 ;; It also deletes the name from all relevant maps.
@@ -1673,7 +1668,6 @@
         (ok true) 
     )
 )
-
 
 ;; Define private function to add a name to a principal's list:
 ;; Set it as primary-name if the principal does not have a primary name.
@@ -1719,7 +1713,6 @@
         true 
     )
 )
-
 
 ;; Returns the minimum of two uint values.
 (define-private (min (a uint) (b uint))
@@ -1888,7 +1881,6 @@
     )
 )
 
-
 ;; SIP-09 compliant function to transfer a token from one owner to another.
 ;; This function is similar to the 'transfer' function but does not check that the owner is the tx-sender.
 ;; @param id: the id of the nft being transferred.
@@ -1925,7 +1917,6 @@
         (nft-transfer? BNS-V2 id owner recipient)
     )
 )
-
 
 ;; Function to update the renewal-height for all imported names within a namespace
 ;; This is used in the namespace-ready function to ensure all names are updated immediately when the namespace is launched.
