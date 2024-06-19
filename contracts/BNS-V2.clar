@@ -981,10 +981,20 @@
                         fqn 
                         ;; If it was preordered we have to compare which one was made first, if the recorded preorder or the tx-sender's
                         ;; If created-at from the first preorder is bigger than the tx-sender-preorder-height then return true and continue, if it not bigger then return false, indicating that the first preorder happened before
-                        (asserts! (> (unwrap-panic (get created-at (map-get? name-preorders {hashed-salted-fqn: fqn, buyer: (unwrap-panic (get registered-by name-props-exist))}))) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
+                        (begin 
+                            (asserts! (> (unwrap-panic (get created-at (map-get? name-preorders {hashed-salted-fqn: fqn, buyer: (unwrap-panic (get registered-by name-props-exist))}))) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
+                            ;; And also update the map to have the correct preorder used to register the name
+                            ;; Update to the correct fqn and the correct registered-by principal
+                            (map-set name-properties {name: name, namespace: namespace} (merge name-props-exist {fully-qualified-name: (some hashed-salted-fqn), registered-by: (some tx-sender)}))
+                        )
                         ;; If the name was not preordered it means it was fast minted
                         ;; If it does then compare the 2 heights
-                        (asserts! (> registered tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)   
+                        (begin 
+                            (asserts! (> registered tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)   
+                            ;; Update to the correct registered-by principal
+                            (map-set name-properties {name: name, namespace: namespace} (merge name-props-exist {registered-by: (some tx-sender)}))
+                        )
+                        
                     )
                     ;; If the name was not registered then it was imported so we need to check agains that
                     (asserts! (> (unwrap-panic (get imported-at (unwrap-panic name-props))) tx-sender-preorder-height) ERR-IMPORTED-BEFORE)
