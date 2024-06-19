@@ -53,7 +53,7 @@
 (define-constant NAMESPACE-LAUNCHABILITY-TTL u52595) 
 ;; The grace period duration for name renewals post-expiration. (34 days)
 (define-constant NAME-GRACE-PERIOD-DURATION u5000) 
-
+;; The length of the hash should match this
 (define-constant HASH160LEN u20)
 
 ;;;;;;;;;;;;;;;;;;
@@ -179,6 +179,8 @@
         revoked-at: (optional uint),
         zonefile-hash: (optional (buff 20)),
         fully-qualified-name: (optional (buff 20)),
+        ;; Added this field in name-properties to know exactly who the name was registered by the first time, to later be able to access the name-preorder correctly in case the name switches owners
+        registered-by: (optional principal),
         renewal-height: uint,
         stx-burn: uint,
         owner: principal,
@@ -218,7 +220,6 @@
     { created-at: uint, stx-burned: uint }
 )
 
-
 ;; Tracks preorders for names, including their creation times, claim status, and STX burned.
 ;; Removed the claimed field as it is not necessary
 (define-map name-preorders
@@ -234,15 +235,15 @@
 (define-map primary-name principal uint)
 ;; Define maps for managing the linked list and name ownership
 ;; Maps principal to the last name ID in their list
-(define-map owner-last-name-map principal uint) 
+(define-map owners-last-name principal uint) 
 ;; Maps name ID to the next name ID in the list
-(define-map owner-name-next-map uint uint) 
+(define-map next-name-in-list uint uint) 
 ;; Maps name ID to the previous name ID in the list
-(define-map owner-name-prev-map uint uint) 
+(define-map previous-name-in-list uint uint) 
 ;; Maps name ID to the owner principal
-(define-map name-owner-map uint principal) 
+(define-map bns-name-owner uint principal) 
 ;; Maps principal to the count of names they own
-(define-map owner-balance-map principal uint)
+(define-map owner-bns-balance principal uint)
 
 ;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;
@@ -258,15 +259,15 @@
 (define-public (transfer (id uint) (owner principal) (recipient principal))
     (let 
         (
-            ;; Attempts to retrieve the name and namespace associated with the given NFT ID. If not found, it returns an error.
-            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
+            ;; Attempts to retrieve the name and namespace associated with the given NFT ID.
+            (name-and-namespace (unwrap! (get-bns-from-id id) ERR-NO-NAME))
             ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
             (namespace (get namespace name-and-namespace))
             ;; Extracts the name part from the retrieved name-and-namespace tuple.
             (name (get name name-and-namespace))
             ;; Fetches properties of the identified namespace to confirm its existence and retrieve management details.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Extracts the manager of the namespace, if one is set.
+            ;; Extracts the manager of the namespace.
             (namespace-manager (get namespace-manager namespace-props))
             ;; Gets the name-props
             (name-props (unwrap! (map-get? name-properties name-and-namespace) ERR-NO-NAME))
@@ -278,14 +279,13 @@
             (name-current-owner (get owner name-props))
             ;; Revalidate the name current owner
             (nft-current-owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-NO-NAME))
-            ;; Checks if the recipient has a primary name
-            (recipient-primary-name (map-get? primary-name recipient))
         )
         ;; Checks if the name was registered
         (match registered-at-value
             is-registered
-            ;; If it was registered, check if registered-at is lower than current blockheight + 1
-            (asserts! (<= (+ is-registered u1) block-height) ERR-OPERATION-UNAUTHORIZED)
+            ;; If it was registered, check if registered-at is lower than current blockheight
+            ;; This check works to make sure that if a name is fast-claimed they
+            (asserts! (<= is-registered block-height) ERR-OPERATION-UNAUTHORIZED)
             ;; If it is not registered then continue
             true 
         )
@@ -709,7 +709,7 @@
         ;; Ensure the name is not already registered, triple check
         (asserts! (map-insert name-to-index {name: name, namespace: namespace} current-mint) ERR-NAME-NOT-AVAILABLE)
         (asserts! (map-insert index-to-name current-mint {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
-        (asserts! (map-insert name-owner-map current-mint beneficiary) ERR-NAME-NOT-AVAILABLE) 
+        (asserts! (map-insert bns-name-owner current-mint beneficiary) ERR-NAME-NOT-AVAILABLE) 
         ;; Verify that the name contains only valid characters to ensure compliance with naming conventions.
         (asserts! (not (has-invalid-chars name)) ERR-CHARSET-INVALID)
         ;; Ensure the transaction sender is the namespace's designated import principal, confirming their authority to import names.
@@ -727,6 +727,7 @@
                 revoked-at: none,
                 zonefile-hash: (some zonefile-hash),
                 fully-qualified-name: none,
+                registered-by: none,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 stx-burn: stx-burn,
                 owner: beneficiary,
@@ -831,7 +832,7 @@
         ;; Ensure the name is not already registered, triple check
         (asserts! (map-insert name-to-index {name: name, namespace: namespace} id-to-be-minted) ERR-NAME-NOT-AVAILABLE)
         (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
-        (asserts! (map-insert name-owner-map id-to-be-minted send-to) ERR-NAME-NOT-AVAILABLE) 
+        (asserts! (map-insert bns-name-owner id-to-be-minted send-to) ERR-NAME-NOT-AVAILABLE) 
         ;; Checks if that name already exists for the namespace if it does, then don't mint
         (asserts! (is-none name-props) ERR-NAME-ALREADY-CLAIMED)
         ;; Verifies if the namespace has a manager
@@ -864,6 +865,7 @@
                 revoked-at: none,
                 zonefile-hash: (some zonefile-hash),
                 fully-qualified-name: none,
+                registered-by: (some send-to),
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 stx-burn: stx-burn,
                 owner: send-to,
@@ -965,37 +967,37 @@
         ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
         (asserts! (>= (get stx-burned preorder) (compute-name-price name (get price-function namespace-props))) ERR-STX-BURNT-INSUFFICIENT)
         ;; Check if the name is registered or not
-        (match name-index
-            name-index-exists 
+        (match name-props
+            name-props-exist 
             ;; If it is some, then it is registered and the name exists... we need to do further checks
             (begin
-                ;; First check that the owner is not the tx-sender
-                (asserts! (not (is-eq tx-sender (unwrap-panic (get owner name-props)))) ERR-OWNER-IS-THE-SAME)
-                ;; If the owner and the tx sender are not the same then check if the current owners preorder happened
-                (match (map-get? name-preorders {hashed-salted-fqn: hashed-salted-fqn, buyer: (unwrap-panic (get owner name-props))}) 
-                    unwrapped-preorder 
-                    ;; If it did then we have to compare which one was made before, if the current owner's or the tx-sender's
-                    ;; If created-at from the owners preorder is bigger than the tx-sender-preorder-height then return true and continue, if it not bigger then return false, indicating that the owners preorder happened before
-                    (asserts! (> (get created-at unwrapped-preorder) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
-                    ;; If name-preorders for the current owner doesn't exist it means it was fast minted or imported, so we need to compare registered-at or imported-at from the name props to the tx-sender's preorder height
-                    ;; First check if registered-at exists
-                    (match (get registered-at (unwrap-panic name-props)) 
-                        registered 
+                ;; First check that the current owner is not the tx-sender
+                (asserts! (not (is-eq tx-sender (get owner name-props-exist))) ERR-OWNER-IS-THE-SAME)
+                ;; If the owner and the tx sender are not the same then check if the name was registered
+                (match (get registered-at name-props-exist) 
+                    registered
+                    ;; If it was registered then check the fully-qualified-name of the name-props to see if it was preordered or fast-minted
+                    (match (get fully-qualified-name name-props-exist) 
+                        fqn 
+                        ;; If it was preordered we have to compare which one was made first, if the recorded preorder or the tx-sender's
+                        ;; If created-at from the first preorder is bigger than the tx-sender-preorder-height then return true and continue, if it not bigger then return false, indicating that the first preorder happened before
+                        (asserts! (> (unwrap-panic (get created-at (map-get? name-preorders {hashed-salted-fqn: fqn, buyer: (unwrap-panic (get registered-by name-props-exist))}))) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
+                        ;; If the name was not preordered it means it was fast minted
                         ;; If it does then compare the 2 heights
-                        (asserts! (> registered tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)
-                        ;; If it doesn't then it was imported so we need to check agains that
-                        (asserts! (> (unwrap-panic (get imported-at (unwrap-panic name-props))) tx-sender-preorder-height) ERR-IMPORTED-BEFORE)
+                        (asserts! (> registered tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)   
                     )
+                    ;; If the name was not registered then it was imported so we need to check agains that
+                    (asserts! (> (unwrap-panic (get imported-at (unwrap-panic name-props))) tx-sender-preorder-height) ERR-IMPORTED-BEFORE)
                 )
                 ;; If any of both scenarios are true then purchase-transfer the name
-                (try! (purchase-transfer name-index-exists (unwrap-panic (get owner name-props)) tx-sender))
+                (try! (purchase-transfer (unwrap-panic name-index) (get owner name-props-exist) tx-sender))
             ) 
             ;; If it is none then it is not registered then execute all actions required to mint a new name
             (begin
                 ;; Ensure the name is not already registered, triple check
                 (asserts! (map-insert name-to-index {name: name, namespace: namespace} id-to-be-minted) ERR-NAME-NOT-AVAILABLE)
                 (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
-                (asserts! (map-insert name-owner-map id-to-be-minted tx-sender) ERR-NAME-NOT-AVAILABLE)
+                (asserts! (map-insert bns-name-owner id-to-be-minted tx-sender) ERR-NAME-NOT-AVAILABLE)
                 ;; Sets properties for the newly registered name including registration time, price, owner, and associated zonefile hash.
                 (map-set name-properties
                     {
@@ -1007,6 +1009,7 @@
                         revoked-at: none,
                         zonefile-hash: (some zonefile-hash),
                         fully-qualified-name: (some hashed-salted-fqn),
+                        registered-by: (some tx-sender),
                         renewal-height: (+ (get lifetime namespace-props) block-height),
                         stx-burn: (get stx-burned preorder),
                         owner: tx-sender,
@@ -1090,7 +1093,7 @@
         ;; Ensure the name is not already registered, triple check
         (asserts! (map-insert name-to-index {name: name, namespace: namespace} id-to-be-minted) ERR-NAME-NOT-AVAILABLE)
         (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
-        (asserts! (map-insert name-owner-map id-to-be-minted send-to) ERR-NAME-NOT-AVAILABLE) 
+        (asserts! (map-insert bns-name-owner id-to-be-minted send-to) ERR-NAME-NOT-AVAILABLE) 
         ;; Verifies that the caller of the contract is the namespace manager.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Ensures the name is not already registered by checking if it lacks an existing index.
@@ -1110,6 +1113,7 @@
                 revoked-at: none,
                 zonefile-hash: (some zonefile-hash),
                 fully-qualified-name: (some hashed-salted-fqn),
+                registered-by: (some send-to),
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 stx-burn: u0,
                 owner: send-to,
@@ -1449,27 +1453,6 @@
     )
 )
 
-;; Read-only function `check-name-ops-preconditions` ensures that all necessary conditions are met for operations on a specific name.
-;; @params:
-    ;; namespace (buff 20): The namespace of the name being checked.
-    ;; name (buff 48): The name being checked for operation preconditions.
-(define-read-only (check-name-ops-preconditions (namespace (buff 20)) (name (buff 48)))
-    (let 
-        (
-            ;; Get index from name and namespace
-            (name-index (unwrap! (map-get? name-to-index { name: name, namespace: namespace }) ERR-NO-NAME))
-            ;; Retrieve the owner of the name from the `names` map, ensuring the name exists.
-            (owner (unwrap! (nft-get-owner? BNS-V2 name-index) ERR-NO-NAME))
-            ;; Fetch properties of the namespace, ensuring the namespace exists.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Fetch properties of the name, ensuring the name exists.
-            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NO-NAME))
-        ) 
-        
-        ;; Returns a tuple containing the namespace properties, name properties, and the owner of the name if all checks pass.
-        (ok { namespace-props: namespace-props, name-props: name-props, owner: owner })
-    )
-)
 
 ;; Read-only function `can-namespace-be-registered` checks if a namespace is available for registration.
 ;; @params:
@@ -1518,7 +1501,7 @@
 ;; Define read-only function to get the balance of names for a principal
 (define-read-only (get-balance (account principal))
     ;; Return balance or 0 if not found
-    (default-to u0 (map-get? owner-balance-map account)) 
+    (default-to u0 (map-get? owner-bns-balance account)) 
 )
 
 ;;;;;;;;;;;;;;;;;;
@@ -1532,7 +1515,7 @@
 (define-private (transfer-ownership-updates (id uint) (sender principal) (recipient principal))
     (begin
         ;; Update the owner map to set the new owner for the name ID
-        (map-set name-owner-map id recipient)
+        (map-set bns-name-owner id recipient)
         
         ;; Log the transfer action with the topic "transfer-ownership"
         (print 
@@ -1561,15 +1544,15 @@
     (let
         (
             ;; Get the previous name ID in the list from the ID being removed.
-            (prev-name (map-get? owner-name-prev-map id)) 
+            (prev-name (map-get? previous-name-in-list id)) 
             ;; Get the next name ID in the list from the ID being removed.
-            (next-name (map-get? owner-name-next-map id)) 
+            (next-name (map-get? next-name-in-list id)) 
             ;; Get the primary name ID for the account.
             (primary (unwrap-panic (map-get? primary-name account))) 
             ;; Get the last name ID for the account.
-            (last (unwrap-panic (map-get? owner-last-name-map account))) 
+            (last (unwrap-panic (map-get? owners-last-name account))) 
             ;; Get the balance of names for the account.
-            (balance (unwrap-panic (map-get? owner-balance-map account))) 
+            (balance (unwrap-panic (map-get? owner-bns-balance account))) 
         )
         ;; Check if the name being removed is the primary name.
         (if (is-eq primary id)
@@ -1581,16 +1564,16 @@
                 ;; If there is no next name, then it means it is the last name.
                 ;; Check if there is a previous name.
                 (match prev-name prev-n 
-                    ;; If there is a previous name, update the primary name to the previous name and update the owner-last-name-map.
+                    ;; If there is a previous name, update the primary name to the previous name and update the owners-last-name.
                     (begin 
                         (map-set primary-name account prev-n) 
-                        (map-set owner-last-name-map account prev-n)
+                        (map-set owners-last-name account prev-n)
                     )
                     ;; If there is also no previous name, then it must be the only name owned by the principal.
                     ;; Delete the maps so the principal doesn't have more names linked to it.
                     (begin
                         (map-delete primary-name account)
-                        (map-delete owner-last-name-map account)
+                        (map-delete owners-last-name account)
                     )
                 )
             )
@@ -1606,10 +1589,10 @@
             (match prev-name prev-n
                 ;; If both names exist
                 ;; Set the current previous name of the ID being removed as the previous name to the next name of the ID being removed.
-                (map-set owner-name-prev-map next-n prev-n)
+                (map-set previous-name-in-list next-n prev-n)
                 ;; If there is no previous name for the ID being removed, it means that the next name on the list from the ID being removed becomes the first name on the list.
                 ;; Delete the next name's previous name, which should correspond to the ID being removed.
-                (map-delete owner-name-prev-map next-n)
+                (map-delete previous-name-in-list next-n)
             )
             ;; If there is no next name, then return true.
             true
@@ -1622,21 +1605,21 @@
             (match next-name next-n
                 ;; If both names exist
                 ;; Set the current next name as the next name of the previous name of the ID being removed.
-                (map-set owner-name-next-map prev-n next-n)
+                (map-set next-name-in-list prev-n next-n)
                 ;; If there is no next name to the ID being removed, then it means this was the last name.
                 ;; Delete the previous name's next name map so the previous name becomes the last name.
-                (map-delete owner-name-next-map prev-n)
+                (map-delete next-name-in-list prev-n)
             )
             ;; If there is no previous name, then return true.
             true
         )
         
         ;; Delete the next and previous name maps of the ID being removed.
-        (map-delete owner-name-next-map id)
-        (map-delete owner-name-prev-map id)
+        (map-delete next-name-in-list id)
+        (map-delete previous-name-in-list id)
 
         ;; Update the balance map to decrease the balance by 1.
-        (map-set owner-balance-map account (- balance u1))
+        (map-set owner-bns-balance account (- balance u1))
         
         ;; Return true indicating successful removal.
         true 
@@ -1652,7 +1635,7 @@
             ;; Get the name details associated with the given ID.
             (name (unwrap! (map-get? index-to-name id) ERR-NO-NAME)) 
             ;; Get the owner of the name.
-            (owner (unwrap! (map-get? name-owner-map id) ERR-UNWRAP)) 
+            (owner (unwrap! (map-get? bns-name-owner id) ERR-UNWRAP)) 
         )
         ;; Call the function to update the owner's list and primary name.
         ;; This function handles removing the name from the principal's linked list and updating the primary name if necessary.
@@ -1663,7 +1646,7 @@
         ;; Remove the index-to-name.
         (map-delete index-to-name id)
         ;; Remove the name-owner.
-        (map-delete name-owner-map id)
+        (map-delete bns-name-owner id)
         ;; Return true indicating the successful burn of the name.
         (ok true) 
     )
@@ -1682,7 +1665,7 @@
     (let
         (
             ;; Get the last name ID for the account.
-            (last-owner-name (map-get? owner-last-name-map account)) 
+            (last-owner-name (map-get? owners-last-name account)) 
             ;; Get the current primary name for the account.
             (current-primary-name (map-get? primary-name account))
         )
@@ -1690,9 +1673,9 @@
         (match last-owner-name last 
             (begin
                 ;; Set the new ID as the next name of the last name.
-                (map-set owner-name-next-map last id)
+                (map-set next-name-in-list last id)
                 ;; Set the last name as the previous name of the new ID.
-                (map-set owner-name-prev-map id last)
+                (map-set previous-name-in-list id last)
             )
             ;; If there is no last name, it means this is the first name for the account.
             true
@@ -1706,9 +1689,9 @@
             (map-set primary-name account id)
         )
         ;; Update the balance map to increase the balance by 1.
-        (map-set owner-balance-map account (+ (get-balance account) u1))
+        (map-set owner-bns-balance account (+ (get-balance account) u1))
         ;; Update the last name map to set the new name as the last name.
-        (map-set owner-last-name-map account id)
+        (map-set owners-last-name account id)
         ;; Return true indicating successful addition.
         true 
     )
