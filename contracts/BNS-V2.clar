@@ -283,7 +283,7 @@
             is-registered
             ;; If it was registered, check if registered-at is lower than current blockheight
             ;; This check works to make sure that if a name is fast-claimed they
-            (asserts! (<= is-registered block-height) ERR-OPERATION-UNAUTHORIZED)
+            (asserts! (< is-registered block-height) ERR-OPERATION-UNAUTHORIZED)
             ;; If it is not registered then continue
             true 
         )
@@ -605,7 +605,7 @@
         ;; Ensure the namespace consists of valid characters only.
         (asserts! (not (has-invalid-chars namespace)) ERR-CHARSET-INVALID)
         ;; Check that the namespace is available for reveal (not already existing or expired).
-        (asserts! (is-none namespace-props) ERR-NAMESPACE-ALREADY-EXISTS)
+        (asserts! (unwrap! (can-namespace-be-registered namespace) ERR-NAMESPACE-ALREADY-EXISTS) ERR-NAMESPACE-ALREADY-EXISTS)
         ;; Verify the burned amount during preorder meets or exceeds the namespace's registration price.
         (asserts! (>= (get stx-burned preorder) namespace-price) ERR-STX-BURNT-INSUFFICIENT)
         ;; Confirm the reveal action is performed within the allowed timeframe from the preorder.
