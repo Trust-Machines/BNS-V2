@@ -194,8 +194,6 @@
 (define-map namespaces (buff 20)
     { 
         namespace-manager: (optional principal),
-        ;; TODO 
-        ;; Missing function to flip the switch
         manager-transferable: bool,
         namespace-import: principal,
         revealed-at: uint,
@@ -289,7 +287,6 @@
             ;; If it is not registered then continue
             true 
         )
-
         ;; Checks if the namespace is managed.
         (match namespace-manager 
             manager
@@ -581,7 +578,7 @@
     ;; p-func-no-vowel-discount (uint): Discount applied to names without vowels.
     ;; lifetime (uint): Duration that names within this namespace are valid before needing renewal.
     ;; namespace-import (principal): The principal authorized to import names into this namespace.
-(define-public (namespace-reveal (namespace (buff 20)) (namespace-salt (buff 20)) (transfers bool) (p-func-base uint) (p-func-coeff uint) (p-func-b1 uint) (p-func-b2 uint) (p-func-b3 uint) (p-func-b4 uint) (p-func-b5 uint) (p-func-b6 uint) (p-func-b7 uint) (p-func-b8 uint) (p-func-b9 uint) (p-func-b10 uint) (p-func-b11 uint) (p-func-b12 uint) (p-func-b13 uint) (p-func-b14 uint) (p-func-b15 uint) (p-func-b16 uint) (p-func-non-alpha-discount uint) (p-func-no-vowel-discount uint) (lifetime uint) (namespace-import principal) (namespace-manager (optional principal)))
+(define-public (namespace-reveal (namespace (buff 20)) (namespace-salt (buff 20)) (p-func-base uint) (p-func-coeff uint) (p-func-b1 uint) (p-func-b2 uint) (p-func-b3 uint) (p-func-b4 uint) (p-func-b5 uint) (p-func-b6 uint) (p-func-b7 uint) (p-func-b8 uint) (p-func-b9 uint) (p-func-b10 uint) (p-func-b11 uint) (p-func-b12 uint) (p-func-b13 uint) (p-func-b14 uint) (p-func-b15 uint) (p-func-b16 uint) (p-func-non-alpha-discount uint) (p-func-no-vowel-discount uint) (lifetime uint) (namespace-import principal) (namespace-manager (optional principal)))
     ;; The salt and namespace must hash to a preorder entry in the `namespace-preorders` table.
     ;; The sender must match the principal in the preorder entry (implied)
     (let 
@@ -613,6 +610,8 @@
         (asserts! (>= (get stx-burned preorder) namespace-price) ERR-STX-BURNT-INSUFFICIENT)
         ;; Confirm the reveal action is performed within the allowed timeframe from the preorder.
         (asserts! (< block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-PREORDER-CLAIMABILITY-EXPIRED)
+        ;; To avoid namespace snipping make sure that 1 block has passed after the preorder
+        (asserts! (> block-height (+ (get created-at preorder) u1)) ERR-OPERATION-UNAUTHORIZED)
         ;; Check if the namespace manager is assigned
         (match namespace-manager 
             namespace-m
@@ -621,7 +620,7 @@
                 {
                     ;; Added manager here
                     namespace-manager: namespace-manager,
-                    manager-transferable: transfers,
+                    manager-transferable: true,
                     namespace-import: namespace-import,
                     revealed-at: block-height,
                     launched-at: none,
@@ -635,7 +634,7 @@
                 {
                     ;; Added manager here
                     namespace-manager: none,
-                    manager-transferable: transfers,
+                    manager-transferable: false,
                     namespace-import: namespace-import,
                     revealed-at: block-height,
                     launched-at: none,
@@ -683,6 +682,20 @@
     )
 )
 
+;; Switch function for manager-transaferable
+(define-public (turn-off-manager-transfers (namespace (buff 20)))
+    (let 
+        (
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            (namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
+            (launched (unwrap! (get launched-at namespace-props) ERR-NAMESPACE-NOT-LAUNCHED))
+        ) 
+        (asserts! (is-eq contract-caller namespace-manager) ERR-NOT-AUTHORIZED)
+        (map-set namespaces namespace (merge namespace-props {manager-transferable: false}))
+        (ok true)
+    )
+)
+
 ;; NAME-IMPORT
 ;; Once a namespace is revealed, the user has the option to populate it with a set of names. Each imported name is given
 ;; both an owner and some off-chain state. This step is optional; Namespace creators are not required to import names.
@@ -718,7 +731,6 @@
         (asserts! (is-none (get launched-at namespace-props)) ERR-NAMESPACE-ALREADY-LAUNCHED)
         ;; Confirm that the import is occurring within the allowed timeframe since the namespace was revealed.
         (asserts! (< block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)
-
         ;; Set the name properties
         (map-set name-properties {name: name, namespace: namespace}
             {
@@ -1035,6 +1047,15 @@
                 ;; Mints the BNS name as an NFT and assigns it to the tx sender.
                 (try! (nft-mint? BNS-V2 id-to-be-minted tx-sender))
             )       
+        )
+        ;; Log the new name registration
+        (print 
+            {
+                topic: "new-name",
+                owner: tx-sender,
+                name: {name: name, namespace: namespace},
+                id: id-to-be-minted,
+            }
         )
         ;; Confirms successful registration of the name.
         (ok true)
