@@ -55,7 +55,7 @@
 (define-constant NAME-PREORDER-CLAIMABILITY-TTL u144) 
 ;; The grace period duration for name renewals post-expiration.
 (define-constant NAME-GRACE-PERIOD-DURATION u5000) 
-;; Constant for the length of the hash
+
 (define-constant HASH160LEN u20)
 
 ;;;;;;;;;;;;;;;;;;
@@ -77,8 +77,6 @@
 ;;;; Errors ;;;;
 ;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;
-
-
 
 (define-constant ERR-UNWRAP (err u101))
 (define-constant ERR-NOT-AUTHORIZED (err u102))
@@ -103,39 +101,38 @@
 (define-constant ERR-NAMESPACE-NOT-LAUNCHED (err u121))
 (define-constant ERR-NAME-OPERATION-UNAUTHORIZED (err u122))
 (define-constant ERR-NAME-NOT-AVAILABLE (err u123))
-(define-constant ERR-NAMESPACE-PREORDER-EXPIRED (err u124))
-(define-constant ERR-NAMESPACE-PRICE-FUNCTION-INVALID (err u125))
-(define-constant ERR-NAMESPACE-BLANK (err u126))
-(define-constant ERR-NAME-PREORDER-NOT-FOUND (err u127))
-(define-constant ERR-NAME-PREORDER-EXPIRED (err u128))
-(define-constant ERR-NAME-PREORDER-FUNDS-INSUFFICIENT (err u129))
-(define-constant ERR-NAME-STX-BURNT-INSUFFICIENT (err u130))
-(define-constant ERR-NAME-EXPIRED (err u131))
-(define-constant ERR-NAME-GRACE-PERIOD (err u132))
-(define-constant ERR-NAME-BLANK (err u133))
-(define-constant ERR-NAME-ALREADY-CLAIMED (err u134))
-(define-constant ERR-NAME-CLAIMABILITY-EXPIRED (err u135))
-(define-constant ERR-NAME-REVOKED (err u136))
-(define-constant ERR-NAME-TRANSFER-FAILED (err u137))
-(define-constant ERR-NAME-PREORDER-ALREADY-EXISTS (err u138))
-(define-constant ERR-NAME-HASH-MALFORMED (err u139))
-(define-constant ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH (err u140))
-(define-constant ERR-NAME-NOT-RESOLVABLE (err u141))
-(define-constant ERR-NAME-COULD-NOT-BE-MINTED (err u142))
-(define-constant ERR-NAME-COULD-NOT-BE-TRANSFERED (err u143))
-(define-constant ERR-NAME-CHARSET-INVALID (err u144))
-(define-constant ERR-PANIC (err u145))
-(define-constant ERR-NAMESPACE-HAS-MANAGER (err u146))
-(define-constant ERR-OVERFLOW (err u147))
-(define-constant ERR-NO-OWNER-FOR-NFT (err u148))
-(define-constant ERR-NO-BNS-NAMES-OWNED (err u149))
-(define-constant ERR-NO-NAMESPACE-MANAGER (err u150))
-(define-constant ERR-SAME-OWNER (err u151))
-(define-constant ERR-OWNER-IS-THE-SAME (err u152))
-(define-constant ERR-FAST-MINTED-BEFORE (err u153))
-(define-constant ERR-PREORDERED-BEFORE (err u154))
-(define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u155))
-(define-constant ERR-BURN-UPDATES-FAILED (err u156))
+(define-constant ERR-NAME-NOT-FOUND (err u124))
+(define-constant ERR-NAMESPACE-PREORDER-EXPIRED (err u125))
+(define-constant ERR-NAMESPACE-UNAVAILABLE (err u126))
+(define-constant ERR-NAMESPACE-PRICE-FUNCTION-INVALID (err u127))
+(define-constant ERR-NAMESPACE-BLANK (err u128))
+(define-constant ERR-NAME-PREORDER-NOT-FOUND (err u129))
+(define-constant ERR-NAME-PREORDER-EXPIRED (err u130))
+(define-constant ERR-NAME-PREORDER-FUNDS-INSUFFICIENT (err u131))
+(define-constant ERR-NAME-UNAVAILABLE (err u132))
+(define-constant ERR-NAME-STX-BURNT-INSUFFICIENT (err u133))
+(define-constant ERR-NAME-EXPIRED (err u134))
+(define-constant ERR-NAME-GRACE-PERIOD (err u135))
+(define-constant ERR-NAME-BLANK (err u136))
+(define-constant ERR-NAME-ALREADY-CLAIMED (err u137))
+(define-constant ERR-NAME-CLAIMABILITY-EXPIRED (err u138))
+(define-constant ERR-NAME-REVOKED (err u139))
+(define-constant ERR-NAME-TRANSFER-FAILED (err u140))
+(define-constant ERR-NAME-PREORDER-ALREADY-EXISTS (err u141))
+(define-constant ERR-NAME-HASH-MALFORMED (err u142))
+(define-constant ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH (err u143))
+(define-constant ERR-NAME-NOT-RESOLVABLE (err u144))
+(define-constant ERR-NAME-COULD-NOT-BE-MINTED (err u145))
+(define-constant ERR-NAME-COULD-NOT-BE-TRANSFERED (err u146))
+(define-constant ERR-NAME-CHARSET-INVALID (err u147))
+(define-constant ERR-PRINCIPAL-ALREADY-ASSOCIATED (err u148))
+(define-constant ERR-PANIC (err u149))
+(define-constant ERR-NAMESPACE-HAS-MANAGER (err u150))
+(define-constant ERR-OVERFLOW (err u151))
+(define-constant ERR-NO-OWNER-FOR-NFT (err u152))
+(define-constant ERR-NO-BNS-NAMES-OWNED (err u153))
+(define-constant ERR-NO-NAMESPACE-MANAGER (err u154))
+(define-constant ERR-BURN-UPDATES-FAILED (err u155))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -486,7 +483,7 @@
     (let 
         (
             ;; Retrieves the name and namespace associated with the given NFT ID. If not found, returns an error.
-            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
+            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NAME-NOT-FOUND))
             ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
             (namespace (get namespace name-and-namespace))
             ;; Fetches existing properties of the namespace to confirm its existence and retrieve management details.
@@ -1007,7 +1004,7 @@
         ;; Ensures that the namespace does not have a manager.
         (asserts! (is-none current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Ensure the name is available
-        (asserts! (is-none name-index) ERR-NAME-NOT-AVAILABLE) 
+        (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
         ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap! (get launched-at namespace-props) ERR-UNWRAP)) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Verifies the registration is completed within the claimability period defined by the NAME-PREORDER-CLAIMABILITY-TTL.
@@ -1131,7 +1128,7 @@
         ;; Verifies that the caller of the contract is the namespace manager.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Ensures the name is not already registered by checking if it lacks an existing index.
-        (asserts! (is-none name-index) ERR-NAME-NOT-AVAILABLE)
+        (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
         ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap! (get launched-at namespace-props) ERR-UNWRAP)) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Checks that the preorder has not already been claimed to avoid duplicate name registrations.
@@ -1315,7 +1312,7 @@
             ;; Get the current owner of the name.
             (owner (unwrap! (nft-get-owner? BNS-V2 name-index) ERR-NO-NAME))
             ;; Fetch the name properties from the `name-properties` map.
-            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NO-NAME))
+            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
             ;; Retrieve namespace manager if any
             (namespace-manager (get namespace-manager namespace-props))
             ;; Get if the name was registered
@@ -1675,7 +1672,7 @@
     (let
         (
             ;; Get the name details
-            (name (unwrap! (map-get? index-to-name id) ERR-NO-NAME)) 
+            (name (unwrap! (map-get? index-to-name id) ERR-NAME-NOT-FOUND)) 
             ;; Get the owner
             (owner (unwrap! (map-get? name-owner-map id) ERR-NOT-AUTHORIZED)) 
         )
