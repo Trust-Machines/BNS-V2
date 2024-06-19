@@ -180,7 +180,7 @@
         zonefile-hash: (optional (buff 20)),
         fully-qualified-name: (optional (buff 20)),
         ;; Added this field in name-properties to know exactly who the name was registered by the first time, to later be able to access the name-preorder correctly in case the name switches owners
-        registered-by: (optional principal),
+        preordered-by: (optional principal),
         renewal-height: uint,
         stx-burn: uint,
         owner: principal,
@@ -727,7 +727,7 @@
                 revoked-at: none,
                 zonefile-hash: (some zonefile-hash),
                 fully-qualified-name: none,
-                registered-by: none,
+                preordered-by: none,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 stx-burn: stx-burn,
                 owner: beneficiary,
@@ -865,7 +865,7 @@
                 revoked-at: none,
                 zonefile-hash: (some zonefile-hash),
                 fully-qualified-name: none,
-                registered-by: (some send-to),
+                preordered-by: none,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 stx-burn: stx-burn,
                 owner: send-to,
@@ -982,17 +982,17 @@
                         ;; If it was preordered we have to compare which one was made first, if the recorded preorder or the tx-sender's
                         ;; If created-at from the first preorder is bigger than the tx-sender-preorder-height then return true and continue, if it not bigger then return false, indicating that the first preorder happened before
                         (begin 
-                            (asserts! (> (unwrap-panic (get created-at (map-get? name-preorders {hashed-salted-fqn: fqn, buyer: (unwrap-panic (get registered-by name-props-exist))}))) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
+                            (asserts! (> (unwrap-panic (get created-at (map-get? name-preorders {hashed-salted-fqn: fqn, buyer: (unwrap-panic (get preordered-by name-props-exist))}))) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
                             ;; And also update the map to have the correct preorder used to register the name
-                            ;; Update to the correct fqn and the correct registered-by principal
-                            (map-set name-properties {name: name, namespace: namespace} (merge name-props-exist {fully-qualified-name: (some hashed-salted-fqn), registered-by: (some tx-sender)}))
+                            ;; Update to the correct fqn and the correct preordered-by principal
+                            (map-set name-properties {name: name, namespace: namespace} (merge name-props-exist {fully-qualified-name: (some hashed-salted-fqn), preordered-by: (some tx-sender)}))
                         )
                         ;; If the name was not preordered it means it was fast minted
                         ;; If it does then compare the 2 heights
                         (begin 
                             (asserts! (> registered tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)   
-                            ;; Update to the correct registered-by principal
-                            (map-set name-properties {name: name, namespace: namespace} (merge name-props-exist {registered-by: (some tx-sender)}))
+                            ;; Update to the correct preordered-by principal
+                            (map-set name-properties {name: name, namespace: namespace} (merge name-props-exist {preordered-by: (some tx-sender)}))
                         )
                         
                     )
@@ -1019,7 +1019,7 @@
                         revoked-at: none,
                         zonefile-hash: (some zonefile-hash),
                         fully-qualified-name: (some hashed-salted-fqn),
-                        registered-by: (some tx-sender),
+                        preordered-by: (some tx-sender),
                         renewal-height: (+ (get lifetime namespace-props) block-height),
                         stx-burn: (get stx-burned preorder),
                         owner: tx-sender,
@@ -1123,7 +1123,7 @@
                 revoked-at: none,
                 zonefile-hash: (some zonefile-hash),
                 fully-qualified-name: (some hashed-salted-fqn),
-                registered-by: (some send-to),
+                preordered-by: (some send-to),
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 stx-burn: u0,
                 owner: send-to,
