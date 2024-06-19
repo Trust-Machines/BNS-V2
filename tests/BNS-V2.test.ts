@@ -120,8 +120,8 @@ const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
     // Called by any address, in this case address1
     address1
   );
-  // This should give ok u147 since the blockheight is 2 + 144 TTL
-  expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+  // This should give ok u146 since the blockheight is 2 + 144 TTL
+  expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
   // Reveal the namespace
   const revealNamespace = simnet.callPublicFn(
@@ -197,7 +197,9 @@ const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
     address1
   );
   // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(150));
+  expect(preorderName.result).toBeOk(Cl.uint(149));
+
+  simnet.mineEmptyBlock();
 
   // Register the name
   const registerName = simnet.callPublicFn(
@@ -236,6 +238,8 @@ const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace = () => {
   // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
   expect(preorderName.result).toBeOk(Cl.uint(152));
 
+  simnet.mineEmptyBlock();
+
   // Register the name
   const registerName = simnet.callPublicFn(
     "BNS-V2",
@@ -270,8 +274,8 @@ const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
     // Called by any address, in this case address1
     address1
   );
-  // This should give ok u147 since the blockheight is 2 + 144 TTL
-  expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+  // This should give ok u146 since the blockheight is 2 + 144 TTL
+  expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
   // Reveal the namespace
   const revealNamespace = simnet.callPublicFn(
@@ -346,7 +350,7 @@ const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
     managerAddress
   );
   // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(150));
+  expect(preorderName.result).toBeOk(Cl.uint(149));
 
   // Register the name
   const registerName = simnet.callPublicFn(
@@ -384,7 +388,7 @@ const successfullyTwoStepRegisterASecondNameInAManagedNamespace = () => {
     managerAddress
   );
   // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(152));
+  expect(preorderName.result).toBeOk(Cl.uint(151));
 
   // Register the name
   const registerName = simnet.callPublicFn(
@@ -422,8 +426,8 @@ const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
     // Called by any address, in this case address1
     address1
   );
-  // This should give ok u147 since the blockheight is 2 + 144 TTL
-  expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+  // This should give ok u146 since the blockheight is 2 + 144 TTL
+  expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
   // Reveal the namespace
   const revealNamespace = simnet.callPublicFn(
@@ -547,8 +551,8 @@ const successfullyFastClaimANameInAManagedNamespace = () => {
     // Called by any address, in this case address1
     address1
   );
-  // This should give ok u147 since the blockheight is 2 + 144 TTL
-  expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+  // This should give ok u146 since the blockheight is 2 + 144 TTL
+  expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
   // Reveal the namespace
   const revealNamespace = simnet.callPublicFn(
@@ -662,17 +666,7 @@ const successfullyFastClaimASecondNameInAManagedNamespace = () => {
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("TRANSFER FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully transfer a 2 step registered name in an unmanaged namespace", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
@@ -692,8 +686,7 @@ describe("TRANSFER FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(transferName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully transfer a 2 step registered name in a managed namespace", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAManagedNamespace();
@@ -712,13 +705,12 @@ describe("TRANSFER FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(transferName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully transfer a fast claimed name in an unmanaged namespace", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // Transfer the name
@@ -736,13 +728,12 @@ describe("TRANSFER FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(transferName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully transfer a fast claimed name in a managed namespace", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block to
     simnet.mineEmptyBlock();
 
     // Transfer the name
@@ -760,8 +751,7 @@ describe("TRANSFER FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(transferName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to transfer a name the doesn't exist", () => {
     // Transfer the name
     const transferName = simnet.callPublicFn(
@@ -778,8 +768,7 @@ describe("TRANSFER FUNCTION", () => {
     // This should give err 107 which is ERR-NO-NAME
     expect(transferName.result).toBeErr(Cl.uint(107));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to transfer a fast claimed name in an unmanaged namespace when trying to transfer before the block time has passed", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
@@ -796,11 +785,10 @@ describe("TRANSFER FUNCTION", () => {
       // Called by the address that is the owner
       address1
     );
-    // This should give err 122 which is ERR-NAME-OPERATION-UNAUTHORIZED
-    expect(transferName.result).toBeErr(Cl.uint(122));
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(116));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to transfer a fast claimed name in a managed namespace when trying to transfer before the block time has passed", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
@@ -817,16 +805,15 @@ describe("TRANSFER FUNCTION", () => {
       // Called by the managerAddress
       managerAddress
     );
-    // This should give err 122 which is ERR-NAME-OPERATION-UNAUTHORIZED
-    expect(transferName.result).toBeErr(Cl.uint(122));
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(116));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to transfer a name in a managed namespace when the contract-caller is not the namespace manager", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // Transfer the name
@@ -844,8 +831,7 @@ describe("TRANSFER FUNCTION", () => {
     // This should give err 102 which is ERR-NOT-AUTHORIZED
     expect(transferName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to transfer a name in a managed namespace when the contract-caller is the namespace manager but transfers are not allowed on the namespace", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -858,8 +844,8 @@ describe("TRANSFER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -946,7 +932,7 @@ describe("TRANSFER FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(fastClaimName.result).toBeOk(Cl.bool(true));
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // Transfer the name
@@ -964,13 +950,12 @@ describe("TRANSFER FUNCTION", () => {
     // This should give err 102 which is ERR-NOT-AUTHORIZED
     expect(transferName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to transfer a name in an unmanaged namespace when the tx-sender is not the owner", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // Transfer the name
@@ -988,13 +973,12 @@ describe("TRANSFER FUNCTION", () => {
     // This should give err 102 which is ERR-NOT-AUTHORIZED
     expect(transferName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to transfer a name in an unmanaged namespace when the name is listed in a market", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // List the name
@@ -1038,13 +1022,12 @@ describe("TRANSFER FUNCTION", () => {
     // This should give err 105 which is ERR-LISTED
     expect(transferName.result).toBeErr(Cl.uint(105));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to transfer a name in a managed namespace when the name is listed in a market", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // List the name
@@ -1091,17 +1074,7 @@ describe("TRANSFER FUNCTION", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("LIST-IN-USTX-FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully list a 2 step registered name in an unmanaged namespace", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
@@ -1132,8 +1105,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       })
     );
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully list a 2 step registered name in a managed namespace", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAManagedNamespace();
@@ -1164,13 +1136,12 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       })
     );
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully list a fast claimed name in an unmanaged namespace", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // List the name
@@ -1199,13 +1170,12 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       })
     );
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully list a fast claimed name in a managed namespace", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // List the name
@@ -1234,8 +1204,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       })
     );
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to list a name that doesn't exist", () => {
     // List the name
     const listName = simnet.callPublicFn(
@@ -1253,11 +1222,10 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       // Call from a non-owner address
       address2
     );
-    // Err 107 ERR-No-NAME
+    // Err 107 ERR-NO-NAME
     expect(listName.result).toBeErr(Cl.uint(107));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to list a name in an unmanaged namespace when it was fast claimed but the lock time has not passed", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
@@ -1278,11 +1246,10 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       // Call from the owner address
       address1
     );
-    // Err 122 ERR-NAME-OPERATION-UNAUTHORIZED
-    expect(listName.result).toBeErr(Cl.uint(122));
+    // Err ERR-OPERATION-UNAUTHORIZED
+    expect(listName.result).toBeErr(Cl.uint(116));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to list a name in a managed namespace when it was fast claimed but the lock time has not passed", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
@@ -1303,16 +1270,15 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       // Call from the manager address
       managerAddress
     );
-    // Err 122 ERR-NAME-OPERATION-UNAUTHORIZED
-    expect(listName.result).toBeErr(Cl.uint(122));
+    // Err ERR-OPERATION-UNAUTHORIZED
+    expect(listName.result).toBeErr(Cl.uint(116));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to list a name in an unmanaged namespace when the tx-sender is not the owner", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // List the name
@@ -1334,13 +1300,12 @@ describe("LIST-IN-USTX-FUNCTION", () => {
     // Err 102 ERR-NOT-AUTHORIZED
     expect(listName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to list a name in an unmanaged namespace when the contract-caller is not the manager", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
 
-    // Mine an empty block to avoid 122 error
+    // Mine an empty block
     simnet.mineEmptyBlock();
 
     // List the name
@@ -1365,17 +1330,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("UNLIST-IN-USTX-FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully unlist a 2 step registered name without a manager", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
@@ -1421,8 +1376,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       })
     );
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully unlist a 2 step registered name with a manager", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAManagedNamespace();
@@ -1469,8 +1423,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       })
     );
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully unlist a fast claimed name without a manager", () => {
     // Fast Claime a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
@@ -1518,8 +1471,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       })
     );
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully unlist a fast claimed name with a manager", () => {
     // Fast Claime a name
     successfullyFastClaimANameInAManagedNamespace();
@@ -1567,8 +1519,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       })
     );
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to unlist a name that doesn't exist", () => {
     // Unlist the name
     const unlistName = simnet.callPublicFn(
@@ -1582,8 +1533,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
     // Err 107 ERR-NO-NAME
     expect(unlistName.result).toBeErr(Cl.uint(107));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to unlist a name without a manager, when tx-sender is not the owner", () => {
     successfullyFastClaimANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlock();
@@ -1626,8 +1576,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
     // Err 102 ERR-NOT-AUTHORIZED
     expect(unlistName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to unlist a name with a manager, when contrac-caller is not the manager", () => {
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
@@ -1670,8 +1619,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
     // Err 102 ERR-NOT-AUTHORIZED
     expect(unlistName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to unlist a name without a manager, when the name is not listed", () => {
     successfullyFastClaimANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlock();
@@ -1685,11 +1633,10 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       // Called by the owner address
       address1
     );
-    // Err 103 ERR-NOT-LISTED
+    // Should return err ERR-NOT-LISTED
     expect(unlistName.result).toBeErr(Cl.uint(103));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to unlist a name with a manager, when the name is not listed", () => {
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
@@ -1706,8 +1653,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
     // Err 103 ERR-NOT-LISTED
     expect(unlistName.result).toBeErr(Cl.uint(103));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully buy a name without a manager", () => {
     // Call the namespace-preorder function from the BNS-V2 contract
     const preorderNamespace = simnet.callPublicFn(
@@ -1718,8 +1664,8 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Call the namespace-reveal function from the BNS-V2 contract
     const revealNamespace = simnet.callPublicFn(
@@ -1842,8 +1788,8 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Call the namespace-reveal function from the BNS-V2 contract
     const revealNamespace = simnet.callPublicFn(
@@ -1959,17 +1905,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("BUY-IN-USTX-FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully buy a 2 step registered name without a manager", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
@@ -2017,8 +1953,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       })
     );
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully buy a 2 step registered name with a manager", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAManagedNamespace();
@@ -2066,8 +2001,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       })
     );
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully buy a fast claimed name without a manager", () => {
     // Register a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
@@ -2116,8 +2050,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       })
     );
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully buy a fast claimed name with a manager", () => {
     // Register a name
     successfullyFastClaimANameInAManagedNamespace();
@@ -2166,8 +2099,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       })
     );
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to buy a name that doesn't exist", () => {
     // Buy the name
     const buyName = simnet.callPublicFn(
@@ -2182,10 +2114,10 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       // Called by the buyer address
       address2
     );
+    // Should return err ERR-NO-NAME
     expect(buyName.result).toBeErr(Cl.uint(107));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to buy a name without a manager, if it is not listed", () => {
     // Register a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
@@ -2201,10 +2133,10 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       // Called by the buyer address
       address2
     );
+    // Should return err ERR-NOT-LISTED
     expect(buyName.result).toBeErr(Cl.uint(103));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to buy a name with a manager, if it is not listed", () => {
     // Register a name
     successfullyFastClaimANameInAManagedNamespace();
@@ -2220,10 +2152,10 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       // Called by the buyer address
       address2
     );
+    // Should return err ERR-NOT-LISTED
     expect(buyName.result).toBeErr(Cl.uint(103));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to buy a name wrong commission trait", () => {
     // Register a name
     successfullyFastClaimANameInAManagedNamespace();
@@ -2268,22 +2200,13 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       // Called by the buyer address
       address2
     );
+    // Should return err ERR-WRONG-COMMISSION
     expect(buyName.result).toBeErr(Cl.uint(104));
   });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("SET-PRIMARY-NAME FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully change the primary name of an address in an unmanaged namespace, when 2 names are 2 step registered", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
@@ -2300,8 +2223,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
     );
     expect(changePrimaryName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully change the primary name of an address in a managed namespace, when 2 names are 2 step registered", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAManagedNamespace();
@@ -2318,8 +2240,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
     );
     expect(changePrimaryName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully change the primary name of an address in an unmanaged namespace, when 2 names are fast claimed", () => {
     // Register a name
     successfullyFastClaimANameInAnUnmanagedNamespace();
@@ -2336,8 +2257,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
     );
     expect(changePrimaryName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully change the primary name of an address in a managed namespace, when 2 names are fast claimed", () => {
     // Register a name
     successfullyFastClaimANameInAManagedNamespace();
@@ -2352,10 +2272,10 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       // Called by the owner address
       address1
     );
+    // Successful response
     expect(changePrimaryName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to change the primary name of an address, if the name doesn't exist", () => {
     // Change the primary name
     const changePrimaryName = simnet.callPublicFn(
@@ -2366,10 +2286,10 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       // Called by an address
       address1
     );
+    // This returns err ERR-NO-NAME
     expect(changePrimaryName.result).toBeErr(Cl.uint(107));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to change the primary name of an address, if the tx-sender doesn't own names", () => {
     successfullyFastClaimANameInAManagedNamespace();
 
@@ -2382,10 +2302,10 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       // Called by a non-owner address
       address2
     );
-    expect(changePrimaryName.result).toBeErr(Cl.uint(153));
+    // This returns err ERR-NO-BNS-NAMES-OWNED
+    expect(changePrimaryName.result).toBeErr(Cl.uint(132));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to change the primary name of an address, if the tx-sender is not the owner of the name", () => {
     successfullyFastClaimANameInAManagedNamespace();
     // Fast claim the name
@@ -2420,10 +2340,10 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       // Called by a non-owner address
       address2
     );
+    // This returns err ERR-NOT-AUTHORIZED
     expect(changePrimaryName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to change the primary name of an address, if the name already is the primary name", () => {
     successfullyFastClaimANameInAManagedNamespace();
 
@@ -2436,22 +2356,13 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       // Called by a non-owner address
       address1
     );
+    // This returns err ERR-ALREADY-PRIMARY-NAME
     expect(changePrimaryName.result).toBeErr(Cl.uint(106));
   });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("MNG-BURN FUNCTIONS", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully burn a name by the manager from a managed namespace", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Burn the name
@@ -2466,8 +2377,7 @@ describe("MNG-BURN FUNCTIONS", () => {
     // Expect and Ok true for success confirmation
     expect(burnName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail by burning a nonexistent name", () => {
     // Burn the name
     const burnName = simnet.callPublicFn(
@@ -2478,11 +2388,10 @@ describe("MNG-BURN FUNCTIONS", () => {
       // Called from the manager address
       managerAddress
     );
-    // This returns err NAME-NOT-FOUND
-    expect(burnName.result).toBeErr(Cl.uint(124));
+    // This returns err ERR-NO-NAME
+    expect(burnName.result).toBeErr(Cl.uint(107));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail in a namespace with no manager", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Burn the name
@@ -2494,11 +2403,10 @@ describe("MNG-BURN FUNCTIONS", () => {
       // Called from the manager address (which is not assigned in the namespace)
       managerAddress
     );
-    // This returns err NAME-NO-NAMESPACE-MANAGER
-    expect(burnName.result).toBeErr(Cl.uint(154));
+    // This returns err ERR-NO-NAMESPACE-MANAGER
+    expect(burnName.result).toBeErr(Cl.uint(133));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail by not allowing a different address from the manager address to burn an nft from a managed namespace", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Burn the name
@@ -2513,8 +2421,7 @@ describe("MNG-BURN FUNCTIONS", () => {
     // This returns err ERR-NOT-AUTHORIZED
     expect(burnName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should still burn the name if it is listed when called by the manager address", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
@@ -2559,17 +2466,7 @@ describe("MNG-BURN FUNCTIONS", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully change the manager of a namespace", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Transfer the Namespace
@@ -2586,8 +2483,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
     // Return a success response
     expect(transferNamespace.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to change the manager of a namespace that doesn't exist", () => {
     // Transfer the Namespace
     const transferNamespace = simnet.callPublicFn(
@@ -2601,10 +2497,9 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(transferNamespace.result).toBeErr(Cl.uint(117));
+    expect(transferNamespace.result).toBeErr(Cl.uint(115));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to change the manager of an unmanaged namespace", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Transfer the Namespace
@@ -2619,10 +2514,9 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NO-NAMESPACE-MANAGER
-    expect(transferNamespace.result).toBeErr(Cl.uint(154));
+    expect(transferNamespace.result).toBeErr(Cl.uint(133));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to change the manager of a namespace if the manager is not the contract-caller", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Transfer the Namespace
@@ -2642,17 +2536,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("NAMESPACE-PREORDER FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("this should successfully preorder a Namespace", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -2665,12 +2549,10 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
   });
 
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("should allow to preorder the same Namespace from the same sender if TTL has passed", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -2683,8 +2565,8 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // mine 144 empty blocks so that TTL is passed
     simnet.mineEmptyBlocks(144);
@@ -2701,10 +2583,9 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       address1
     );
     // This should give ok u291 since the blockheight is 2 + 144 of time passed + 1 of the current block mined + 144 TTL
-    expect(preorderNamespace2.result).toBeOk(Cl.uint(292));
+    expect(preorderNamespace2.result).toBeOk(Cl.uint(291));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("should fail to preorder the same Namespace from the same sender", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -2717,8 +2598,8 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Preorder the same Namespace again before the 144 ttl has passed
     const preorderNamespace2 = simnet.callPublicFn(
@@ -2731,11 +2612,10 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by the same address that created the first order, in this case address1
       address1
     );
-    // This should give err ERR-NAMESPACE-PREORDER-ALREADY-EXISTS
-    expect(preorderNamespace2.result).toBeErr(Cl.uint(109));
+    // This should give err ERR-PREORDER-ALREADY-EXISTS
+    expect(preorderNamespace2.result).toBeErr(Cl.uint(108));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("should allow to preorder the same Namespace from a different sender", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -2748,8 +2628,8 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Preorder the same Namespace again but with a different address
     const preorderNamespace2 = simnet.callPublicFn(
@@ -2763,10 +2643,9 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       address2
     );
     // This should give ok u147 since the blockheight is 3 + 144 TTL
-    expect(preorderNamespace2.result).toBeOk(Cl.uint(148));
+    expect(preorderNamespace2.result).toBeOk(Cl.uint(147));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("should fail if the param of the hash is malformed", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -2779,11 +2658,10 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give err ERR-NAMESPACE-HASH-MALFORMED
-    expect(preorderNamespace.result).toBeErr(Cl.uint(110));
+    // This should give err ERR-HASH-MALFORMED
+    expect(preorderNamespace.result).toBeErr(Cl.uint(109));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("should fail if the stx to burn is 0", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -2796,11 +2674,10 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give err ERR-NAMESPACE-STX-BURNT-INSUFFICIENT
-    expect(preorderNamespace.result).toBeErr(Cl.uint(111));
+    // This should give err ERR-STX-BURNT-INSUFFICIENT
+    expect(preorderNamespace.result).toBeErr(Cl.uint(110));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("should fail if the tx-sender has insufficient funds", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -2819,17 +2696,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("NAMESPACE-REVEAL FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully reveal a Namespace without a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -2842,8 +2709,8 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -2895,8 +2762,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(revealNamespace.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully reveal a Namespace with a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -2909,8 +2775,8 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -2962,8 +2828,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(revealNamespace.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail if no namespace preorder", () => {
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3012,11 +2877,10 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by the address that made the preorder of the namespace
       address1
     );
-    // Return err ERR-NAMESPACE-PREORDER-NOT-FOUND
-    expect(revealNamespace.result).toBeErr(Cl.uint(113));
+    // Return err ERR-PREORDER-NOT-FOUND
+    expect(revealNamespace.result).toBeErr(Cl.uint(111));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail if the namespace contains invalid characters", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3029,8 +2893,8 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3079,11 +2943,10 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by the address that made the preorder of the namespace
       address1
     );
-    // Return err ERR-NAMESPACE-CHARSET-INVALID
-    expect(revealNamespace.result).toBeErr(Cl.uint(114));
+    // Return err ERR-CHARSET-INVALID
+    expect(revealNamespace.result).toBeErr(Cl.uint(112));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail if the namespace already exists", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3096,8 +2959,8 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3197,10 +3060,9 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-ALREADY-EXISTS
-    expect(revealNamespace2.result).toBeErr(Cl.uint(115));
+    expect(revealNamespace2.result).toBeErr(Cl.uint(113));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail if burned stx is not enough for the price", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3213,8 +3075,8 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3263,11 +3125,10 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by the address that made the preorder of the namespace
       address1
     );
-    // Return err ERR-NAMESPACE-STX-BURNT-INSUFFICIENT
-    expect(revealNamespace.result).toBeErr(Cl.uint(111));
+    // Return err ERR-STX-BURNT-INSUFFICIENT
+    expect(revealNamespace.result).toBeErr(Cl.uint(110));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail if TTL has passed to reveal a namespace", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3280,11 +3141,11 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Mine 148 blocks to make sure TTL has passed
-    simnet.mineEmptyBlocks(149);
+    simnet.mineEmptyBlocks(148);
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3334,22 +3195,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-PREORDER-CLAIMABILITY-EXPIRED
-    expect(revealNamespace.result).toBeErr(Cl.uint(116));
+    expect(revealNamespace.result).toBeErr(Cl.uint(114));
   });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("NAMESPACE-READY FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully launch a Namespace without a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3362,8 +3213,8 @@ describe("NAMESPACE-READY FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3427,8 +3278,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(launchNamespace.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully launch a Namespace with a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3441,8 +3291,8 @@ describe("NAMESPACE-READY FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3506,8 +3356,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(launchNamespace.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to launch a Namespace that doesn't exist", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
@@ -3519,10 +3368,9 @@ describe("NAMESPACE-READY FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(launchNamespace.result).toBeErr(Cl.uint(117));
+    expect(launchNamespace.result).toBeErr(Cl.uint(115));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to launch a Namespace when called by a different address than the import address assigned in the namespace-reveal", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3535,8 +3383,8 @@ describe("NAMESPACE-READY FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3597,11 +3445,10 @@ describe("NAMESPACE-READY FUNCTION", () => {
       // Called by a different address than the import address assigned in the namespace-reveal function
       address2
     );
-    // Return err ERR-NAMESPACE-OPERATION-UNAUTHORIZED
-    expect(launchNamespace.result).toBeErr(Cl.uint(118));
+    // Return err ERR-OPERATION-UNAUTHORIZED
+    expect(launchNamespace.result).toBeErr(Cl.uint(116));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to launch a Namespace that has already been launched", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3614,8 +3461,8 @@ describe("NAMESPACE-READY FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3689,10 +3536,9 @@ describe("NAMESPACE-READY FUNCTION", () => {
       address1
     );
     // Return ERR-NAMESPACE-ALREADY-LAUNCHED
-    expect(launchNamespace2.result).toBeErr(Cl.uint(119));
+    expect(launchNamespace2.result).toBeErr(Cl.uint(117));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to launch a Namespace that TTL has already expired", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3705,8 +3551,8 @@ describe("NAMESPACE-READY FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3771,22 +3617,12 @@ describe("NAMESPACE-READY FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED
-    expect(launchNamespace.result).toBeErr(Cl.uint(120));
+    expect(launchNamespace.result).toBeErr(Cl.uint(118));
   });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("NAME-IMPORT FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully import a name", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3799,8 +3635,8 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3875,8 +3711,7 @@ describe("NAME-IMPORT FUNCTION", () => {
     // This should give ok true
     expect(importName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to import a name if no namespace", () => {
     // Import a name
     const importName = simnet.callPublicFn(
@@ -3899,10 +3734,9 @@ describe("NAME-IMPORT FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(importName.result).toBeErr(Cl.uint(117));
+    expect(importName.result).toBeErr(Cl.uint(115));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to import a name, if the name has invalid characters", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3915,8 +3749,8 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -3988,11 +3822,10 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by the import address
       address1
     );
-    // Return err ERR-NAME-CHARSET-INVALID
-    expect(importName.result).toBeErr(Cl.uint(147));
+    // Return err ERR-CHARSET-INVALID
+    expect(importName.result).toBeErr(Cl.uint(112));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to import a name if the tx-sender is not the import address", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -4005,8 +3838,8 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4078,11 +3911,10 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by a different address than the import address
       address2
     );
-    // Return err ERR-NAMESPACE-OPERATION-UNAUTHORIZED
-    expect(importName.result).toBeErr(Cl.uint(118));
+    // Return err ERR-OPERATION-UNAUTHORIZED
+    expect(importName.result).toBeErr(Cl.uint(116));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to import a name in a launched namespace", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -4095,8 +3927,8 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4181,10 +4013,9 @@ describe("NAME-IMPORT FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-ALREADY-LAUNCHED
-    expect(importName.result).toBeErr(Cl.uint(119));
+    expect(importName.result).toBeErr(Cl.uint(117));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to import a name if the namespace launchability TTL has passed", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -4197,8 +4028,8 @@ describe("NAME-IMPORT FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4274,22 +4105,12 @@ describe("NAME-IMPORT FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED
-    expect(importName.result).toBeErr(Cl.uint(120));
+    expect(importName.result).toBeErr(Cl.uint(118));
   });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully update the price in a namespace", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Update the price
@@ -4332,8 +4153,7 @@ describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(updatePriceNamespace.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to update the price in a namespace, that doesn't exist", () => {
     // Update the price
     const updatePriceNamespace = simnet.callPublicFn(
@@ -4373,10 +4193,9 @@ describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(updatePriceNamespace.result).toBeErr(Cl.uint(117));
+    expect(updatePriceNamespace.result).toBeErr(Cl.uint(115));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully update the price in a namespace", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Update the price
@@ -4416,11 +4235,10 @@ describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
       // Called by a different address than the import addess from the namespace
       address2
     );
-    // Return err ERR-NAMESPACE-OPERATION-UNAUTHORIZED
-    expect(updatePriceNamespace.result).toBeErr(Cl.uint(118));
+    // Return err ERR-OPERATION-UNAUTHORIZED
+    expect(updatePriceNamespace.result).toBeErr(Cl.uint(116));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to update the price in a namespace that doesn't allow price namespace changes", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Update the can-update-price-function
@@ -4472,23 +4290,13 @@ describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
       // Called by the import addess from the namespace
       address1
     );
-    // Return err ERR-NAMESPACE-OPERATION-UNAUTHORIZED
-    expect(updatePriceNamespace.result).toBeErr(Cl.uint(118));
+    // Return err ERR-OPERATION-UNAUTHORIZED
+    expect(updatePriceNamespace.result).toBeErr(Cl.uint(116));
   });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("NAMESPACE-REVOKE-FUNCTION-PRICE-EDITION FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully update the can-update-price-function of a namespace", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Update the can-update-price-function
@@ -4503,8 +4311,7 @@ describe("NAMESPACE-REVOKE-FUNCTION-PRICE-EDITION FUNCTION", () => {
     // Return a success response
     expect(updatePriceFunctionNamespace.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to update the can-update-price-function of a namespace if no namespace", () => {
     // Update the can-update-price-function
     const updatePriceFunctionNamespace = simnet.callPublicFn(
@@ -4516,10 +4323,9 @@ describe("NAMESPACE-REVOKE-FUNCTION-PRICE-EDITION FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(updatePriceFunctionNamespace.result).toBeErr(Cl.uint(117));
+    expect(updatePriceFunctionNamespace.result).toBeErr(Cl.uint(115));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to update the can-update-price-function of a namespace if the tx-sender is not the import address", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Update the can-update-price-function
@@ -4531,23 +4337,13 @@ describe("NAMESPACE-REVOKE-FUNCTION-PRICE-EDITION FUNCTION", () => {
       // Call from a different address than the import address
       address2
     );
-    // Return err ERR-NAMESPACE-OPERATION-UNAUTHORIZED
-    expect(updatePriceFunctionNamespace.result).toBeErr(Cl.uint(118));
+    // Return err ERR-OPERATION-UNAUTHORIZED
+    expect(updatePriceFunctionNamespace.result).toBeErr(Cl.uint(116));
   });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("NAME-CLAIM-FAST FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully fast mint a name on a launched namespace without a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -4560,8 +4356,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4648,8 +4444,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(fastClaimName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully fast mint a name on a launched namespace with a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -4662,8 +4457,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4750,8 +4545,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(fastClaimName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully fast mint a name on a launched namespace without a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -4764,8 +4558,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4875,8 +4669,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(fastClaimName2.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully fast mint two names on a launched namespace with a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -4889,8 +4682,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -4999,8 +4792,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(fastClaimName2.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to fast mint name on a namespace that doesn't exist", () => {
     // Fast claim the name
     const fastClaimName = simnet.callPublicFn(
@@ -5023,10 +4815,9 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(fastClaimName.result).toBeErr(Cl.uint(117));
+    expect(fastClaimName.result).toBeErr(Cl.uint(115));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to fast mint a name that is already claimed", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -5039,8 +4830,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5147,11 +4938,10 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by the manager address
       managerAddress
     );
-    // Return err ERR-NAME-ALREADY-CLAIMED
-    expect(fastClaimName2.result).toBeErr(Cl.uint(123));
+    // Return err ERR-NAME-NOT-AVAILABLE
+    expect(fastClaimName2.result).toBeErr(Cl.uint(120));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to fast mint name on a launched namespace with a manager when the contract-caller is not the manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -5164,8 +4954,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5252,8 +5042,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // Return err ERR-NOT-AUTHORIZED
     expect(fastClaimName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to fast mint a name on a launched namespace without a manager when the tx-sender is not the send-to address", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -5266,8 +5055,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5354,8 +5143,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // Return err ERR-NOT-AUTHORIZED
     expect(fastClaimName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to fast mint a name on a launched namespace without a manager and the user does not have sufficient funds to burn stx", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -5368,8 +5156,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5456,8 +5244,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // Return err ERR-INSUFFICIENT-FUNDS
     expect(fastClaimName.result).toBeErr(Cl.uint(1));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to fast mint a name on a launched namespace without a manager and the user does not burn enough for the name price", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -5470,8 +5257,8 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5555,23 +5342,13 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       // Called by the send-to address
       address1
     );
-    // Return err ERR-NAME-STX-BURNT-INSUFFICIENT
-    expect(fastClaimName.result).toBeErr(Cl.uint(133));
+    // Return err ERR-STX-BURNT-INSUFFICIENT
+    expect(fastClaimName.result).toBeErr(Cl.uint(110));
   });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("NAME-PREORDER FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully preorder a name on a launched namespace without a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -5584,8 +5361,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5661,10 +5438,9 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully preorder a name on a launched namespace without a manager if the previous preorder has expired", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -5677,8 +5453,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5754,7 +5530,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Mine blocks for order to expire
     simnet.mineEmptyBlocks(145);
@@ -5771,10 +5547,9 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 295, the current blockheight 151 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(296));
+    expect(preorderName2.result).toBeOk(Cl.uint(295));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully preorder a name on a launched namespace with a manager even though this is not the intended use", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -5787,8 +5562,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5863,10 +5638,9 @@ describe("NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to preorder a name if a preorder for the same name and namespace exists", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -5879,8 +5653,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -5956,7 +5730,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -5970,10 +5744,9 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-PREORDER-ALREADY-EXISTS
-    expect(preorderName2.result).toBeErr(Cl.uint(141));
+    expect(preorderName2.result).toBeErr(Cl.uint(128));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to preorder a name if a preorder for the same name and namespace exists even if it was made from the mng-name-preorder function", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -5986,8 +5759,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6062,7 +5835,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -6076,10 +5849,9 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-PREORDER-ALREADY-EXISTS
-    expect(preorderName2.result).toBeErr(Cl.uint(141));
+    expect(preorderName2.result).toBeErr(Cl.uint(128));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to preorder a name if hash is malformed", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -6092,8 +5864,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6168,11 +5940,10 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // Return err ERR-NAME-HASH-MALFORMED
-    expect(preorderName.result).toBeErr(Cl.uint(142));
+    // Return err ERR-HASH-MALFORMED
+    expect(preorderName.result).toBeErr(Cl.uint(109));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to preorder a name if stx to burn 0", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -6185,8 +5956,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6261,11 +6032,10 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // Return err ERR-NAME-STX-BURNT-INSUFFICIENT
-    expect(preorderName.result).toBeErr(Cl.uint(133));
+    // Return err ERR-STX-BURNT-INSUFFICIENT
+    expect(preorderName.result).toBeErr(Cl.uint(110));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to preorder a name if stx to burn not enough in balance of user", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -6278,8 +6048,8 @@ describe("NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6360,17 +6130,7 @@ describe("NAME-PREORDER FUNCTION", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("NAME-REGISTER FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should succesfully register a name on an unmanaged namespace", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -6383,8 +6143,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6460,7 +6220,9 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -6483,9 +6245,8 @@ describe("NAME-REGISTER FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(registerName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  it("This should succesfully register 2 different names", () => {
+
+  it("This should succesfully register a name on an unmanaged namespace even if someone preordered it after me", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
       "BNS-V2",
@@ -6497,8 +6258,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6574,7 +6335,422 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    // Preorder the name
+    const preorderSameName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address2
+      address2
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderSameName.result).toBeOk(Cl.uint(150));
+
+    // Register the name
+    const registerName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(registerName.result).toBeOk(Cl.bool(true));
+  });
+
+  it("This should succesfully register a name on an unmanaged namespace even if someone preordered it after me and registered before me", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+        // 3. Are transfers allowed on the namespace
+        Cl.bool(true),
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-ready",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    // Preorder the name
+    const preorderSameName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address2
+      address2
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderSameName.result).toBeOk(Cl.uint(150));
+
+    simnet.mineEmptyBlock();
+
+    // Register the name
+    const registerSameName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address2
+    );
+    // This should give ok true since it should be successful
+    expect(registerSameName.result).toBeOk(Cl.bool(true));
+
+    // Register the name
+    const registerName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(registerName.result).toBeOk(Cl.bool(true));
+  });
+
+  it("This should succesfully register a name on an unmanaged namespace even if someone fastclaimed it after I made the preorder", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+        // 3. Are transfers allowed on the namespace
+        Cl.bool(true),
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-ready",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    // Fast claim the name
+    const fastClaimName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-claim-fast",
+      // Passing 5 arguments:
+      // 1. the name
+      // 2. the namespace
+      // 3. the zonefile
+      // 4. the stx to burn
+      // 5. the address to receive the name
+      [
+        Cl.buffer(name1Buff),
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(zonefileBuff),
+        Cl.uint(10000000),
+        Cl.principal(address2),
+      ],
+      // Called by the address that is the send-to address in unmanaged namespaces, in this case address2
+      address2
+    );
+    // This should give ok true since it should be successful
+    expect(fastClaimName.result).toBeOk(Cl.bool(true));
+
+    // Register the name
+    const registerName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(registerName.result).toBeOk(Cl.bool(true));
+  });
+
+  it("This should succesfully register 2 different names", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+        // 3. Are transfers allowed on the namespace
+        Cl.bool(true),
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-ready",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -6611,6 +6787,8 @@ describe("NAME-REGISTER FUNCTION", () => {
     // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
     expect(preorderName2.result).toBeOk(Cl.uint(152));
 
+    simnet.mineEmptyBlock();
+
     // Register the name
     const registerName2 = simnet.callPublicFn(
       "BNS-V2",
@@ -6632,8 +6810,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(registerName2.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name if no name-preorder", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -6646,8 +6823,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6729,11 +6906,10 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by the address that preordered the name
       address1
     );
-    // Return err ERR-NAME-PREORDER-NOT-FOUND
-    expect(registerName.result).toBeErr(Cl.uint(129));
+    // Return err ERR-PREORDER-NOT-FOUND
+    expect(registerName.result).toBeErr(Cl.uint(111));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name if no namespace", () => {
     // Preorder the name
     const preorderName = simnet.callPublicFn(
@@ -6747,7 +6923,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 146, the current blockheight 2 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(147));
+    expect(preorderName.result).toBeOk(Cl.uint(146));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -6768,10 +6944,9 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(registerName.result).toBeErr(Cl.uint(117));
+    expect(registerName.result).toBeErr(Cl.uint(115));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name if the namespace has a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -6784,8 +6959,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6861,7 +7036,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -6884,8 +7059,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Return err ERR-NOT-AUTHORIZED
     expect(registerName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name if name already exists", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -6898,8 +7072,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -6975,7 +7149,9 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -6998,19 +7174,153 @@ describe("NAME-REGISTER FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(registerName.result).toBeOk(Cl.bool(true));
 
+    // Register the name
+    const registerName2 = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address1
+    );
+    // Return err ERR-OWNER-IS-THE-SAME
+    expect(registerName2.result).toBeErr(Cl.uint(134));
+  });
+
+  it("This should fail to register a name if name was preordered before my preorder and registered by the principal of the first preorder", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+        // 3. Are transfers allowed on the namespace
+        Cl.bool(true),
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-ready",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
     // Preorder the name
-    const preorderName2 = simnet.callPublicFn(
+    const preorderSameName = simnet.callPublicFn(
       "BNS-V2",
       "name-preorder",
       // Passing 2 arguments:
       // 1. the name + salt with hash160
       // 2. the amount of STX to burn for the name since it is unmanaged
-      [Cl.buffer(name2BuffSalt), Cl.uint(200000000)],
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address2
+      address2
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderSameName.result).toBeOk(Cl.uint(149));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
       // Called by any address, in this case address1
       address1
     );
-    // This should return 151, current block 7 plus 144 of the TTL
-    expect(preorderName2.result).toBeOk(Cl.uint(152));
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(150));
+
+    // Register the name
+    const registerName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address2
+    );
+    // This should give ok true since it should be successful
+    expect(registerName.result).toBeOk(Cl.bool(true));
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -7030,11 +7340,148 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by the address that preordered the name
       address1
     );
-    // Return err ERR-NAME-UNAVAILABLE
-    expect(registerName2.result).toBeErr(Cl.uint(123));
+    // Return err ERR-PREORDERED-BEFORE
+    expect(registerName2.result).toBeErr(Cl.uint(136));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  it("This should fail to register a name if name was fast claimed before my preorder", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+        // 3. Are transfers allowed on the namespace
+        Cl.bool(true),
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-ready",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
+    // Fast claim the name
+    const fastClaimName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-claim-fast",
+      // Passing 5 arguments:
+      // 1. the name
+      // 2. the namespace
+      // 3. the zonefile
+      // 4. the stx to burn
+      // 5. the address to receive the name
+      [
+        Cl.buffer(name1Buff),
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(zonefileBuff),
+        Cl.uint(10000000),
+        Cl.principal(address2),
+      ],
+      // Called by the address that is the send-to address in unmanaged namespaces, in this case address1
+      address2
+    );
+    // This should give ok true since it should be successful
+    expect(fastClaimName.result).toBeOk(Cl.bool(true));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(150));
+
+    simnet.mineEmptyBlock();
+
+    // Register the name
+    const registerName2 = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address1
+    );
+    // Return err ERR-FAST-MINTED-BEFORE
+    expect(registerName2.result).toBeErr(Cl.uint(135));
+  });
+
   it("This should fail to register a name if name was preordered before namespace launch", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -7047,8 +7494,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7109,7 +7556,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
       address1
     );
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(148));
 
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
@@ -7142,10 +7589,9 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH
-    expect(registerName.result).toBeErr(Cl.uint(143));
+    expect(registerName.result).toBeErr(Cl.uint(129));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name if TTL has passed", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -7158,8 +7604,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7235,7 +7681,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Mine blocks to pass TTL
     simnet.mineEmptyBlocks(150);
@@ -7258,11 +7704,10 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by the address that preordered the name
       address1
     );
-    // Return err ERR-NAME-CLAIMABILITY-EXPIRED
-    expect(registerName.result).toBeErr(Cl.uint(138));
+    // Return err ERR-PREORDER-CLAIMABILITY-EXPIRED
+    expect(registerName.result).toBeErr(Cl.uint(114));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name if burned STX was not enough, this should also act as a blocker to preorder a name with mng-name-preorder", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -7275,8 +7720,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7352,7 +7797,9 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -7372,22 +7819,13 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by the address that preordered the name
       address1
     );
-    // Return err ERR-NAME-STX-BURNT-INSUFFICIENT
-    expect(registerName.result).toBeErr(Cl.uint(133));
+    // Return err ERR-STX-BURNT-INSUFFICIENT
+    expect(registerName.result).toBeErr(Cl.uint(110));
   });
 });
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("MNG-NAME-PREORDER FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully preorder a name on a launched namespace without a manager even though it is not its intended use", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -7400,8 +7838,8 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7476,10 +7914,9 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully preorder a name on a launched namespace with a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -7492,8 +7929,8 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7568,10 +8005,9 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully preorder a name on a launched namespace with a manager, where the previous preorder has expired", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -7584,8 +8020,8 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7660,7 +8096,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Mine blocks to pass ttl
     simnet.mineEmptyBlocks(144);
@@ -7676,10 +8112,9 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 294, the current blockheight 150 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(295));
+    expect(preorderName2.result).toBeOk(Cl.uint(294));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to preorder a name if a preorder for the same name and namespace exists and the ttl has not passed", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -7692,8 +8127,8 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7768,7 +8203,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -7781,10 +8216,9 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAME-PREORDER-ALREADY-EXISTS
-    expect(preorderName2.result).toBeErr(Cl.uint(141));
+    expect(preorderName2.result).toBeErr(Cl.uint(128));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to preorder a name if a preorder for the same name and namespace exists even if it was made from the name-preorder function", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -7797,8 +8231,8 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7874,7 +8308,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -7887,10 +8321,9 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAME-PREORDER-ALREADY-EXISTS
-    expect(preorderName2.result).toBeErr(Cl.uint(141));
+    expect(preorderName2.result).toBeErr(Cl.uint(128));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to preorder a name if hash is malformed", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -7903,8 +8336,8 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -7978,23 +8411,13 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       // Called by the managerAddress
       managerAddress
     );
-    // Return err ERR-NAME-HASH-MALFORMED
-    expect(preorderName.result).toBeErr(Cl.uint(142));
+    // Return err ERR-HASH-MALFORMED
+    expect(preorderName.result).toBeErr(Cl.uint(109));
   });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("MNG-NAME-REGISTER FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should succesfully register a name in a managed namespace", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -8007,8 +8430,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8083,7 +8506,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8108,8 +8531,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(registerName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should succesfully register 2 different names in a managed namespace", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -8122,8 +8544,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8198,7 +8620,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8234,7 +8656,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(152));
+    expect(preorderName2.result).toBeOk(Cl.uint(151));
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -8259,8 +8681,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     // This should give ok true since it should be successful
     expect(registerName2.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name if no namespace", () => {
     // Preorder the name
     const preorderName = simnet.callPublicFn(
@@ -8273,7 +8694,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 146, the current blockheight 2 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(147));
+    expect(preorderName.result).toBeOk(Cl.uint(146));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8296,10 +8717,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(registerName.result).toBeErr(Cl.uint(117));
+    expect(registerName.result).toBeErr(Cl.uint(115));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name if the namespace has no manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -8312,8 +8732,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8388,7 +8808,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8411,10 +8831,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NO-NAMESPACE-MANAGER
-    expect(registerName.result).toBeErr(Cl.uint(154));
+    expect(registerName.result).toBeErr(Cl.uint(133));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name if no name-preorder", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -8427,8 +8846,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8512,11 +8931,10 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by the managerAddress
       managerAddress
     );
-    // Return err ER-NAME-PREORDER-NOT-FOUND
-    expect(registerName.result).toBeErr(Cl.uint(129));
+    // Return err ER-PREORDER-NOT-FOUND
+    expect(registerName.result).toBeErr(Cl.uint(111));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name in a managed namespace if contract-caller not the manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -8529,8 +8947,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8605,7 +9023,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8627,11 +9045,10 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by the address 1 not manager
       address1
     );
-    // Return err ERR-NAME-PREORDER-NOT-FOUND
-    expect(registerName.result).toBeErr(Cl.uint(129));
+    // Return err ERR-PREORDER-NOT-FOUND
+    expect(registerName.result).toBeErr(Cl.uint(111));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name if name already exists", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -8644,8 +9061,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8720,7 +9137,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8759,7 +9176,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 295, the current blockheight 151 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(296));
+    expect(preorderName2.result).toBeOk(Cl.uint(295));
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -8781,11 +9198,10 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by the managerAddress
       managerAddress
     );
-    // Return err ERR-NAME-UNAVAILABLE
-    expect(registerName2.result).toBeErr(Cl.uint(123));
+    // Return err ERR-NAME-NOT-AVAILABLE
+    expect(registerName2.result).toBeErr(Cl.uint(120));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name if name was preordered before namespace launch", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -8798,8 +9214,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8862,7 +9278,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 148, the current blockheight 4 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(148));
 
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
@@ -8897,10 +9313,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH
-    expect(registerName.result).toBeErr(Cl.uint(143));
+    expect(registerName.result).toBeErr(Cl.uint(129));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to register a name if TTL has passed", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -8913,8 +9328,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -8989,7 +9404,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Mine blocks to pass ttl
     simnet.mineEmptyBlocks(150);
@@ -9014,23 +9429,13 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       // Called by the managerAddress
       managerAddress
     );
-    // Return err ERR-NAME-CLAIMABILITY-EXPIRED
-    expect(registerName.result).toBeErr(Cl.uint(138));
+    // Return err ERR-PREORDER-CLAIMABILITY-EXPIRED
+    expect(registerName.result).toBeErr(Cl.uint(114));
   });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTS COMPLETED
 describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully update the zonefile hash of a name in an unmanaged namespace", () => {
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
@@ -9053,8 +9458,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     // Should return a success response
     expect(updateZoneName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully update the zonefile hash of a name in a managed namespace", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Update the zone file
@@ -9076,8 +9480,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     // Should return a success response
     expect(updateZoneName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to update the zonefile hash of a nonexistent name", () => {
     // Update the zone file
     const updateZoneName = simnet.callPublicFn(
@@ -9098,8 +9501,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     // Return err ERR-NO-NAME
     expect(updateZoneName.result).toBeErr(Cl.uint(107));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to update the zonefile hash if the zonefile is the same", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Update the zone file
@@ -9114,11 +9516,10 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       // Called from the manager address
       managerAddress
     );
-    // Return err ERR-NAME-OPERATION-UNAUTHORIZED
-    expect(updateZoneName.result).toBeErr(Cl.uint(122));
+    // Return err ERR-OPERATION-UNAUTHORIZED
+    expect(updateZoneName.result).toBeErr(Cl.uint(116));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to update the zonefile hash if the name is revoked", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Revoke the name
@@ -9151,10 +9552,9 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-REVOKED
-    expect(updateZoneName.result).toBeErr(Cl.uint(139));
+    expect(updateZoneName.result).toBeErr(Cl.uint(126));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to update the zonefile hash of a name in an unmanaged namespace when the tx-sender is not the owner", () => {
     successfullyFastClaimANameInAnUnmanagedNamespace();
     // Update the zone file
@@ -9176,8 +9576,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     // Return err ERR-NOT-AUTHORIZED
     expect(updateZoneName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to update the zonefile hash of a name in a managed namespace when the contract-caller is not the manager", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
     /// Update the zone file
@@ -9199,8 +9598,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     // Return err ERR-NOT-AUTHORIZED
     expect(updateZoneName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to update the zonefile hash of a name if the name is not in a valid grace period", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
@@ -9223,22 +9621,13 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       // Called from a non manager address
       managerAddress
     );
-    // Return err ERR-NAME-OPERATION-UNAUTHORIZED
-    expect(updateZoneName.result).toBeErr(Cl.uint(122));
+    // Return err ERR-OPERATION-UNAUTHORIZED
+    expect(updateZoneName.result).toBeErr(Cl.uint(116));
   });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAME-REVOKE FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully revoke a name in an unmanaged namespace", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Revoke the name
@@ -9254,8 +9643,7 @@ describe("NAME-REVOKE FUNCTION", () => {
     );
     expect(revokeName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully revoke a name in a managed namespace", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Revoke the name
@@ -9271,8 +9659,7 @@ describe("NAME-REVOKE FUNCTION", () => {
     );
     expect(revokeName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to revoke a name in a namespace that does not exist", () => {
     // Revoke the name
     const revokeName = simnet.callPublicFn(
@@ -9285,10 +9672,10 @@ describe("NAME-REVOKE FUNCTION", () => {
       // Called from the manager address
       managerAddress
     );
-    expect(revokeName.result).toBeErr(Cl.uint(117));
+    // Return err ERR-NAMESPACE-NOT-FOUND
+    expect(revokeName.result).toBeErr(Cl.uint(115));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to revoke a name in a managed namespace but the contract-caller is not the manager", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Revoke the name
@@ -9305,8 +9692,7 @@ describe("NAME-REVOKE FUNCTION", () => {
     // Return err ERR-NOT-AUTHORIZED
     expect(revokeName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to revoke a name in an unmanaged namespace but the tx-sender is not the import address", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Revoke the name
@@ -9324,17 +9710,9 @@ describe("NAME-REVOKE FUNCTION", () => {
     expect(revokeName.result).toBeErr(Cl.uint(102));
   });
 });
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAME-RENEWAL FUNCTION", () => {
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   it("This should successfully renew a name in an unmanaged namespace when the name is still within the lifetime", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Renew the name
@@ -9358,8 +9736,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     // Expect a successful response
     expect(renewName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully renew a name in an unmanaged namespace when the name is within the grace period", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
@@ -9387,8 +9764,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     // Expect a successful response
     expect(renewName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully renew a name in an unmanaged namespace when the name is not in the grace period by the owner", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
@@ -9416,8 +9792,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     // Expect a successful response
     expect(renewName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should successfully renew a name in an unmanaged namespace when the name is not in the grace period by a different address than the owner", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
@@ -9445,8 +9820,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     // Expect a successful response
     expect(renewName.result).toBeOk(Cl.bool(true));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to renew a name in an unmanaged namespace when the name does not exist", () => {
     // Renew the name
     const renewName = simnet.callPublicFn(
@@ -9469,8 +9843,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     // Return err ERR-NO-NAME
     expect(renewName.result).toBeErr(Cl.uint(107));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to renew a name in a managed namespace", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Renew the name
@@ -9492,10 +9865,9 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-HAS-MANAGER
-    expect(renewName.result).toBeErr(Cl.uint(150));
+    expect(renewName.result).toBeErr(Cl.uint(130));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to renew a name if the namespace is not launched", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -9508,8 +9880,8 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -9603,10 +9975,9 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-LAUNCHED
-    expect(renewName.result).toBeErr(Cl.uint(121));
+    expect(renewName.result).toBeErr(Cl.uint(119));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to renew a name if the namespace does not require renewals", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -9619,8 +9990,8 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // Called by any address, in this case address1
       address1
     );
-    // This should give ok u147 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(147));
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
@@ -9696,7 +10067,9 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
+
+    simnet.mineEmptyBlock();
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -9737,11 +10110,10 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // Called from owner address
       address1
     );
-    // Return err ERR-NAME-OPERATION-UNAUTHORIZED
-    expect(renewName.result).toBeErr(Cl.uint(122));
+    // Return err ERR-OPERATION-UNAUTHORIZED
+    expect(renewName.result).toBeErr(Cl.uint(116));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current grace period", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
@@ -9769,8 +10141,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     // Return err ERR-NOT-AUTHORIZED
     expect(renewName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current lifetime", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
@@ -9795,8 +10166,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     // Return err ERR-NOT-AUTHORIZED
     expect(renewName.result).toBeErr(Cl.uint(102));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to renew a name if the stx-burn is not sufficient for the price", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
@@ -9813,11 +10183,10 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // Called from owner address
       address1
     );
-    // Return err ERR-NAME-STX-BURNT-INSUFFICIENT
-    expect(renewName.result).toBeErr(Cl.uint(133));
+    // Return err ERR-STX-BURNT-INSUFFICIENT
+    expect(renewName.result).toBeErr(Cl.uint(110));
   });
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   it("This should fail to renew a name if the name is revoked", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
@@ -9853,6 +10222,6 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-REVOKED
-    expect(renewName.result).toBeErr(Cl.uint(139));
+    expect(renewName.result).toBeErr(Cl.uint(126));
   });
 });
