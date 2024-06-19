@@ -282,7 +282,7 @@
         (match registered-at-value
             is-registered
             ;; If it was registered, check if registered-at is lower than current blockheight
-            ;; This check works to make sure that if a name is fast-claimed they
+            ;; This check works to make sure that if a name is fast-claimed they have to wait 1 block to transfer it
             (asserts! (< is-registered block-height) ERR-OPERATION-UNAUTHORIZED)
             ;; If it is not registered then continue
             true 
@@ -1420,38 +1420,6 @@
     (ok (nft-get-owner? BNS-V2 id))
 )
 
-;; This read-only function determines the availability of a specific BNS (Blockchain Name Service) name within a specified namespace.
-(define-read-only (is-name-available (name (buff 48)) (namespace (buff 20)))
-    (let 
-        (
-            ;; Attempts to retrieve properties of the specified namespace to ensure it exists.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Attempts to find an index for the name-namespace pair, which would indicate prior registration.
-            (name-index (map-get? name-to-index {name: name, namespace: namespace}))
-            ;; Tries to get the properties associated with the name within the namespace, if it's registered.
-            (name-props (map-get? name-properties {name: name, namespace: namespace}))
-        ) 
-        ;; Returns the availability status based on whether name properties were found.
-        (ok
-            (match name-props
-                name-p
-                {
-                    ;; If properties are found, the name is not available, and the function returns its renewal height and price.
-                    available: false,
-                    renews-at: (get renewal-height name-props),  ;; The block height at which the name needs to be renewed.
-                    stx-burn: (get stx-burn name-props)  ;; The current registration price for the name.
-                }
-                {
-                    ;; If no properties are found, the name is considered available, and no renewal or price info is applicable.
-                    available: true,
-                    renews-at: none,
-                    stx-burn: none
-                }
-            )
-        )
-    )
-)
-
 ;; Read-only function `get-namespace-price` calculates the registration price for a namespace based on its length.
 ;; @params:
     ;; namespace (buff 20): The namespace for which the price is being calculated.
@@ -1468,22 +1436,6 @@
         (ok (unwrap! (element-at NAMESPACE-PRICE-TIERS (min u7 (- namespace-len u1))) ERR-UNWRAP))
     )
 )
-
-;; Read-only function `get-name-price` calculates the registration price for a name within a specific namespace.
-;; @params:
-    ;; namespace (buff 20): The namespace within which the name's price is being calculated.
-    ;; name (buff 48): The name for which the price is being calculated.
-(define-read-only (get-name-price (namespace (buff 20)) (name (buff 48)))
-    (let 
-        (
-            ;; Fetch properties of the specified namespace to access its price function.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-        )
-        ;; Calculate and return the price for the specified name using the namespace's price function.
-        (ok (compute-name-price name (get price-function namespace-props)))
-    )
-)
-
 
 ;; Read-only function `can-namespace-be-registered` checks if a namespace is available for registration.
 ;; @params:
