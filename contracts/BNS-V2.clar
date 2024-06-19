@@ -457,7 +457,7 @@
     (let 
         (
             ;; Retrieves the name and namespace associated with the given NFT ID. If not found, returns an error.
-            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NAME-NOT-FOUND))
+            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
             ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
             (namespace (get namespace name-and-namespace))
             ;; Fetches existing properties of the namespace to confirm its existence and retrieve management details.
@@ -1094,7 +1094,7 @@
         ;; Verifies that the caller of the contract is the namespace manager.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Ensures the name is not already registered by checking if it lacks an existing index.
-        (asserts! (is-none name-index) ERR-NAME-UNAVAILABLE)
+        (asserts! (is-none name-index) ERR-NO-NAME)
         ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap! (get launched-at namespace-props) ERR-UNWRAP)) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Verifies the registration is completed within the claimability period defined by the PREORDER-CLAIMABILITY-TTL.
@@ -1258,7 +1258,7 @@
             ;; Get the current owner of the name.
             (owner (unwrap! (nft-get-owner? BNS-V2 name-index) ERR-NO-NAME))
             ;; Fetch the name properties from the `name-properties` map.
-            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NAME-NOT-FOUND))
+            (name-props (unwrap! (map-get? name-properties { name: name, namespace: namespace }) ERR-NO-NAME))
             ;; Retrieve namespace manager if any
             (namespace-manager (get namespace-manager namespace-props))
             ;; Get if the name was registered
