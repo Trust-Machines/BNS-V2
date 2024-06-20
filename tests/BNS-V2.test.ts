@@ -124,6 +124,9 @@ const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
   expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
   // Reveal the namespace
+  simnet.mineEmptyBlock();
+
+  // Reveal the namespace
   const revealNamespace = simnet.callPublicFn(
     "BNS-V2",
     "namespace-reveal",
@@ -133,8 +136,7 @@ const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
       Cl.buffer(namespaceBuff),
       // 2. The salt used to hash160 the namespace with
       Cl.buffer(saltBuff),
-      // 3. Are transfers allowed on the namespace
-      Cl.bool(true),
+
       // 4. Price base
       Cl.uint(1),
       // 5. Price coeff
@@ -197,7 +199,7 @@ const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
     address1
   );
   // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(149));
+  expect(preorderName.result).toBeOk(Cl.uint(150));
 
   simnet.mineEmptyBlock();
 
@@ -236,7 +238,7 @@ const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace = () => {
     address1
   );
   // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(152));
+  expect(preorderName.result).toBeOk(Cl.uint(153));
 
   simnet.mineEmptyBlock();
 
@@ -278,6 +280,9 @@ const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
   expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
   // Reveal the namespace
+  simnet.mineEmptyBlock();
+
+  // Reveal the namespace
   const revealNamespace = simnet.callPublicFn(
     "BNS-V2",
     "namespace-reveal",
@@ -287,8 +292,7 @@ const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
       Cl.buffer(namespaceBuff),
       // 2. The salt used to hash160 the namespace with
       Cl.buffer(saltBuff),
-      // 3. Are transfers allowed on the namespace
-      Cl.bool(true),
+
       // 4. Price base
       Cl.uint(1),
       // 5. Price coeff
@@ -350,7 +354,7 @@ const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
     managerAddress
   );
   // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(149));
+  expect(preorderName.result).toBeOk(Cl.uint(150));
 
   // Register the name
   const registerName = simnet.callPublicFn(
@@ -388,7 +392,7 @@ const successfullyTwoStepRegisterASecondNameInAManagedNamespace = () => {
     managerAddress
   );
   // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-  expect(preorderName.result).toBeOk(Cl.uint(151));
+  expect(preorderName.result).toBeOk(Cl.uint(152));
 
   // Register the name
   const registerName = simnet.callPublicFn(
@@ -430,6 +434,9 @@ const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
   expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
   // Reveal the namespace
+  simnet.mineEmptyBlock();
+
+  // Reveal the namespace
   const revealNamespace = simnet.callPublicFn(
     "BNS-V2",
     "namespace-reveal",
@@ -439,8 +446,7 @@ const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
       Cl.buffer(namespaceBuff),
       // 2. The salt used to hash160 the namespace with
       Cl.buffer(saltBuff),
-      // 3. Are transfers allowed on the namespace
-      Cl.bool(true),
+
       // 4. Price base
       Cl.uint(1),
       // 5. Price coeff
@@ -555,6 +561,9 @@ const successfullyFastClaimANameInAManagedNamespace = () => {
   expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
   // Reveal the namespace
+  simnet.mineEmptyBlock();
+
+  // Reveal the namespace
   const revealNamespace = simnet.callPublicFn(
     "BNS-V2",
     "namespace-reveal",
@@ -564,8 +573,7 @@ const successfullyFastClaimANameInAManagedNamespace = () => {
       Cl.buffer(namespaceBuff),
       // 2. The salt used to hash160 the namespace with
       Cl.buffer(saltBuff),
-      // 3. Are transfers allowed on the namespace
-      Cl.bool(true),
+
       // 4. Price base
       Cl.uint(1),
       // 5. Price coeff
@@ -848,6 +856,9 @@ describe("TRANSFER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -857,8 +868,7 @@ describe("TRANSFER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(false),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -931,6 +941,19 @@ describe("TRANSFER FUNCTION", () => {
     );
     // This should give ok true since it should be successful
     expect(fastClaimName.result).toBeOk(Cl.bool(true));
+
+    const switchTransfers = simnet.callPublicFn(
+      "BNS-V2",
+      "turn-off-manager-transfers",
+      // Passing 1 argument:
+      // 1. the namespace
+
+      [Cl.buffer(namespaceBuff)],
+      // Called by the manager address
+      managerAddress
+    );
+    // This should give ok true since it should be successful
+    expect(switchTransfers.result).toBeOk(Cl.bool(true));
 
     // Mine an empty block
     simnet.mineEmptyBlock();
@@ -1668,6 +1691,9 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Call the namespace-reveal function from the BNS-V2 contract
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -1676,7 +1702,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       [
         Cl.buffer(namespaceBuff),
         Cl.buffer(saltBuff),
-        Cl.bool(true),
+
         // Pass the pricing function
         // Base
         Cl.uint(1),
@@ -1792,6 +1818,9 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Call the namespace-reveal function from the BNS-V2 contract
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -1800,7 +1829,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       [
         Cl.buffer(namespaceBuff),
         Cl.buffer(saltBuff),
-        Cl.bool(true),
+
         // Pass the pricing function
         // Base
         Cl.uint(1),
@@ -2713,6 +2742,9 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -2722,8 +2754,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -2779,6 +2810,9 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -2788,8 +2822,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -2831,6 +2864,9 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
 
   it("This should fail if no namespace preorder", () => {
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -2840,8 +2876,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -2897,6 +2932,9 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -2906,8 +2944,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.buffer(invalidNamespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -2963,6 +3000,9 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -2972,8 +3012,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -3013,6 +3052,9 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
     expect(revealNamespace.result).toBeOk(Cl.bool(true));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace2 = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -3022,8 +3064,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -3079,6 +3120,9 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -3088,8 +3132,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -3148,6 +3191,9 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
     simnet.mineEmptyBlocks(148);
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -3157,8 +3203,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -3217,6 +3262,9 @@ describe("NAMESPACE-READY FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -3226,8 +3274,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -3295,6 +3342,9 @@ describe("NAMESPACE-READY FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -3304,8 +3354,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -3387,6 +3436,9 @@ describe("NAMESPACE-READY FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -3396,8 +3448,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -3465,6 +3516,9 @@ describe("NAMESPACE-READY FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -3474,8 +3528,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -3555,6 +3608,9 @@ describe("NAMESPACE-READY FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -3564,8 +3620,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -3639,6 +3694,9 @@ describe("NAME-IMPORT FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -3648,8 +3706,7 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -3753,6 +3810,9 @@ describe("NAME-IMPORT FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -3762,8 +3822,7 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -3842,6 +3901,9 @@ describe("NAME-IMPORT FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -3851,8 +3913,7 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -3931,6 +3992,9 @@ describe("NAME-IMPORT FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -3940,8 +4004,7 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -4032,6 +4095,9 @@ describe("NAME-IMPORT FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -4041,8 +4107,7 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -4360,6 +4425,9 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -4369,8 +4437,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -4461,6 +4528,9 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -4470,8 +4540,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -4562,6 +4631,9 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -4571,8 +4643,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -4686,6 +4757,9 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -4695,8 +4769,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -4834,6 +4907,9 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -4843,8 +4919,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -4958,6 +5033,9 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -4967,8 +5045,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -5059,6 +5136,9 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -5068,8 +5148,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -5160,6 +5239,9 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -5169,8 +5251,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -5261,6 +5342,9 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -5270,8 +5354,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -5365,6 +5448,9 @@ describe("NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -5374,8 +5460,7 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -5438,7 +5523,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
   });
 
   it("This should successfully preorder a name on a launched namespace without a manager if the previous preorder has expired", () => {
@@ -5457,6 +5542,9 @@ describe("NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -5466,8 +5554,7 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -5530,7 +5617,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Mine blocks for order to expire
     simnet.mineEmptyBlocks(145);
@@ -5547,7 +5634,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 295, the current blockheight 151 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(295));
+    expect(preorderName2.result).toBeOk(Cl.uint(296));
   });
 
   it("This should successfully preorder a name on a launched namespace with a manager even though this is not the intended use", () => {
@@ -5566,6 +5653,9 @@ describe("NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -5575,8 +5665,7 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -5638,7 +5727,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
   });
 
   it("This should fail to preorder a name if a preorder for the same name and namespace exists", () => {
@@ -5657,6 +5746,9 @@ describe("NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -5666,8 +5758,7 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -5730,7 +5821,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -5763,6 +5854,9 @@ describe("NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -5772,8 +5866,7 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -5835,7 +5928,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -5868,6 +5961,9 @@ describe("NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -5877,8 +5973,7 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -5960,6 +6055,9 @@ describe("NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -5969,8 +6067,7 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -6052,6 +6149,9 @@ describe("NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -6061,8 +6161,7 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -6147,6 +6246,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -6156,8 +6258,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -6220,7 +6321,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     simnet.mineEmptyBlock();
 
@@ -6262,6 +6363,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -6271,8 +6375,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -6335,7 +6438,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Preorder the name
     const preorderSameName = simnet.callPublicFn(
@@ -6349,7 +6452,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address2
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderSameName.result).toBeOk(Cl.uint(150));
+    expect(preorderSameName.result).toBeOk(Cl.uint(151));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -6389,6 +6492,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -6398,8 +6504,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -6462,7 +6567,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Preorder the name
     const preorderSameName = simnet.callPublicFn(
@@ -6476,7 +6581,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address2
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderSameName.result).toBeOk(Cl.uint(150));
+    expect(preorderSameName.result).toBeOk(Cl.uint(151));
 
     simnet.mineEmptyBlock();
 
@@ -6539,6 +6644,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -6548,8 +6656,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -6612,7 +6719,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Fast claim the name
     const fastClaimName = simnet.callPublicFn(
@@ -6675,6 +6782,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -6684,8 +6794,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -6748,7 +6857,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     simnet.mineEmptyBlock();
 
@@ -6785,7 +6894,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(152));
+    expect(preorderName2.result).toBeOk(Cl.uint(153));
 
     simnet.mineEmptyBlock();
 
@@ -6827,6 +6936,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -6836,8 +6948,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -6963,6 +7074,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -6972,8 +7086,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -7036,7 +7149,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -7076,6 +7189,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -7085,8 +7201,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -7149,7 +7264,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     simnet.mineEmptyBlock();
 
@@ -7212,6 +7327,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -7221,8 +7339,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -7285,7 +7402,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address2
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderSameName.result).toBeOk(Cl.uint(149));
+    expect(preorderSameName.result).toBeOk(Cl.uint(150));
 
     // Preorder the name
     const preorderName = simnet.callPublicFn(
@@ -7299,7 +7416,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(151));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -7360,6 +7477,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -7369,8 +7489,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -7456,7 +7575,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
+    expect(preorderName.result).toBeOk(Cl.uint(151));
 
     simnet.mineEmptyBlock();
 
@@ -7498,6 +7617,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -7507,8 +7629,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -7556,7 +7677,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
       address1
     );
-    expect(preorderName.result).toBeOk(Cl.uint(148));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
@@ -7608,6 +7729,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -7617,8 +7741,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -7681,7 +7804,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Mine blocks to pass TTL
     simnet.mineEmptyBlocks(150);
@@ -7724,6 +7847,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -7733,8 +7859,7 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -7797,7 +7922,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     simnet.mineEmptyBlock();
 
@@ -7842,6 +7967,9 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -7851,8 +7979,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -7914,7 +8041,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
   });
 
   it("This should successfully preorder a name on a launched namespace with a manager", () => {
@@ -7933,6 +8060,9 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -7942,8 +8072,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -8005,7 +8134,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
   });
 
   it("This should successfully preorder a name on a launched namespace with a manager, where the previous preorder has expired", () => {
@@ -8024,6 +8153,9 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -8033,8 +8165,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -8096,7 +8227,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Mine blocks to pass ttl
     simnet.mineEmptyBlocks(144);
@@ -8112,7 +8243,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 294, the current blockheight 150 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(294));
+    expect(preorderName2.result).toBeOk(Cl.uint(295));
   });
 
   it("This should fail to preorder a name if a preorder for the same name and namespace exists and the ttl has not passed", () => {
@@ -8131,6 +8262,9 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -8140,8 +8274,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -8203,7 +8336,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -8235,6 +8368,9 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -8244,8 +8380,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -8308,7 +8443,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -8340,6 +8475,9 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -8349,8 +8487,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -8434,6 +8571,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -8443,8 +8583,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -8506,7 +8645,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8548,6 +8687,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -8557,8 +8699,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -8620,7 +8761,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8656,7 +8797,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 151, the current blockheight 7 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(151));
+    expect(preorderName2.result).toBeOk(Cl.uint(152));
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -8736,6 +8877,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -8745,8 +8889,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -8808,7 +8951,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -8850,6 +8993,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -8859,8 +9005,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -8951,6 +9096,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -8960,8 +9108,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -9023,7 +9170,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -9065,6 +9212,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -9074,8 +9224,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -9137,7 +9286,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -9176,7 +9325,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 295, the current blockheight 151 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(295));
+    expect(preorderName2.result).toBeOk(Cl.uint(296));
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -9218,6 +9367,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -9227,8 +9379,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -9278,7 +9429,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 148, the current blockheight 4 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(148));
+    expect(preorderName.result).toBeOk(Cl.uint(149));
 
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
@@ -9332,6 +9483,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -9341,8 +9495,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -9404,7 +9557,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     // Mine blocks to pass ttl
     simnet.mineEmptyBlocks(150);
@@ -9884,6 +10037,9 @@ describe("NAME-RENEWAL FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -9893,8 +10049,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -9994,6 +10149,9 @@ describe("NAME-RENEWAL FUNCTION", () => {
     expect(preorderNamespace.result).toBeOk(Cl.uint(146));
 
     // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
     const revealNamespace = simnet.callPublicFn(
       "BNS-V2",
       "namespace-reveal",
@@ -10003,8 +10161,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
         Cl.buffer(namespaceBuff),
         // 2. The salt used to hash160 the namespace with
         Cl.buffer(saltBuff),
-        // 3. Are transfers allowed on the namespace
-        Cl.bool(true),
+
         // 4. Price base
         Cl.uint(1),
         // 5. Price coeff
@@ -10067,7 +10224,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(149));
+    expect(preorderName.result).toBeOk(Cl.uint(150));
 
     simnet.mineEmptyBlock();
 
