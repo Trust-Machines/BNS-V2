@@ -56,31 +56,25 @@
 (define-constant ERR-NAME-EXPIRED (err u122))
 (define-constant ERR-NAME-GRACE-PERIOD (err u123))
 (define-constant ERR-NAME-BLANK (err u124))
-(define-constant ERR-NAME-ALREADY-CLAIMED (err u125))
-(define-constant ERR-NAME-REVOKED (err u126))
-(define-constant ERR-NAME-TRANSFER-FAILED (err u127))
-(define-constant ERR-NAME-PREORDER-ALREADY-EXISTS (err u128))
-(define-constant ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH (err u129))
-(define-constant ERR-NAMESPACE-HAS-MANAGER (err u130))
-(define-constant ERR-OVERFLOW (err u131))
-(define-constant ERR-NO-BNS-NAMES-OWNED (err u132))
-(define-constant ERR-NO-NAMESPACE-MANAGER (err u133))
-(define-constant ERR-OWNER-IS-THE-SAME (err u134))
-(define-constant ERR-FAST-MINTED-BEFORE (err u135))
-(define-constant ERR-PREORDERED-BEFORE (err u136))
-(define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u137))
-(define-constant ERR-BURN-UPDATES-FAILED (err u138))
+(define-constant ERR-NAME-REVOKED (err u125))
+(define-constant ERR-NAME-PREORDER-ALREADY-EXISTS (err u127))
+(define-constant ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH (err u128))
+(define-constant ERR-NAMESPACE-HAS-MANAGER (err u129))
+(define-constant ERR-OVERFLOW (err u130))
+(define-constant ERR-NO-BNS-NAMES-OWNED (err u131))
+(define-constant ERR-NO-NAMESPACE-MANAGER (err u132))
+(define-constant ERR-OWNER-IS-THE-SAME (err u133))
+(define-constant ERR-FAST-MINTED-BEFORE (err u134))
+(define-constant ERR-PREORDERED-BEFORE (err u135))
+(define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u136))
+(define-constant ERR-BURN-UPDATES-FAILED (err u137))
 (define-constant ERR-IMPORTED-BEFORE (err u138))
-
-
 
 ;; variables
 ;; (new) Counter to keep track of the last minted NFT ID, ensuring unique identifiers
 (define-data-var bns-index uint u0)
 ;; (new) Variable to store the token URI, allowing for metadata association with the NFT
 (define-data-var token-uri (string-ascii 246) "")
-
-
 
 ;; maps
 ;; (new) Map to track market listings, associating NFT IDs with price and commission details
@@ -106,10 +100,12 @@
     {
         registered-at: (optional uint),
         imported-at: (optional uint),
-        revoked-at: (optional uint),
+        ;; Updated this to be a boolean, since we do not need know when it was revoked, only if it is revoked
+        revoked-at: bool,
         zonefile-hash: (optional (buff 20)),
+        ;; The fqn used to make the earliest preorder at any given point
         fully-qualified-name: (optional (buff 20)),
-        ;; Added this field in name-properties to know exactly who the name was registered by the first time, to later be able to access the name-preorder correctly in case the name switches owners
+        ;; Added this field in name-properties to know exactly who has the earliest preorder at any given point
         preordered-by: (optional principal),
         renewal-height: uint,
         stx-burn: uint,
@@ -169,8 +165,6 @@
 (define-map bns-name-owner uint principal) 
 ;; Maps principal to the count of names they own
 (define-map owner-bns-balance principal uint)
-
-
 
 ;; read-only
 ;; @desc (new) SIP-09 compliant function to get the last minted token's ID
@@ -300,10 +294,11 @@
             manager
             ;; If the namespace is managed, performs the transfer under the management's authorization.
             ;; Asserts that the transaction caller is the namespace manager, hence authorized to handle the transfer.
-            (begin 
+            (if (is-eq true (get manager-transferable namespace-props)) 
+                ;; If manager transfers are allowed then check if contract-caller is manager
                 (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
-                ;; Also check if the namespace allows manager transfers
-                (asserts! (get manager-transferable namespace-props) ERR-NOT-AUTHORIZED)
+                ;;If manager trnasfers are not allowed, then check if tx-sender is the name-current-owner
+                (asserts! (is-eq tx-sender name-current-owner nft-current-owner) ERR-NOT-AUTHORIZED)
             )
             ;; If the namespace does not have a manager then...
             ;; Asserts that the transaction sender is the owner of the NFT to authorize the transfer.
@@ -311,7 +306,7 @@
         ) 
         ;; Ensures the NFT is not currently listed in the market, which would block transfers.
         (asserts! (is-none (map-get? market id)) ERR-LISTED)
-        ;; Transfer ownership
+        ;; Transfer ownership and update the linked lists
         (transfer-ownership-updates id owner recipient)
         ;; Updates the name-props map with the new information, everything stays the same, we only change the zonefile to none for a clean slate and the owner
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
@@ -435,7 +430,7 @@
             ;; Retrieves the current primary name for the caller, to check if an update is necessary. This should never cause an error unless the user doesn't own any BNS names
             (current-primary-name (unwrap! (map-get? primary-name tx-sender) ERR-NO-BNS-NAMES-OWNED))
             ;; Retrieves the name and namespace from the uint/index
-            (name-and-namespace (unwrap! (map-get? index-to-name primary-name-id) ERR-NO-NAME))
+            (name-and-namespace (unwrap! (get-bns-from-id primary-name-id) ERR-NO-NAME))
         ) 
         ;; Verifies that the caller (`tx-sender`) is indeed the owner of the name they wish to set as primary.
         (asserts! (is-eq owner tx-sender) ERR-NOT-AUTHORIZED)
@@ -453,19 +448,17 @@
     (let 
         (
             ;; Retrieves the name and namespace associated with the given NFT ID. If not found, returns an error.
-            (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
+            (name-and-namespace (unwrap! (get-bns-from-id id) ERR-NO-NAME))
             ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
             (namespace (get namespace name-and-namespace))
             ;; Fetches existing properties of the namespace to confirm its existence and retrieve management details.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
             ;; Retrieves the current manager of the namespace from the namespace properties.
             (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
-            ;; Retrieves the current owner of the NFT, necessary to authorize the burn operation.
+            ;; Retrieves the current owner of the NFT, necessary to execute the burn operation.
             (current-name-owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP))
             ;; Get if it is listed
             (is-listed (map-get? market id))
-            ;; Checks if the owner has a primary name
-            (owner-primary-name (map-get? primary-name current-name-owner))
         ) 
         ;; Ensures that the function caller is the current namespace manager, providing the authority to perform the burn.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
@@ -478,7 +471,6 @@
         )
         ;; Burn the name
         (unwrap! (burn-name-updates id) ERR-BURN-UPDATES-FAILED)
-
         ;; Deletes the maps
         (map-delete name-properties name-and-namespace)
         ;; Executes the burn operation for the specified NFT, effectively removing it from circulation.
@@ -508,7 +500,6 @@
                     {
                         ;; Updates the namespace-manager field to the new manager's principal.
                         namespace-manager: (some new-manager),
-                        namespace-import: new-manager,
                     }
                 )
                 
@@ -735,7 +726,7 @@
             {
                 registered-at: none,
                 imported-at: (some block-height),
-                revoked-at: none,
+                revoked-at: false,
                 zonefile-hash: (some zonefile-hash),
                 fully-qualified-name: none,
                 preordered-by: none,
@@ -845,7 +836,7 @@
         (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
         (asserts! (map-insert bns-name-owner id-to-be-minted send-to) ERR-NAME-NOT-AVAILABLE) 
         ;; Checks if that name already exists for the namespace if it does, then don't mint
-        (asserts! (is-none name-props) ERR-NAME-ALREADY-CLAIMED)
+        (asserts! (is-none name-props) ERR-NAME-NOT-AVAILABLE)
         ;; Verifies if the namespace has a manager
         (match current-namespace-manager 
             manager 
@@ -859,7 +850,7 @@
                 ;; Burns the STX from the user
                 (try! (stx-burn? stx-burn send-to))
                 ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
-                (asserts! (>= stx-burn (compute-name-price name (get price-function namespace-props))) ERR-STX-BURNT-INSUFFICIENT)
+                (asserts! (>= stx-burn (try! (compute-name-price name (get price-function namespace-props)))) ERR-STX-BURNT-INSUFFICIENT)
             )
         )
         ;; Set the index 
@@ -873,7 +864,7 @@
                
                 registered-at: (some (+ block-height u1)),
                 imported-at: none,
-                revoked-at: none,
+                revoked-at: false,
                 zonefile-hash: (some zonefile-hash),
                 fully-qualified-name: none,
                 preordered-by: none,
@@ -976,7 +967,7 @@
         ;; Verifies that 1 block has passed from when the preorder was made
         (asserts! (> block-height (+ (get created-at preorder) u1)) ERR-NAME-NOT-CLAIMABLE-YET)
         ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
-        (asserts! (>= (get stx-burned preorder) (compute-name-price name (get price-function namespace-props))) ERR-STX-BURNT-INSUFFICIENT)
+        (asserts! (>= (get stx-burned preorder) (try! (compute-name-price name (get price-function namespace-props)))) ERR-STX-BURNT-INSUFFICIENT)
         ;; Check if the name is registered or not
         (match name-props
             name-props-exist 
@@ -1027,7 +1018,7 @@
                     {
                         registered-at: (some block-height),
                         imported-at: none,
-                        revoked-at: none,
+                        revoked-at: false,
                         zonefile-hash: (some zonefile-hash),
                         fully-qualified-name: (some hashed-salted-fqn),
                         preordered-by: (some tx-sender),
@@ -1138,7 +1129,7 @@
             {
                 registered-at: (some block-height),
                 imported-at: none,
-                revoked-at: none,
+                revoked-at: false,
                 zonefile-hash: (some zonefile-hash),
                 fully-qualified-name: (some hashed-salted-fqn),
                 preordered-by: (some send-to),
@@ -1198,7 +1189,7 @@
         ;; Assert we are actually updating the zonefile
         (asserts! (not (is-eq (some zonefile-hash) current-zone-file)) ERR-OPERATION-UNAUTHORIZED)
         ;; Asserts the name has not been revoked.
-        (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
+        (asserts! (not (get revoked-at name-props)) ERR-NAME-REVOKED)
         ;; See if the namespace has a manager
         (asserts! 
             (match namespace-manager 
@@ -1258,7 +1249,7 @@
         (map-set name-properties {name: name, namespace: namespace}
             (merge 
                 name-props
-                {revoked-at: (some block-height)} 
+                {revoked-at: true} 
             )
         )
         ;; Return a success response indicating the name has been successfully revoked.
@@ -1375,9 +1366,9 @@
             )  
         )
         ;; Asserts that the amount of STX to be burned is at least equal to the price of the name.
-        (asserts! (>= stx-to-burn (compute-name-price name (get price-function namespace-props))) ERR-STX-BURNT-INSUFFICIENT)
+        (asserts! (>= stx-to-burn (try! (compute-name-price name (get price-function namespace-props)))) ERR-STX-BURNT-INSUFFICIENT)
         ;; Asserts that the name has not been revoked.
-        (asserts! (is-none (get revoked-at name-props)) ERR-NAME-REVOKED)
+        (asserts! (not (get revoked-at name-props)) ERR-NAME-REVOKED)
         ;; Burns the STX provided
         (try! (stx-burn? stx-to-burn tx-sender))
         ;; Checks if a new zone file hash is specified
@@ -1739,11 +1730,13 @@
             ;; If the name contains non-alphabetic characters, apply the non-alpha discount from the price function.
             ;; Otherwise, use 1 indicating no discount.
             (nonalpha-discount (if (has-nonalpha-chars name) (get nonalpha-discount price-function) u1))
+            (len-name (len name))
         )
+        (asserts! (> len-name u0) ERR-NAME-BLANK)
         ;; Compute the final price.
         ;; The base price, adjusted by the coefficient and exponent, is divided by the greater of the two discounts (non-alpha or no-vowel).
         ;; The result is then multiplied by 10 to adjust for unit precision.
-        (* (/ (* (get coeff price-function) (pow (get base price-function) exponent)) (max nonalpha-discount no-vowel-discount)) u10)
+        (ok (* (/ (* (get coeff price-function) (pow (get base price-function) exponent)) (max nonalpha-discount no-vowel-discount)) u10))
     )
 )
 

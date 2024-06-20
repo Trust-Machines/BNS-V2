@@ -2332,7 +2332,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       address2
     );
     // This returns err ERR-NO-BNS-NAMES-OWNED
-    expect(changePrimaryName.result).toBeErr(Cl.uint(132));
+    expect(changePrimaryName.result).toBeErr(Cl.uint(131));
   });
 
   it("This should fail to change the primary name of an address, if the tx-sender is not the owner of the name", () => {
@@ -2433,7 +2433,7 @@ describe("MNG-BURN FUNCTIONS", () => {
       managerAddress
     );
     // This returns err ERR-NO-NAMESPACE-MANAGER
-    expect(burnName.result).toBeErr(Cl.uint(133));
+    expect(burnName.result).toBeErr(Cl.uint(132));
   });
 
   it("This should fail by not allowing a different address from the manager address to burn an nft from a managed namespace", () => {
@@ -2543,7 +2543,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NO-NAMESPACE-MANAGER
-    expect(transferNamespace.result).toBeErr(Cl.uint(133));
+    expect(transferNamespace.result).toBeErr(Cl.uint(132));
   });
 
   it("This should fail to change the manager of a namespace if the manager is not the contract-caller", () => {
@@ -5835,7 +5835,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-PREORDER-ALREADY-EXISTS
-    expect(preorderName2.result).toBeErr(Cl.uint(128));
+    expect(preorderName2.result).toBeErr(Cl.uint(127));
   });
 
   it("This should fail to preorder a name if a preorder for the same name and namespace exists even if it was made from the mng-name-preorder function", () => {
@@ -5942,7 +5942,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-PREORDER-ALREADY-EXISTS
-    expect(preorderName2.result).toBeErr(Cl.uint(128));
+    expect(preorderName2.result).toBeErr(Cl.uint(127));
   });
 
   it("This should fail to preorder a name if hash is malformed", () => {
@@ -7308,7 +7308,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-OWNER-IS-THE-SAME
-    expect(registerName2.result).toBeErr(Cl.uint(134));
+    expect(registerName2.result).toBeErr(Cl.uint(133));
   });
 
   it("This should fail to register a name if name was preordered before my preorder and registered by the principal of the first preorder", () => {
@@ -7458,7 +7458,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-PREORDERED-BEFORE
-    expect(registerName2.result).toBeErr(Cl.uint(136));
+    expect(registerName2.result).toBeErr(Cl.uint(135));
   });
 
   it("This should fail to register a name if name was fast claimed before my preorder", () => {
@@ -7598,7 +7598,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-FAST-MINTED-BEFORE
-    expect(registerName2.result).toBeErr(Cl.uint(135));
+    expect(registerName2.result).toBeErr(Cl.uint(134));
   });
 
   it("This should fail to register a name if name was preordered before namespace launch", () => {
@@ -7710,7 +7710,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH
-    expect(registerName.result).toBeErr(Cl.uint(129));
+    expect(registerName.result).toBeErr(Cl.uint(128));
   });
 
   it("This should fail to register a name if TTL has passed", () => {
@@ -8349,7 +8349,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAME-PREORDER-ALREADY-EXISTS
-    expect(preorderName2.result).toBeErr(Cl.uint(128));
+    expect(preorderName2.result).toBeErr(Cl.uint(127));
   });
 
   it("This should fail to preorder a name if a preorder for the same name and namespace exists even if it was made from the name-preorder function", () => {
@@ -8456,7 +8456,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAME-PREORDER-ALREADY-EXISTS
-    expect(preorderName2.result).toBeErr(Cl.uint(128));
+    expect(preorderName2.result).toBeErr(Cl.uint(127));
   });
 
   it("This should fail to preorder a name if hash is malformed", () => {
@@ -8974,7 +8974,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NO-NAMESPACE-MANAGER
-    expect(registerName.result).toBeErr(Cl.uint(133));
+    expect(registerName.result).toBeErr(Cl.uint(132));
   });
 
   it("This should fail to register a name if no name-preorder", () => {
@@ -9464,7 +9464,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH
-    expect(registerName.result).toBeErr(Cl.uint(129));
+    expect(registerName.result).toBeErr(Cl.uint(128));
   });
 
   it("This should fail to register a name if TTL has passed", () => {
@@ -9705,7 +9705,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-REVOKED
-    expect(updateZoneName.result).toBeErr(Cl.uint(126));
+    expect(updateZoneName.result).toBeErr(Cl.uint(125));
   });
 
   it("This should fail to update the zonefile hash of a name in an unmanaged namespace when the tx-sender is not the owner", () => {
@@ -10018,7 +10018,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-HAS-MANAGER
-    expect(renewName.result).toBeErr(Cl.uint(130));
+    expect(renewName.result).toBeErr(Cl.uint(129));
   });
 
   it("This should fail to renew a name if the namespace is not launched", () => {
@@ -10379,6 +10379,6 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-REVOKED
-    expect(renewName.result).toBeErr(Cl.uint(126));
+    expect(renewName.result).toBeErr(Cl.uint(125));
   });
 });
