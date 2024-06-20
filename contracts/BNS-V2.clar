@@ -3,42 +3,17 @@
 ;; summary: Updated BNS contract, handles the creation of new namespaces and new names on each namespace
 ;; description:
 
-;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;
-;;;;;; traits ;;;;;
-;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; Import SIP-09 NFT trait 
+
+;; traits
+;; (new) Import SIP-09 NFT trait 
 (impl-trait .sip-09.nft-trait)
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; Import a custom commission trait for handling commissions for NFT marketplaces functions
+;; (new) Import a custom commission trait for handling commissions for NFT marketplaces functions
 (use-trait commission-trait .commission-trait.commission)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; Token Definition ;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; Define the non-fungible token (NFT) called BNS-V2 with unique identifiers as unsigned integers
+;; token definition
+;; (new) Define the non-fungible token (NFT) called BNS-V2 with unique identifiers as unsigned integers
 (define-non-fungible-token BNS-V2 uint)
-
-;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; Constants ;;;;;
-;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;
-
 ;; Time-to-live (TTL) constants for namespace preorders and name preorders, and the duration for name grace period.
 ;; The TTL for namespace and names preorders. (1 day)
 (define-constant PREORDER-CLAIMABILITY-TTL u144) 
@@ -46,15 +21,8 @@
 (define-constant NAMESPACE-LAUNCHABILITY-TTL u52595) 
 ;; The grace period duration for name renewals post-expiration. (34 days)
 (define-constant NAME-GRACE-PERIOD-DURATION u5000) 
-;; The length of the hash should match this
+;; (new) The length of the hash should match this
 (define-constant HASH160LEN u20)
-
-;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;
-;; Price tables ;;
-;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;
-
 ;; Defines the price tiers for namespaces based on their lengths.
 (define-constant NAMESPACE-PRICE-TIERS (list
     u640000000000
@@ -63,12 +31,7 @@
     u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000)
 )
 
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-;;;; Errors ;;;;
-;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;
-
+;; errors
 (define-constant ERR-UNWRAP (err u101))
 (define-constant ERR-NOT-AUTHORIZED (err u102))
 (define-constant ERR-NOT-LISTED (err u103))
@@ -107,50 +70,23 @@
 (define-constant ERR-BURN-UPDATES-FAILED (err u137))
 (define-constant ERR-IMPORTED-BEFORE (err u138))
 
-;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; Variables ;;;;;
-;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; Counter to keep track of the last minted NFT ID, ensuring unique identifiers
+;; variables
+;; (new) Counter to keep track of the last minted NFT ID, ensuring unique identifiers
 (define-data-var bns-index uint u0)
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; Variable to store the token URI, allowing for metadata association with the NFT
+;; (new) Variable to store the token URI, allowing for metadata association with the NFT
 (define-data-var token-uri (string-ascii 246) "")
 
-;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;
-;;;;;; Maps ;;;;;
-;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; Map to track market listings, associating NFT IDs with price and commission details
+;; maps
+;; (new) Map to track market listings, associating NFT IDs with price and commission details
 (define-map market uint {price: uint, commission: principal})
 
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; Define a map to link NFT IDs to their respective names and namespaces.
+;; (new) Define a map to link NFT IDs to their respective names and namespaces.
 (define-map index-to-name uint 
     {
         name: (buff 48), namespace: (buff 20)
     } 
 )
-
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; Define a map to link names and namespaces to their respective NFT IDs.
+;; (new) Define a map to link names and namespaces to their respective NFT IDs.
 (define-map name-to-index 
     {
         name: (buff 48), namespace: (buff 20)
@@ -158,10 +94,7 @@
     uint
 )
 
-;;;;;;;;;;;;;
-;; Updated ;;
-;;;;;;;;;;;;;
-;; Contains detailed properties of names, including registration and importation times, revocation status, and zonefile hash.
+;; (updated) Contains detailed properties of names, including registration and importation times, revocation status, and zonefile hash.
 (define-map name-properties
     { name: (buff 48), namespace: (buff 20) }
     {
@@ -180,10 +113,7 @@
     }
 )
 
-;;;;;;;;;;;;;
-;; Updated ;;
-;;;;;;;;;;;;;
-;; Stores properties of namespaces, including their import principals, reveal and launch times, and pricing functions.
+;; (update) Stores properties of namespaces, including their import principals, reveal and launch times, and pricing functions.
 (define-map namespaces (buff 20)
     { 
         namespace-manager: (optional principal),
@@ -236,16 +166,95 @@
 ;; Maps principal to the count of names they own
 (define-map owner-bns-balance principal uint)
 
-;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;
-;;;;;; Public ;;;;;
-;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;
+;; read-only
+;; @desc (new) SIP-09 compliant function to get the last minted token's ID
+(define-read-only (get-last-token-id)
+    ;; Returns the current value of bns-index variable, which tracks the last token ID
+    (ok (var-get bns-index))
+)
 
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; @desc SIP-09 compliant function to transfer a token from one owner to another
+;; @desc (new) SIP-09 compliant function to get token URI
+(define-read-only (get-token-uri (id uint))
+    ;; Returns a predefined set URI for the token metadata
+    (ok (some (var-get token-uri)))
+)
+
+;; @desc (new) SIP-09 compliant function to get the owner of a specific token by its ID
+(define-read-only (get-owner (id uint))
+    ;; Check and return the owner of the specified NFT
+    (ok (nft-get-owner? BNS-V2 id))
+)
+
+;; Read-only function `get-namespace-price` calculates the registration price for a namespace based on its length.
+;; @params:
+    ;; namespace (buff 20): The namespace for which the price is being calculated.
+(define-read-only (get-namespace-price (namespace (buff 20)))
+    (let 
+        (
+            ;; Calculate the length of the namespace.
+            (namespace-len (len namespace))
+        )
+        ;; Ensure the namespace is not blank, its length is greater than 0.
+        (asserts! (> namespace-len u0) ERR-NAMESPACE-BLANK)
+        ;; Retrieve the price for the namespace based on its length from the NAMESPACE-PRICE-TIERS list.
+        ;; The price tier is determined by the minimum of 7 or the namespace length minus one.
+        (ok (unwrap! (element-at NAMESPACE-PRICE-TIERS (min u7 (- namespace-len u1))) ERR-UNWRAP))
+    )
+)
+
+;; Read-only function `can-namespace-be-registered` checks if a namespace is available for registration.
+;; @params:
+    ;; namespace (buff 20): The namespace being checked for availability.
+(define-read-only (can-namespace-be-registered (namespace (buff 20)))
+    ;; Returns the result of `is-namespace-available` directly, indicating if the namespace can be registered.
+    (ok (is-namespace-available namespace))
+)
+
+;; Read-only function `get-namespace-properties` for retrieving properties of a specific namespace.
+;; @params:
+    ;; namespace (buff 20): The namespace whose properties are being queried.
+(define-read-only (get-namespace-properties (namespace (buff 20)))
+    (let 
+        (
+            ;; Fetch the properties of the specified namespace from the `namespaces` map.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+        )
+        ;; Returns the namespace along with its associated properties.
+        (ok { namespace: namespace, properties: namespace-props })
+    )
+)
+
+;; Read only function to get name properties
+(define-read-only (get-bns-info (name (buff 48)) (namespace (buff 20)))
+    (map-get? name-properties {name: name, namespace: namespace})
+)
+
+;; (new) Defines a read-only function to fetch the unique ID of a BNS name given its name and the namespace it belongs to.
+(define-read-only (get-id-from-bns (name (buff 48)) (namespace (buff 20))) 
+    ;; Attempts to retrieve the ID from the 'name-to-index' map using the provided name and namespace as the key.
+    (map-get? name-to-index {name: name, namespace: namespace})
+)
+
+;; (new) Defines a read-only function to fetch the unique ID of a BNS name given its name and the namespace it belongs to.
+(define-read-only (get-bns-from-id (id uint)) 
+    ;; Attempts to retrieve the ID from the 'name-to-index' map using the provided name and namespace as the key.
+    (map-get? index-to-name id)
+)
+
+;; (new) Fetcher for primary name
+(define-read-only (get-primary-name (owner principal))
+    (map-get? primary-name owner)
+)
+
+;; Gets the balance of names for a principal
+(define-read-only (get-balance (account principal))
+    ;; Return balance or 0 if not found
+    (default-to u0 (map-get? owner-bns-balance account)) 
+)
+
+
+;; public functions
+;; @desc (new) SIP-09 compliant function to transfer a token from one owner to another
 ;; @param id: the id of the nft being transferred, owner: the principal of the owner of the nft being transferred, recipient: the principal the nft is being transferred to
 (define-public (transfer (id uint) (owner principal) (recipient principal))
     (let 
@@ -306,10 +315,7 @@
     )
 )
 
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; @desc Function to list an NFT for sale
+;; @desc (new) Function to list an NFT for sale
 ;; @param id: the ID of the NFT in question, price: the price being listed, comm-trait: a principal that conforms to the commission-trait
 (define-public (list-in-ustx (id uint) (price uint) (comm-trait <commission-trait>))
     (let
@@ -357,10 +363,7 @@
     )
 )
 
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; @desc Function to remove an NFT listing from the market
+;; @desc (new) Function to remove an NFT listing from the market
 ;; @param id: the ID of the NFT in question, price: the price being listed, comm-trait: a principal that conforms to the commission-trait
 (define-public (unlist-in-ustx (id uint))
     (let
@@ -393,10 +396,7 @@
     )
 )
 
-;;;;;;;;;
-;; New ;;
-;;;;;;;;;
-;; @desc Function to buy an NFT listed for sale, transferring ownership and handling commission
+;; @desc (new) Function to buy an NFT listed for sale, transferring ownership and handling commission
 ;; @param id: the ID of the NFT in question, comm-trait: a principal that conforms to the commission-trait for royalty split
 (define-public (buy-in-ustx (id uint) (comm-trait <commission-trait>))
     (let
@@ -421,7 +421,7 @@
     )
 )
 
-;; Sets the primary name for the caller to a specific BNS name they own.
+;; (new) Sets the primary name for the caller to a specific BNS name they own.
 (define-public (set-primary-name (primary-name-id uint))
     (let 
         (
@@ -443,7 +443,7 @@
     )
 )
 
-;; Defines a public function to burn an NFT, identified by its unique ID, under managed namespace authority.
+;; (new) Defines a public function to burn an NFT, identified by its unique ID, under managed namespace authority.
 (define-public (mng-burn (id uint)) 
     (let 
         (
@@ -478,7 +478,7 @@
     )
 )
 
-;; This function transfers the management role of a specific namespace to a new principal.
+;; (new) This function transfers the management role of a specific namespace to a new principal.
 (define-public (mng-manager-transfer (new-manager principal) (namespace (buff 20)))
     (let 
         (
@@ -672,7 +672,7 @@
     )
 )
 
-;; Switch function for manager-transaferable
+;; (new) Switch function for manager-transaferable (callable only once)
 (define-public (turn-off-manager-transfers (namespace (buff 20)))
     (let 
         (
@@ -817,8 +817,8 @@
     )
 )
 
-;; NEW FAST MINT
-;; A 'fast' one-block registration function: (name-claim-fast)
+;; (new) A 'fast' one-block registration function: (name-claim-fast)
+;; Warning: this *is* snipeable, for a slower but un-snipeable claim, use the pre-order & register functions
 (define-public (name-claim-fast (name (buff 48)) (namespace (buff 20)) (zonefile-hash (buff 20)) (stx-burn uint) (send-to principal)) 
     (let 
         (
@@ -1052,9 +1052,8 @@
     )
 )
 
-;; Defines a public function called `mng-name-preorder`.
-;; This function is similar to `name-preorder` but only for namespace managers, without the burning of STX tokens.
-;; This function is intended only for managers, but in reality anyone can call this, but the mng-name-register and name-register will validate everything
+;; (new) This function is similar to `name-preorder` but only for namespace managers, without the burning of STX tokens.
+;; This function is intended only for managers as mng-name-register & name-register will validate
 (define-public (mng-name-preorder (hashed-salted-fqn (buff 20)))
     (let 
         (
@@ -1090,8 +1089,7 @@
     )
 )
 
-;; Defines a public function `name-register` that finalizes the registration of a BNS name.
-;; This function uses provided details to verify the preorder, register the name, and assign it initial properties.
+;; (new) This function uses provided details to verify the preorder, register the name, and assign it initial properties.
 ;; This should only allow Managers from MANAGED namespaces to register names
 (define-public (mng-name-register (namespace (buff 20)) (name (buff 48)) (salt (buff 20)) (zonefile-hash (buff 20)) (send-to principal))
     (let 
@@ -1386,103 +1384,7 @@
     )
 )
 
-;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;
-;;;;; Read Only ;;;;
-;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;
-
-;; @desc SIP-09 compliant function to get the last minted token's ID
-(define-read-only (get-last-token-id)
-    ;; Returns the current value of bns-index variable, which tracks the last token ID
-    (ok (var-get bns-index))
-)
-
-;; @desc SIP-09 compliant function to get token URI
-(define-read-only (get-token-uri (id uint))
-    ;; Returns a predefined set URI for the token metadata
-    (ok (some (var-get token-uri)))
-)
-
-;; @desc SIP-09 compliant function to get the owner of a specific token by its ID
-(define-read-only (get-owner (id uint))
-    ;; Check and return the owner of the specified NFT
-    (ok (nft-get-owner? BNS-V2 id))
-)
-
-;; Read-only function `get-namespace-price` calculates the registration price for a namespace based on its length.
-;; @params:
-    ;; namespace (buff 20): The namespace for which the price is being calculated.
-(define-read-only (get-namespace-price (namespace (buff 20)))
-    (let 
-        (
-            ;; Calculate the length of the namespace.
-            (namespace-len (len namespace))
-        )
-        ;; Ensure the namespace is not blank, its length is greater than 0.
-        (asserts! (> namespace-len u0) ERR-NAMESPACE-BLANK)
-        ;; Retrieve the price for the namespace based on its length from the NAMESPACE-PRICE-TIERS list.
-        ;; The price tier is determined by the minimum of 7 or the namespace length minus one.
-        (ok (unwrap! (element-at NAMESPACE-PRICE-TIERS (min u7 (- namespace-len u1))) ERR-UNWRAP))
-    )
-)
-
-;; Read-only function `can-namespace-be-registered` checks if a namespace is available for registration.
-;; @params:
-    ;; namespace (buff 20): The namespace being checked for availability.
-(define-read-only (can-namespace-be-registered (namespace (buff 20)))
-    ;; Returns the result of `is-namespace-available` directly, indicating if the namespace can be registered.
-    (ok (is-namespace-available namespace))
-)
-
-;; Read-only function `get-namespace-properties` for retrieving properties of a specific namespace.
-;; @params:
-    ;; namespace (buff 20): The namespace whose properties are being queried.
-(define-read-only (get-namespace-properties (namespace (buff 20)))
-    (let 
-        (
-            ;; Fetch the properties of the specified namespace from the `namespaces` map.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-        )
-        ;; Returns the namespace along with its associated properties.
-        (ok { namespace: namespace, properties: namespace-props })
-    )
-)
-
-;; Read only function to get name properties
-(define-read-only (get-bns-info (name (buff 48)) (namespace (buff 20)))
-    (map-get? name-properties {name: name, namespace: namespace})
-)
-
-;; Defines a read-only function to fetch the unique ID of a BNS name given its name and the namespace it belongs to.
-(define-read-only (get-id-from-bns (name (buff 48)) (namespace (buff 20))) 
-    ;; Attempts to retrieve the ID from the 'name-to-index' map using the provided name and namespace as the key.
-    (map-get? name-to-index {name: name, namespace: namespace})
-)
-
-;; Defines a read-only function to fetch the unique ID of a BNS name given its name and the namespace it belongs to.
-(define-read-only (get-bns-from-id (id uint)) 
-    ;; Attempts to retrieve the ID from the 'name-to-index' map using the provided name and namespace as the key.
-    (map-get? index-to-name id)
-)
-
-;; Fetcher for primary name
-(define-read-only (get-primary-name (owner principal))
-    (map-get? primary-name owner)
-)
-
-;; Define read-only function to get the balance of names for a principal
-(define-read-only (get-balance (account principal))
-    ;; Return balance or 0 if not found
-    (default-to u0 (map-get? owner-bns-balance account)) 
-)
-
-;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;
-;;;;; Private ;;;;
-;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;
-
+;; private functions
 ;; Define private function to transfer ownership of a name
 ;; This function removes the name from the sender and adds the name to the recipient, in both cases primary name update is handled accordingly
 (define-private (transfer-ownership-updates (id uint) (sender principal) (recipient principal))
@@ -1599,8 +1501,7 @@
     )
 )
 
-;; Define private function to burn a name.
-;; This function updates the primary name and linked list by calling `remove-name-from-principal-updates`.
+;; (new) This function updates the primary name and linked list by calling `remove-name-from-principal-updates`.
 ;; It also deletes the name from all relevant maps.
 (define-private (burn-name-updates (id uint))
     (let
