@@ -1,6 +1,7 @@
 
 **/settings/Mainnet.toml
 **/settings/Testnet.toml
+**/.DS_Store
 .cache/**
 history.txt
 
