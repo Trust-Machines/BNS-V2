@@ -178,7 +178,7 @@ const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
   // Launch the namespace
   const launchNamespace = simnet.callPublicFn(
     "BNS-V2",
-    "namespace-ready",
+    "namespace-launch",
     // 1. Only passing the namespace as argument
     [Cl.buffer(namespaceBuff)],
     // Called by the import address assigned in the namespace-reveal function
@@ -334,7 +334,7 @@ const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
   // Launch the namespace
   const launchNamespace = simnet.callPublicFn(
     "BNS-V2",
-    "namespace-ready",
+    "namespace-launch",
     // 1. Only passing the namespace as argument
     [Cl.buffer(namespaceBuff)],
     // Called by the import address assigned in the namespace-reveal function
@@ -488,7 +488,7 @@ const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
   // Launch the namespace
   const launchNamespace = simnet.callPublicFn(
     "BNS-V2",
-    "namespace-ready",
+    "namespace-launch",
     // 1. Only passing the namespace as argument
     [Cl.buffer(namespaceBuff)],
     // Called by the import address assigned in the namespace-reveal function
@@ -615,7 +615,7 @@ const successfullyFastClaimANameInAManagedNamespace = () => {
   // Launch the namespace
   const launchNamespace = simnet.callPublicFn(
     "BNS-V2",
-    "namespace-ready",
+    "namespace-launch",
     // 1. Only passing the namespace as argument
     [Cl.buffer(namespaceBuff)],
     // Called by the import address assigned in the namespace-reveal function
@@ -910,7 +910,7 @@ describe("TRANSFER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -1740,10 +1740,10 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
     );
     expect(revealNamespace.result).toBeOk(Cl.bool(true));
 
-    // Call the namespace-ready function from the BNS-V2 contract
+    // Call the namespace-launch function from the BNS-V2 contract
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // Pass the namespace in Uint8Array Format
       [Cl.buffer(namespaceBuff)],
       address1
@@ -1867,10 +1867,10 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
     );
     expect(revealNamespace.result).toBeOk(Cl.bool(true));
 
-    // Call the namespace-ready function from the BNS-V2 contract
+    // Call the namespace-launch function from the BNS-V2 contract
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // Pass the namespace in Uint8Array Format
       [Cl.buffer(namespaceBuff)],
       address1
@@ -3245,7 +3245,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-describe("NAMESPACE-READY FUNCTION", () => {
+describe("namespace-launch FUNCTION", () => {
   it("This should successfully launch a Namespace without a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3316,7 +3316,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -3396,7 +3396,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -3410,7 +3410,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -3490,7 +3490,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by a different address than the import address assigned in the namespace-reveal function
@@ -3570,7 +3570,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -3582,7 +3582,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
     // Launch the namespace
     const launchNamespace2 = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -3665,7 +3665,7 @@ describe("NAMESPACE-READY FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -4046,7 +4046,7 @@ describe("NAME-IMPORT FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -4175,13 +4175,13 @@ describe("NAME-IMPORT FUNCTION", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
+describe("namespace-update-price FUNCTION", () => {
   it("This should successfully update the price in a namespace", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Update the price
     const updatePriceNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-update-function-price",
+      "namespace-update-price",
       // Pass all the arguments for updating the price of the namespace
       [
         // 1. The namespace
@@ -4223,7 +4223,7 @@ describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
     // Update the price
     const updatePriceNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-update-function-price",
+      "namespace-update-price",
       // Pass all the arguments for updating the price of the namespace
       [
         // 1. The namespace
@@ -4266,7 +4266,7 @@ describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
     // Update the price
     const updatePriceNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-update-function-price",
+      "namespace-update-price",
       // Pass all the arguments for updating the price of the namespace
       [
         // 1. The namespace
@@ -4309,7 +4309,7 @@ describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
     // Update the can-update-price-function
     const updatePriceFunctionNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-revoke-function-price-edition",
+      "namespace-revoke-price-edition",
       // 1. namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Call from the import address of the namespace
@@ -4321,7 +4321,7 @@ describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
     // Update the price
     const updatePriceNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-update-function-price",
+      "namespace-update-price",
       // Pass all the arguments for updating the price of the namespace
       [
         // 1. The namespace
@@ -4361,13 +4361,13 @@ describe("NAMESPACE-UPDATE-FUNCTION-PRICE FUNCTION", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-describe("NAMESPACE-REVOKE-FUNCTION-PRICE-EDITION FUNCTION", () => {
+describe("namespace-revoke-price-edition FUNCTION", () => {
   it("This should successfully update the can-update-price-function of a namespace", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Update the can-update-price-function
     const updatePriceFunctionNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-revoke-function-price-edition",
+      "namespace-revoke-price-edition",
       // 1. namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Call from the import address of the namespace
@@ -4381,7 +4381,7 @@ describe("NAMESPACE-REVOKE-FUNCTION-PRICE-EDITION FUNCTION", () => {
     // Update the can-update-price-function
     const updatePriceFunctionNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-revoke-function-price-edition",
+      "namespace-revoke-price-edition",
       // 1. namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Call from the import address of the namespace
@@ -4396,7 +4396,7 @@ describe("NAMESPACE-REVOKE-FUNCTION-PRICE-EDITION FUNCTION", () => {
     // Update the can-update-price-function
     const updatePriceFunctionNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-revoke-function-price-edition",
+      "namespace-revoke-price-edition",
       // 1. namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Call from a different address than the import address
@@ -4479,7 +4479,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -4582,7 +4582,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -4685,7 +4685,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -4811,7 +4811,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -4961,7 +4961,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -5087,7 +5087,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -5190,7 +5190,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -5293,7 +5293,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -5396,7 +5396,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -5502,7 +5502,7 @@ describe("NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -5596,7 +5596,7 @@ describe("NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -5707,7 +5707,7 @@ describe("NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -5800,7 +5800,7 @@ describe("NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -5908,7 +5908,7 @@ describe("NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -6015,7 +6015,7 @@ describe("NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -6109,7 +6109,7 @@ describe("NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -6203,7 +6203,7 @@ describe("NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -6300,7 +6300,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -6417,7 +6417,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -6546,7 +6546,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -6698,7 +6698,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -6836,7 +6836,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -6990,7 +6990,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -7128,7 +7128,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -7243,7 +7243,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -7381,7 +7381,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -7531,7 +7531,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -7682,7 +7682,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -7783,7 +7783,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -7901,7 +7901,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -8021,7 +8021,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -8114,7 +8114,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -8207,7 +8207,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -8316,7 +8316,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -8422,7 +8422,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -8529,7 +8529,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -8625,7 +8625,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -8741,7 +8741,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -8931,7 +8931,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -9047,7 +9047,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -9150,7 +9150,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -9266,7 +9266,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -9434,7 +9434,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -9537,7 +9537,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
@@ -10203,7 +10203,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     // Launch the namespace
     const launchNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-ready",
+      "namespace-launch",
       // 1. Only passing the namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Called by the import address assigned in the namespace-reveal function
