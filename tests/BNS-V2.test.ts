@@ -93,6 +93,9 @@ const zonefileBuff = encoder.encode("zonefile");
 const zonefile2Buff = encoder.encode("zonefile2");
 const namespaceBuff = encoder.encode("namespacetest");
 
+console.log("namespaceBuff", namespaceBuff);
+console.log("name1Buff", name1Buff);
+
 // Hash 160 the Names with the namespace and salt
 const name1BuffSalt = createHash160Name(
   encoder.encode("name1"),
@@ -100,6 +103,8 @@ const name1BuffSalt = createHash160Name(
   namespaceBuff,
   saltBuff
 );
+console.log("name1BuffSalt", name1BuffSalt);
+console.log("saltBuff", saltBuff);
 
 const name2BuffSalt = createHash160Name(
   encoder.encode("name2"),
@@ -168,6 +173,12 @@ const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
       Cl.principal(address1),
       // 11. Manager address: in this case is none to not have a manager
       Cl.none(),
+      // 12. can update price
+      Cl.bool(true),
+      // 13. manager transfers
+      Cl.bool(false),
+      // 14. manager frozen
+      Cl.bool(true),
     ],
     // Called by the address that made the preorder of the namespace
     address1
@@ -222,7 +233,7 @@ const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
     address1
   );
   // This should give ok true since it should be successful
-  expect(registerName.result).toBeOk(Cl.bool(true));
+  expect(registerName.result).toBeOk(Cl.uint(1));
 };
 
 const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace = () => {
@@ -261,7 +272,7 @@ const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace = () => {
     address1
   );
   // This should give ok true since it should be successful
-  expect(registerName.result).toBeOk(Cl.bool(true));
+  expect(registerName.result).toBeOk(Cl.uint(2));
 };
 
 const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
@@ -324,6 +335,12 @@ const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
       Cl.principal(address1),
       // 11. Manager address: in this the managerAddress
       Cl.some(Cl.principal(managerAddress)),
+      // 12. can update price
+      Cl.bool(false),
+      // 13. manager transfers
+      Cl.bool(true),
+      // 14. manager frozen
+      Cl.bool(false),
     ],
     // Called by the address that made the preorder of the namespace
     address1
@@ -377,7 +394,7 @@ const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
     managerAddress
   );
   // This should give ok true since it should be successful
-  expect(registerName.result).toBeOk(Cl.bool(true));
+  expect(registerName.result).toBeOk(Cl.uint(1));
 };
 
 const successfullyTwoStepRegisterASecondNameInAManagedNamespace = () => {
@@ -415,7 +432,7 @@ const successfullyTwoStepRegisterASecondNameInAManagedNamespace = () => {
     managerAddress
   );
   // This should give ok true since it should be successful
-  expect(registerName.result).toBeOk(Cl.bool(true));
+  expect(registerName.result).toBeOk(Cl.uint(2));
 };
 
 const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
@@ -478,6 +495,12 @@ const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
       Cl.principal(address1),
       // 11. Manager address: in this case is none to not have a manager
       Cl.none(),
+      // 12. can update price
+      Cl.bool(true),
+      // 13. manager transfers
+      Cl.bool(false),
+      // 14. manager frozen
+      Cl.bool(true),
     ],
     // Called by the address that made the preorder of the namespace
     address1
@@ -518,7 +541,7 @@ const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
     address1
   );
   // This should give ok true since it should be successful
-  expect(fastClaimName.result).toBeOk(Cl.bool(true));
+  expect(fastClaimName.result).toBeOk(Cl.uint(1));
 };
 const successfullyFastClaimASecondNameInAnUnmanagedNamespace = () => {
   // Fast claim the name
@@ -542,7 +565,7 @@ const successfullyFastClaimASecondNameInAnUnmanagedNamespace = () => {
     address1
   );
   // This should give ok true since it should be successful
-  expect(fastClaimName.result).toBeOk(Cl.bool(true));
+  expect(fastClaimName.result).toBeOk(Cl.uint(2));
 };
 
 const successfullyFastClaimANameInAManagedNamespace = () => {
@@ -573,7 +596,6 @@ const successfullyFastClaimANameInAManagedNamespace = () => {
       Cl.buffer(namespaceBuff),
       // 2. The salt used to hash160 the namespace with
       Cl.buffer(saltBuff),
-
       // 4. Price base
       Cl.uint(1),
       // 5. Price coeff
@@ -605,6 +627,12 @@ const successfullyFastClaimANameInAManagedNamespace = () => {
       Cl.principal(address1),
       // 11. Manager address: in this the managerAddress
       Cl.some(Cl.principal(managerAddress)),
+      // 12. can update price
+      Cl.bool(false),
+      // 13. manager transfers
+      Cl.bool(true),
+      // 14. manager frozen
+      Cl.bool(false),
     ],
     // Called by the address that made the preorder of the namespace
     address1
@@ -645,7 +673,7 @@ const successfullyFastClaimANameInAManagedNamespace = () => {
     managerAddress
   );
   // This should give ok true since it should be successful
-  expect(fastClaimName.result).toBeOk(Cl.bool(true));
+  expect(fastClaimName.result).toBeOk(Cl.uint(1));
 };
 
 const successfullyFastClaimASecondNameInAManagedNamespace = () => {
@@ -670,7 +698,7 @@ const successfullyFastClaimASecondNameInAManagedNamespace = () => {
     managerAddress
   );
   // This should give ok true since it should be successful
-  expect(fastClaimName.result).toBeOk(Cl.bool(true));
+  expect(fastClaimName.result).toBeOk(Cl.uint(2));
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -695,9 +723,23 @@ describe("TRANSFER FUNCTION", () => {
     expect(transferName.result).toBeOk(Cl.bool(true));
   });
 
-  it("This should successfully transfer a 2 step registered name in a managed namespace", () => {
+  it("This should successfully transfer a 2 step registered name in a managed namespace that does not allow manager transfers", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAManagedNamespace();
+
+    // Turn off manager transfers
+    const turnOffManagerTransfers = simnet.callPublicFn(
+      "BNS-V2",
+      "turn-off-manager-transfers",
+      // Passing 1 argument:
+      // 1. namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the managerAddress
+      managerAddress
+    );
+    // This should give ok true since it should be successful
+    expect(turnOffManagerTransfers.result).toBeOk(Cl.bool(true));
+
     // Transfer the name
     const transferName = simnet.callPublicFn(
       "BNS-V2",
@@ -707,8 +749,8 @@ describe("TRANSFER FUNCTION", () => {
       // 2. the owner,
       // 3. the recipient
       [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
-      // Called by the managerAddress
-      managerAddress
+      // Called by the owner
+      address1
     );
     // This should give ok true since it should be successful
     expect(transferName.result).toBeOk(Cl.bool(true));
@@ -737,12 +779,25 @@ describe("TRANSFER FUNCTION", () => {
     expect(transferName.result).toBeOk(Cl.bool(true));
   });
 
-  it("This should successfully transfer a fast claimed name in a managed namespace", () => {
+  it("This should successfully transfer a fast claimed name in a managed namespace that does not allow manager transfers", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
 
     // Mine an empty block to
     simnet.mineEmptyBlock();
+
+    // Turn off manager transfers
+    const turnOffManagerTransfers = simnet.callPublicFn(
+      "BNS-V2",
+      "turn-off-manager-transfers",
+      // Passing 1 argument:
+      // 1. namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the managerAddress
+      managerAddress
+    );
+    // This should give ok true since it should be successful
+    expect(turnOffManagerTransfers.result).toBeOk(Cl.bool(true));
 
     // Transfer the name
     const transferName = simnet.callPublicFn(
@@ -753,8 +808,8 @@ describe("TRANSFER FUNCTION", () => {
       // 2. the owner,
       // 3. the recipient
       [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
-      // Called by the managerAddress
-      managerAddress
+      // Called by the owner
+      address1
     );
     // This should give ok true since it should be successful
     expect(transferName.result).toBeOk(Cl.bool(true));
@@ -797,166 +852,25 @@ describe("TRANSFER FUNCTION", () => {
     expect(transferName.result).toBeErr(Cl.uint(116));
   });
 
-  it("This should fail to transfer a fast claimed name in a managed namespace when trying to transfer before the block time has passed", () => {
-    // Fast Claim a name
-    successfullyFastClaimANameInAManagedNamespace();
-
-    // Transfer the name
-    const transferName = simnet.callPublicFn(
-      "BNS-V2",
-      "transfer",
-      // Passing 3 arguments:
-      // 1. the id of the name,
-      // 2. the owner,
-      // 3. the recipient
-      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
-      // Called by the managerAddress
-      managerAddress
-    );
-    // This should give err
-    expect(transferName.result).toBeErr(Cl.uint(116));
-  });
-
-  it("This should fail to transfer a name in a managed namespace when the contract-caller is not the namespace manager", () => {
+  it("This should fail to transfer a name in a managed namespace when the contract-caller is the namespace manager but manager transfers are off", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
 
     // Mine an empty block
     simnet.mineEmptyBlock();
 
-    // Transfer the name
-    const transferName = simnet.callPublicFn(
-      "BNS-V2",
-      "transfer",
-      // Passing 3 arguments:
-      // 1. the id of the name,
-      // 2. the owner,
-      // 3. the recipient
-      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
-      // Called by address1 which should not be authorized to perform this even if it is the owner
-      address1
-    );
-    // This should give err 102 which is ERR-NOT-AUTHORIZED
-    expect(transferName.result).toBeErr(Cl.uint(102));
-  });
-
-  it("This should fail to transfer a name in a managed namespace when the contract-caller is the namespace manager but transfers are not allowed on the namespace", () => {
-    // Preorder the Namespace
-    const preorderNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Passing 2 arguments:
-      // 1. the namespace + salt with hash160
-      // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
-
-    // Reveal the namespace
-    simnet.mineEmptyBlock();
-
-    // Reveal the namespace
-    const revealNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-reveal",
-      // Pass all the arguments for the revealing of the name
-      [
-        // 1. The namespace
-        Cl.buffer(namespaceBuff),
-        // 2. The salt used to hash160 the namespace with
-        Cl.buffer(saltBuff),
-
-        // 4. Price base
-        Cl.uint(1),
-        // 5. Price coeff
-        Cl.uint(1),
-        // 6. Price buckets
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        // 7. The non alpha discount
-        Cl.uint(1),
-        // 8. The no vowel discount
-        Cl.uint(1),
-        // 9. Lifetime of the namespace names
-        Cl.uint(5000),
-        // 10. Import address
-        Cl.principal(address1),
-        // 11. Manager address: in this the managerAddress
-        Cl.some(Cl.principal(managerAddress)),
-      ],
-      // Called by the address that made the preorder of the namespace
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(revealNamespace.result).toBeOk(Cl.bool(true));
-
-    // Launch the namespace
-    const launchNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-launch",
-      // 1. Only passing the namespace as argument
-      [Cl.buffer(namespaceBuff)],
-      // Called by the import address assigned in the namespace-reveal function
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(launchNamespace.result).toBeOk(Cl.bool(true));
-
-    // Fast claim the name
-    const fastClaimName = simnet.callPublicFn(
-      "BNS-V2",
-      "name-claim-fast",
-      // Passing 5 arguments:
-      // 1. the name
-      // 2. the namespace
-      // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
-      [
-        Cl.buffer(name1Buff),
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
-        Cl.principal(address1),
-      ],
-      // Called by the manager address
-      managerAddress
-    );
-    // This should give ok true since it should be successful
-    expect(fastClaimName.result).toBeOk(Cl.bool(true));
-
-    const switchTransfers = simnet.callPublicFn(
+    // Turn off manager transfers
+    const turnOffManagerTransfers = simnet.callPublicFn(
       "BNS-V2",
       "turn-off-manager-transfers",
       // Passing 1 argument:
-      // 1. the namespace
-
+      // 1. namespace
       [Cl.buffer(namespaceBuff)],
-      // Called by the manager address
+      // Called by the managerAddress
       managerAddress
     );
     // This should give ok true since it should be successful
-    expect(switchTransfers.result).toBeOk(Cl.bool(true));
-
-    // Mine an empty block
-    simnet.mineEmptyBlock();
+    expect(turnOffManagerTransfers.result).toBeOk(Cl.bool(true));
 
     // Transfer the name
     const transferName = simnet.callPublicFn(
@@ -967,7 +881,7 @@ describe("TRANSFER FUNCTION", () => {
       // 2. the owner,
       // 3. the recipient
       [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
-      // Called by managerAddress
+      // Called by manager address
       managerAddress
     );
     // This should give err 102 which is ERR-NOT-AUTHORIZED
@@ -1046,6 +960,200 @@ describe("TRANSFER FUNCTION", () => {
     expect(transferName.result).toBeErr(Cl.uint(105));
   });
 
+  it("This should fail to transfer a name in a managed namespace when manager transfers are on even if the contract-caller is the manager", () => {
+    // Fast Claim a name
+    successfullyFastClaimANameInAManagedNamespace();
+
+    // Mine an empty block
+    simnet.mineEmptyBlock();
+
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by the manager address
+      managerAddress
+    );
+    // This should give err 102 which is ERR-NOT-AUTHORIZED
+    expect(transferName.result).toBeErr(Cl.uint(102));
+  });
+  it("This should fail to transfer a name in a managed namespace when manager transfers are on even if the tx-sender is the owner", () => {
+    // Fast Claim a name
+    successfullyFastClaimANameInAManagedNamespace();
+
+    // Mine an empty block
+    simnet.mineEmptyBlock();
+
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by the owner
+      address1
+    );
+    // This should give err 102 which is ERR-NOT-AUTHORIZED
+    expect(transferName.result).toBeErr(Cl.uint(102));
+  });
+});
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+describe("MNG-TRANSFER FUNCTION", () => {
+  it("This should fail to transfer a 2 step registered name in an unmanaged namespace even if the tx-sender is the owner", () => {
+    // Register a name
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by the address that is the owner
+      address1
+    );
+    // This should give err 102
+    expect(transferName.result).toBeErr(Cl.uint(102));
+  });
+
+  it("This should successfully transfer a 2 step registered name in a managed namespace that does allow manager transfers when contract-caller is manager", () => {
+    // Register a name
+    successfullyTwoStepRegisterANameInAManagedNamespace();
+
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by the manager
+      managerAddress
+    );
+    // This should give ok true since it should be successful
+    expect(transferName.result).toBeOk(Cl.bool(true));
+  });
+
+  it("This should fail to transfer a fast claimed name in an unmanaged namespace even if the block time has passed", () => {
+    // Fast Claim a name
+    successfullyFastClaimANameInAnUnmanagedNamespace();
+
+    // Mine an empty block
+    simnet.mineEmptyBlock();
+
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by the address that is the owner
+      address1
+    );
+    // This should give err 102
+    expect(transferName.result).toBeErr(Cl.uint(102));
+  });
+
+  it("This should successfully transfer a fast claimed name in a managed namespace that does allow manager transfers and contract-caller is manager", () => {
+    // Fast Claim a name
+    successfullyFastClaimANameInAManagedNamespace();
+
+    // Mine an empty block to
+    simnet.mineEmptyBlock();
+
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by the manager
+      managerAddress
+    );
+    // This should give ok true since it should be successful
+    expect(transferName.result).toBeOk(Cl.bool(true));
+  });
+
+  it("This should fail to transfer a name that doesn't exist", () => {
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by the managerAddress
+      managerAddress
+    );
+    // This should give err 107 which is ERR-NO-NAME
+    expect(transferName.result).toBeErr(Cl.uint(107));
+  });
+
+  it("This should fail to transfer a fast claimed name in an unmanaged namespace when trying to transfer before the block time has passed", () => {
+    // Fast Claim a name
+    successfullyFastClaimANameInAnUnmanagedNamespace();
+
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by the address that is the owner
+      address1
+    );
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(116));
+  });
+
+  it("This should fail to transfer a name in a managed namespace when the tx-sender is the owner but manager transfers are on", () => {
+    // Fast Claim a name
+    successfullyFastClaimANameInAManagedNamespace();
+
+    // Mine an empty block
+    simnet.mineEmptyBlock();
+
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by owner
+      address1
+    );
+    // This should give err 102 which is ERR-NOT-AUTHORIZED
+    expect(transferName.result).toBeErr(Cl.uint(102));
+  });
+
   it("This should fail to transfer a name in a managed namespace when the name is listed in a market", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
@@ -1066,7 +1174,7 @@ describe("TRANSFER FUNCTION", () => {
         Cl.uint(10000),
         Cl.contractPrincipal(commTraitAddress, commTraitName),
       ],
-      // Called by the the manager address
+      // Called by the manager
       managerAddress
     );
     // This should give ok and the tuple containing the information of the listing
@@ -1082,7 +1190,43 @@ describe("TRANSFER FUNCTION", () => {
     // Transfer the name
     const transferName = simnet.callPublicFn(
       "BNS-V2",
-      "transfer",
+      "mng-transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by the manager
+      managerAddress
+    );
+    // This should give err 105 which is ERR-LISTED
+    expect(transferName.result).toBeErr(Cl.uint(105));
+  });
+
+  it("This should fail to transfer a name in a managed namespace when manager transfers are off even if the contract-caller is the manager", () => {
+    // Fast Claim a name
+    successfullyFastClaimANameInAManagedNamespace();
+
+    // Mine an empty block
+    simnet.mineEmptyBlock();
+
+    // Turn off manager transfers
+    const turnOffManagerTransfers = simnet.callPublicFn(
+      "BNS-V2",
+      "turn-off-manager-transfers",
+      // Passing 1 argument:
+      // 1. namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the managerAddress
+      managerAddress
+    );
+    // This should give ok true since it should be successful
+    expect(turnOffManagerTransfers.result).toBeOk(Cl.bool(true));
+
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-transfer",
       // Passing 3 arguments:
       // 1. the id of the name,
       // 2. the owner,
@@ -1091,8 +1235,43 @@ describe("TRANSFER FUNCTION", () => {
       // Called by the manager address
       managerAddress
     );
-    // This should give err 105 which is ERR-LISTED
-    expect(transferName.result).toBeErr(Cl.uint(105));
+    // This should give err 102 which is ERR-NOT-AUTHORIZED
+    expect(transferName.result).toBeErr(Cl.uint(102));
+  });
+  it("This should fail to transfer a name in a managed namespace when manager transfers are off even if the tx-sender is the owner", () => {
+    // Fast Claim a name
+    successfullyFastClaimANameInAManagedNamespace();
+
+    // Mine an empty block
+    simnet.mineEmptyBlock();
+
+    // Turn off manager transfers
+    const turnOffManagerTransfers = simnet.callPublicFn(
+      "BNS-V2",
+      "turn-off-manager-transfers",
+      // Passing 1 argument:
+      // 1. namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the managerAddress
+      managerAddress
+    );
+    // This should give ok true since it should be successful
+    expect(turnOffManagerTransfers.result).toBeOk(Cl.bool(true));
+
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by the owner
+      address1
+    );
+    // This should give err 102 which is ERR-NOT-AUTHORIZED
+    expect(transferName.result).toBeErr(Cl.uint(102));
   });
 });
 
@@ -1735,6 +1914,12 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
         Cl.principal(address1),
         // Manager address
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       address1
     );
@@ -1768,7 +1953,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       ],
       address1
     );
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
     simnet.mineEmptyBlock();
     simnet.mineEmptyBlock();
 
@@ -1862,6 +2047,12 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
         Cl.principal(address1),
         // Manager address
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       address1
     );
@@ -1895,7 +2086,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       ],
       managerAddress
     );
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
     simnet.mineEmptyBlock();
     simnet.mineEmptyBlock();
 
@@ -2319,22 +2510,6 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
     expect(changePrimaryName.result).toBeErr(Cl.uint(107));
   });
 
-  it("This should fail to change the primary name of an address, if the tx-sender doesn't own names", () => {
-    successfullyFastClaimANameInAManagedNamespace();
-
-    // Change the primary name
-    const changePrimaryName = simnet.callPublicFn(
-      "BNS-V2",
-      "set-primary-name",
-      // 1. the id of the name to set as primary name
-      [Cl.uint(1)],
-      // Called by a non-owner address
-      address2
-    );
-    // This returns err ERR-NO-BNS-NAMES-OWNED
-    expect(changePrimaryName.result).toBeErr(Cl.uint(131));
-  });
-
   it("This should fail to change the primary name of an address, if the tx-sender is not the owner of the name", () => {
     successfullyFastClaimANameInAManagedNamespace();
     // Fast claim the name
@@ -2358,7 +2533,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       managerAddress
     );
     // This should give ok true since it should be successful
-    expect(fastClaimName.result).toBeOk(Cl.bool(true));
+    expect(fastClaimName.result).toBeOk(Cl.uint(2));
 
     // Change the primary name
     const changePrimaryName = simnet.callPublicFn(
@@ -2385,8 +2560,8 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       // Called by a non-owner address
       address1
     );
-    // This returns err ERR-ALREADY-PRIMARY-NAME
-    expect(changePrimaryName.result).toBeErr(Cl.uint(106));
+    // This returns ok
+    expect(changePrimaryName.result).toBeOk(Cl.bool(true));
   });
 });
 
@@ -2615,7 +2790,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
     expect(preorderNamespace2.result).toBeOk(Cl.uint(291));
   });
 
-  it("should fail to preorder the same Namespace from the same sender", () => {
+  it("should allow to preorder the same Namespace from the same sender", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
       "BNS-V2",
@@ -2641,8 +2816,8 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Called by the same address that created the first order, in this case address1
       address1
     );
-    // This should give err ERR-PREORDER-ALREADY-EXISTS
-    expect(preorderNamespace2.result).toBeErr(Cl.uint(108));
+    // This should give ok
+    expect(preorderNamespace2.result).toBeOk(Cl.uint(147));
   });
 
   it("should allow to preorder the same Namespace from a different sender", () => {
@@ -2786,6 +2961,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -2854,6 +3035,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -2908,6 +3095,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -2976,6 +3169,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -3044,6 +3243,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -3096,6 +3301,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -3164,6 +3375,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -3235,6 +3452,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -3306,6 +3529,12 @@ describe("namespace-launch FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -3386,6 +3615,12 @@ describe("namespace-launch FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -3480,6 +3715,12 @@ describe("namespace-launch FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -3560,6 +3801,12 @@ describe("namespace-launch FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -3652,6 +3899,12 @@ describe("namespace-launch FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -3738,6 +3991,12 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -3854,6 +4113,12 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -3945,6 +4210,12 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -4036,6 +4307,12 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -4139,6 +4416,12 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -4469,6 +4752,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -4509,7 +4798,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       address1
     );
     // This should give ok true since it should be successful
-    expect(fastClaimName.result).toBeOk(Cl.bool(true));
+    expect(fastClaimName.result).toBeOk(Cl.uint(1));
   });
 
   it("This should successfully fast mint a name on a launched namespace with a manager", () => {
@@ -4572,6 +4861,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -4612,7 +4907,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       managerAddress
     );
     // This should give ok true since it should be successful
-    expect(fastClaimName.result).toBeOk(Cl.bool(true));
+    expect(fastClaimName.result).toBeOk(Cl.uint(1));
   });
 
   it("This should successfully fast mint a name on a launched namespace without a manager", () => {
@@ -4675,6 +4970,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -4715,7 +5016,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       address1
     );
     // This should give ok true since it should be successful
-    expect(fastClaimName.result).toBeOk(Cl.bool(true));
+    expect(fastClaimName.result).toBeOk(Cl.uint(1));
 
     // Fast claim the name
     const fastClaimName2 = simnet.callPublicFn(
@@ -4738,7 +5039,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       address1
     );
     // This should give ok true since it should be successful
-    expect(fastClaimName2.result).toBeOk(Cl.bool(true));
+    expect(fastClaimName2.result).toBeOk(Cl.uint(2));
   });
 
   it("This should successfully fast mint two names on a launched namespace with a manager", () => {
@@ -4801,6 +5102,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -4841,7 +5148,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       managerAddress
     );
     // This should give ok true since it should be successful
-    expect(fastClaimName.result).toBeOk(Cl.bool(true));
+    expect(fastClaimName.result).toBeOk(Cl.uint(1));
     // Fast claim the name
     const fastClaimName2 = simnet.callPublicFn(
       "BNS-V2",
@@ -4863,7 +5170,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       managerAddress
     );
     // This should give ok true since it should be successful
-    expect(fastClaimName2.result).toBeOk(Cl.bool(true));
+    expect(fastClaimName2.result).toBeOk(Cl.uint(2));
   });
 
   it("This should fail to fast mint name on a namespace that doesn't exist", () => {
@@ -4951,6 +5258,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -4991,7 +5304,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       managerAddress
     );
     // This should give ok true since it should be successful
-    expect(fastClaimName.result).toBeOk(Cl.bool(true));
+    expect(fastClaimName.result).toBeOk(Cl.uint(1));
 
     // Fast claim the name
     const fastClaimName2 = simnet.callPublicFn(
@@ -5077,6 +5390,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -5180,6 +5499,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -5283,6 +5608,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -5386,6 +5717,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -5492,6 +5829,12 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -5524,117 +5867,6 @@ describe("NAME-PREORDER FUNCTION", () => {
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(150));
-  });
-
-  it("This should successfully preorder a name on a launched namespace without a manager if the previous preorder has expired", () => {
-    // Preorder the Namespace
-    const preorderNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Passing 2 arguments:
-      // 1. the namespace + salt with hash160
-      // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
-
-    // Reveal the namespace
-    simnet.mineEmptyBlock();
-
-    // Reveal the namespace
-    const revealNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-reveal",
-      // Pass all the arguments for the revealing of the name
-      [
-        // 1. The namespace
-        Cl.buffer(namespaceBuff),
-        // 2. The salt used to hash160 the namespace with
-        Cl.buffer(saltBuff),
-
-        // 4. Price base
-        Cl.uint(1),
-        // 5. Price coeff
-        Cl.uint(1),
-        // 6. Price buckets
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        // 7. The non alpha discount
-        Cl.uint(1),
-        // 8. The no vowel discount
-        Cl.uint(1),
-        // 9. Lifetime of the namespace names
-        Cl.uint(5000),
-        // 10. Import address
-        Cl.principal(address1),
-        // 11. Manager address: in this case is none to not have a manager
-        Cl.none(),
-      ],
-      // Called by the address that made the preorder of the namespace
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(revealNamespace.result).toBeOk(Cl.bool(true));
-
-    // Launch the namespace
-    const launchNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-launch",
-      // 1. Only passing the namespace as argument
-      [Cl.buffer(namespaceBuff)],
-      // Called by the import address assigned in the namespace-reveal function
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(launchNamespace.result).toBeOk(Cl.bool(true));
-
-    // Preorder the name
-    const preorderName = simnet.callPublicFn(
-      "BNS-V2",
-      "name-preorder",
-      // Passing 2 arguments:
-      // 1. the name + salt with hash160
-      // 2. the amount of STX to burn for the name since it is unmanaged
-      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
-
-    // Mine blocks for order to expire
-    simnet.mineEmptyBlocks(145);
-
-    // Preorder the name
-    const preorderName2 = simnet.callPublicFn(
-      "BNS-V2",
-      "name-preorder",
-      // Passing 2 arguments:
-      // 1. the name + salt with hash160
-      // 2. the amount of STX to burn for the name since it is unmanaged
-      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should return 295, the current blockheight 151 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(296));
   });
 
   it("This should successfully preorder a name on a launched namespace with a manager even though this is not the intended use", () => {
@@ -5697,6 +5929,12 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -5728,221 +5966,6 @@ describe("NAME-PREORDER FUNCTION", () => {
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(150));
-  });
-
-  it("This should fail to preorder a name if a preorder for the same name and namespace exists", () => {
-    // Preorder the Namespace
-    const preorderNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Passing 2 arguments:
-      // 1. the namespace + salt with hash160
-      // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
-
-    // Reveal the namespace
-    simnet.mineEmptyBlock();
-
-    // Reveal the namespace
-    const revealNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-reveal",
-      // Pass all the arguments for the revealing of the name
-      [
-        // 1. The namespace
-        Cl.buffer(namespaceBuff),
-        // 2. The salt used to hash160 the namespace with
-        Cl.buffer(saltBuff),
-
-        // 4. Price base
-        Cl.uint(1),
-        // 5. Price coeff
-        Cl.uint(1),
-        // 6. Price buckets
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        // 7. The non alpha discount
-        Cl.uint(1),
-        // 8. The no vowel discount
-        Cl.uint(1),
-        // 9. Lifetime of the namespace names
-        Cl.uint(5000),
-        // 10. Import address
-        Cl.principal(address1),
-        // 11. Manager address: in this case is none to not have a manager
-        Cl.none(),
-      ],
-      // Called by the address that made the preorder of the namespace
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(revealNamespace.result).toBeOk(Cl.bool(true));
-
-    // Launch the namespace
-    const launchNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-launch",
-      // 1. Only passing the namespace as argument
-      [Cl.buffer(namespaceBuff)],
-      // Called by the import address assigned in the namespace-reveal function
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(launchNamespace.result).toBeOk(Cl.bool(true));
-
-    // Preorder the name
-    const preorderName = simnet.callPublicFn(
-      "BNS-V2",
-      "name-preorder",
-      // Passing 2 arguments:
-      // 1. the name + salt with hash160
-      // 2. the amount of STX to burn for the name since it is unmanaged
-      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
-
-    // Preorder the name
-    const preorderName2 = simnet.callPublicFn(
-      "BNS-V2",
-      "name-preorder",
-      // Passing 2 arguments:
-      // 1. the name + salt with hash160
-      // 2. the amount of STX to burn for the name since it is unmanaged
-      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // Return err ERR-NAME-PREORDER-ALREADY-EXISTS
-    expect(preorderName2.result).toBeErr(Cl.uint(127));
-  });
-
-  it("This should fail to preorder a name if a preorder for the same name and namespace exists even if it was made from the mng-name-preorder function", () => {
-    // Preorder the Namespace
-    const preorderNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Passing 2 arguments:
-      // 1. the namespace + salt with hash160
-      // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
-
-    // Reveal the namespace
-    simnet.mineEmptyBlock();
-
-    // Reveal the namespace
-    const revealNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-reveal",
-      // Pass all the arguments for the revealing of the name
-      [
-        // 1. The namespace
-        Cl.buffer(namespaceBuff),
-        // 2. The salt used to hash160 the namespace with
-        Cl.buffer(saltBuff),
-
-        // 4. Price base
-        Cl.uint(1),
-        // 5. Price coeff
-        Cl.uint(1),
-        // 6. Price buckets
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        // 7. The non alpha discount
-        Cl.uint(1),
-        // 8. The no vowel discount
-        Cl.uint(1),
-        // 9. Lifetime of the namespace names
-        Cl.uint(5000),
-        // 10. Import address
-        Cl.principal(address1),
-        // 11. Manager address: in this case is none to not have a manager
-        Cl.none(),
-      ],
-      // Called by the address that made the preorder of the namespace
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(revealNamespace.result).toBeOk(Cl.bool(true));
-
-    // Launch the namespace
-    const launchNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-launch",
-      // 1. Only passing the namespace as argument
-      [Cl.buffer(namespaceBuff)],
-      // Called by the import address assigned in the namespace-reveal function
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(launchNamespace.result).toBeOk(Cl.bool(true));
-
-    // Preorder the name
-    const preorderName = simnet.callPublicFn(
-      "BNS-V2",
-      "mng-name-preorder",
-      // Passing 1 argument:
-      // 1. the name + salt with hash160
-      [Cl.buffer(name1BuffSalt)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
-
-    // Preorder the name
-    const preorderName2 = simnet.callPublicFn(
-      "BNS-V2",
-      "name-preorder",
-      // Passing 2 arguments:
-      // 1. the name + salt with hash160
-      // 2. the amount of STX to burn for the name since it is unmanaged
-      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // Return err ERR-NAME-PREORDER-ALREADY-EXISTS
-    expect(preorderName2.result).toBeErr(Cl.uint(127));
   });
 
   it("This should fail to preorder a name if hash is malformed", () => {
@@ -6005,6 +6028,12 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -6099,6 +6128,12 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -6193,6 +6228,12 @@ describe("NAME-PREORDER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -6290,6 +6331,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -6344,7 +6391,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should give ok true since it should be successful
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
   });
 
   it("This should succesfully register a name on an unmanaged namespace even if someone preordered it after me", () => {
@@ -6407,6 +6454,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -6473,7 +6526,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should give ok true since it should be successful
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
   });
 
   it("This should succesfully register a name on an unmanaged namespace even if someone preordered it after me and registered before me", () => {
@@ -6536,6 +6589,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -6604,7 +6663,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address2
     );
     // This should give ok true since it should be successful
-    expect(registerSameName.result).toBeOk(Cl.bool(true));
+    expect(registerSameName.result).toBeOk(Cl.uint(1));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -6625,7 +6684,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should give ok true since it should be successful
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
   });
 
   it("This should succesfully register a name on an unmanaged namespace even if someone fastclaimed it after I made the preorder", () => {
@@ -6688,6 +6747,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -6742,7 +6807,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address2
     );
     // This should give ok true since it should be successful
-    expect(fastClaimName.result).toBeOk(Cl.bool(true));
+    expect(fastClaimName.result).toBeOk(Cl.uint(1));
 
     // Register the name
     const registerName = simnet.callPublicFn(
@@ -6763,7 +6828,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should give ok true since it should be successful
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
   });
 
   it("This should succesfully register 2 different names", () => {
@@ -6826,6 +6891,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -6880,7 +6951,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should give ok true since it should be successful
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -6917,7 +6988,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should give ok true since it should be successful
-    expect(registerName2.result).toBeOk(Cl.bool(true));
+    expect(registerName2.result).toBeOk(Cl.uint(2));
   });
 
   it("This should fail to register a name if no name-preorder", () => {
@@ -6980,6 +7051,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -7118,6 +7195,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -7233,6 +7316,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -7287,7 +7376,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // This should give ok true since it should be successful
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -7307,8 +7396,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Called by the address that preordered the name
       address1
     );
-    // Return err ERR-OWNER-IS-THE-SAME
-    expect(registerName2.result).toBeErr(Cl.uint(133));
+    // Return err
+    expect(registerName2.result).toBeErr(Cl.uint(116));
   });
 
   it("This should fail to register a name if name was preordered before my preorder and registered by the principal of the first preorder", () => {
@@ -7371,6 +7460,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -7437,7 +7532,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address2
     );
     // This should give ok true since it should be successful
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
 
     // Register the name
     const registerName2 = simnet.callPublicFn(
@@ -7521,6 +7616,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -7561,7 +7662,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address2
     );
     // This should give ok true since it should be successful
-    expect(fastClaimName.result).toBeOk(Cl.bool(true));
+    expect(fastClaimName.result).toBeOk(Cl.uint(1));
 
     // Preorder the name
     const preorderName = simnet.callPublicFn(
@@ -7661,6 +7762,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -7773,6 +7880,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -7891,6 +8004,12 @@ describe("NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -8011,6 +8130,12 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -8104,6 +8229,12 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -8135,328 +8266,6 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
     );
     // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
     expect(preorderName.result).toBeOk(Cl.uint(150));
-  });
-
-  it("This should successfully preorder a name on a launched namespace with a manager, where the previous preorder has expired", () => {
-    // Preorder the Namespace
-    const preorderNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Passing 2 arguments:
-      // 1. the namespace + salt with hash160
-      // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
-
-    // Reveal the namespace
-    simnet.mineEmptyBlock();
-
-    // Reveal the namespace
-    const revealNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-reveal",
-      // Pass all the arguments for the revealing of the name
-      [
-        // 1. The namespace
-        Cl.buffer(namespaceBuff),
-        // 2. The salt used to hash160 the namespace with
-        Cl.buffer(saltBuff),
-
-        // 4. Price base
-        Cl.uint(1),
-        // 5. Price coeff
-        Cl.uint(1),
-        // 6. Price buckets
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        // 7. The non alpha discount
-        Cl.uint(1),
-        // 8. The no vowel discount
-        Cl.uint(1),
-        // 9. Lifetime of the namespace names
-        Cl.uint(5000),
-        // 10. Import address
-        Cl.principal(address1),
-        // 11. Manager address: in this the managerAddress
-        Cl.some(Cl.principal(managerAddress)),
-      ],
-      // Called by the address that made the preorder of the namespace
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(revealNamespace.result).toBeOk(Cl.bool(true));
-
-    // Launch the namespace
-    const launchNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-launch",
-      // 1. Only passing the namespace as argument
-      [Cl.buffer(namespaceBuff)],
-      // Called by the import address assigned in the namespace-reveal function
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(launchNamespace.result).toBeOk(Cl.bool(true));
-
-    // Preorder the name
-    const preorderName = simnet.callPublicFn(
-      "BNS-V2",
-      "mng-name-preorder",
-      // Passing 1 argument:
-      // 1. the name + salt with hash160
-      [Cl.buffer(name1BuffSalt)],
-      // Called by the managerAddress
-      managerAddress
-    );
-    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
-
-    // Mine blocks to pass ttl
-    simnet.mineEmptyBlocks(144);
-
-    // Preorder the name
-    const preorderName2 = simnet.callPublicFn(
-      "BNS-V2",
-      "mng-name-preorder",
-      // Passing 1 argument:
-      // 1. the name + salt with hash160
-      [Cl.buffer(name1BuffSalt)],
-      // Called by the managerAddress
-      managerAddress
-    );
-    // This should return 294, the current blockheight 150 plus the TTL 144 of the name preorder
-    expect(preorderName2.result).toBeOk(Cl.uint(295));
-  });
-
-  it("This should fail to preorder a name if a preorder for the same name and namespace exists and the ttl has not passed", () => {
-    // Preorder the Namespace
-    const preorderNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Passing 2 arguments:
-      // 1. the namespace + salt with hash160
-      // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
-
-    // Reveal the namespace
-    simnet.mineEmptyBlock();
-
-    // Reveal the namespace
-    const revealNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-reveal",
-      // Pass all the arguments for the revealing of the name
-      [
-        // 1. The namespace
-        Cl.buffer(namespaceBuff),
-        // 2. The salt used to hash160 the namespace with
-        Cl.buffer(saltBuff),
-
-        // 4. Price base
-        Cl.uint(1),
-        // 5. Price coeff
-        Cl.uint(1),
-        // 6. Price buckets
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        // 7. The non alpha discount
-        Cl.uint(1),
-        // 8. The no vowel discount
-        Cl.uint(1),
-        // 9. Lifetime of the namespace names
-        Cl.uint(5000),
-        // 10. Import address
-        Cl.principal(address1),
-        // 11. Manager address: in this the managerAddress
-        Cl.some(Cl.principal(managerAddress)),
-      ],
-      // Called by the address that made the preorder of the namespace
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(revealNamespace.result).toBeOk(Cl.bool(true));
-
-    // Launch the namespace
-    const launchNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-launch",
-      // 1. Only passing the namespace as argument
-      [Cl.buffer(namespaceBuff)],
-      // Called by the import address assigned in the namespace-reveal function
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(launchNamespace.result).toBeOk(Cl.bool(true));
-
-    // Preorder the name
-    const preorderName = simnet.callPublicFn(
-      "BNS-V2",
-      "mng-name-preorder",
-      // Passing 1 argument:
-      // 1. the name + salt with hash160
-      [Cl.buffer(name1BuffSalt)],
-      // Called by the managerAddress
-      managerAddress
-    );
-    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
-
-    // Preorder the name
-    const preorderName2 = simnet.callPublicFn(
-      "BNS-V2",
-      "mng-name-preorder",
-      // Passing 1 argument:
-      // 1. the name + salt with hash160
-      [Cl.buffer(name1BuffSalt)],
-      // Called by the managerAddress
-      managerAddress
-    );
-    // Return err ERR-NAME-PREORDER-ALREADY-EXISTS
-    expect(preorderName2.result).toBeErr(Cl.uint(127));
-  });
-
-  it("This should fail to preorder a name if a preorder for the same name and namespace exists even if it was made from the name-preorder function", () => {
-    // Preorder the Namespace
-    const preorderNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Passing 2 arguments:
-      // 1. the namespace + salt with hash160
-      // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
-
-    // Reveal the namespace
-    simnet.mineEmptyBlock();
-
-    // Reveal the namespace
-    const revealNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-reveal",
-      // Pass all the arguments for the revealing of the name
-      [
-        // 1. The namespace
-        Cl.buffer(namespaceBuff),
-        // 2. The salt used to hash160 the namespace with
-        Cl.buffer(saltBuff),
-
-        // 4. Price base
-        Cl.uint(1),
-        // 5. Price coeff
-        Cl.uint(1),
-        // 6. Price buckets
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        // 7. The non alpha discount
-        Cl.uint(1),
-        // 8. The no vowel discount
-        Cl.uint(1),
-        // 9. Lifetime of the namespace names
-        Cl.uint(5000),
-        // 10. Import address
-        Cl.principal(address1),
-        // 11. Manager address: in this the managerAddress
-        Cl.some(Cl.principal(managerAddress)),
-      ],
-      // Called by the address that made the preorder of the namespace
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(revealNamespace.result).toBeOk(Cl.bool(true));
-
-    // Launch the namespace
-    const launchNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-launch",
-      // 1. Only passing the namespace as argument
-      [Cl.buffer(namespaceBuff)],
-      // Called by the import address assigned in the namespace-reveal function
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(launchNamespace.result).toBeOk(Cl.bool(true));
-
-    // Preorder the name
-    const preorderName = simnet.callPublicFn(
-      "BNS-V2",
-      "name-preorder",
-      // Passing 2 arguments:
-      // 1. the name + salt with hash160
-      // 2. the amount of STX to burn for the name since it is unmanaged
-      [Cl.buffer(name1BuffSalt), Cl.uint(1)],
-      // Called by the manager address
-      managerAddress
-    );
-    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
-    expect(preorderName.result).toBeOk(Cl.uint(150));
-
-    // Preorder the name
-    const preorderName2 = simnet.callPublicFn(
-      "BNS-V2",
-      "mng-name-preorder",
-      // Passing 1 argument:
-      // 1. the name + salt with hash160
-      [Cl.buffer(name1BuffSalt)],
-      // Called by the managerAddress
-      managerAddress
-    );
-    // Return err ERR-NAME-PREORDER-ALREADY-EXISTS
-    expect(preorderName2.result).toBeErr(Cl.uint(127));
   });
 
   it("This should fail to preorder a name if hash is malformed", () => {
@@ -8519,6 +8328,12 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -8615,6 +8430,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -8668,7 +8489,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should give ok true since it should be successful
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
   });
 
   it("This should succesfully register 2 different names in a managed namespace", () => {
@@ -8731,6 +8552,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -8784,7 +8611,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should give ok true since it should be successful
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
 
     // Preorder the name
     const preorderName2 = simnet.callPublicFn(
@@ -8820,7 +8647,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should give ok true since it should be successful
-    expect(registerName2.result).toBeOk(Cl.bool(true));
+    expect(registerName2.result).toBeOk(Cl.uint(2));
   });
 
   it("This should fail to register a name if no namespace", () => {
@@ -8921,6 +8748,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -9037,6 +8870,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -9140,6 +8979,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -9256,6 +9101,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -9309,7 +9160,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // This should give ok true since it should be successful
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
 
     // Mine empty blocks
     simnet.mineEmptyBlocks(144);
@@ -9411,6 +9262,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -9527,6 +9384,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this the managerAddress
         Cl.some(Cl.principal(managerAddress)),
+        // 12. can update price
+        Cl.bool(false),
+        // 13. manager transfers
+        Cl.bool(true),
+        // 14. manager frozen
+        Cl.bool(false),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -9627,8 +9490,8 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
         Cl.buffer(name1Buff),
         Cl.buffer(zonefile2Buff),
       ],
-      // Called from the manager address
-      managerAddress
+      // Called from the owner
+      address1
     );
     // Should return a success response
     expect(updateZoneName.result).toBeOk(Cl.bool(true));
@@ -9730,7 +9593,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     expect(updateZoneName.result).toBeErr(Cl.uint(102));
   });
 
-  it("This should fail to update the zonefile hash of a name in a managed namespace when the contract-caller is not the manager", () => {
+  it("This should fail to update the zonefile hash of a name in a managed namespace when the contract-caller is not the owner", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
     /// Update the zone file
     const updateZoneName = simnet.callPublicFn(
@@ -9745,8 +9608,8 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
         Cl.buffer(name1Buff),
         Cl.buffer(zonefile2Buff),
       ],
-      // Called from a non manager address
-      address1
+      // Called from owner
+      managerAddress
     );
     // Return err ERR-NOT-AUTHORIZED
     expect(updateZoneName.result).toBeErr(Cl.uint(102));
@@ -9772,7 +9635,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
         Cl.buffer(zonefile2Buff),
       ],
       // Called from a non manager address
-      managerAddress
+      address1
     );
     // Return err ERR-OPERATION-UNAUTHORIZED
     expect(updateZoneName.result).toBeErr(Cl.uint(116));
@@ -10081,6 +9944,12 @@ describe("NAME-RENEWAL FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -10193,6 +10062,12 @@ describe("NAME-RENEWAL FUNCTION", () => {
         Cl.principal(address1),
         // 11. Manager address: in this case is none to not have a manager
         Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
       ],
       // Called by the address that made the preorder of the namespace
       address1
@@ -10247,7 +10122,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // This should give ok true since it should be successful
-    expect(registerName.result).toBeOk(Cl.bool(true));
+    expect(registerName.result).toBeOk(Cl.uint(1));
 
     // Renew the name
     const renewName = simnet.callPublicFn(

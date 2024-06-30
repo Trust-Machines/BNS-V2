@@ -29,6 +29,9 @@
     u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000)
 )
 
+;; (new) Constant to store the token URI, allowing for metadata association with the NFT
+(define-constant token-uri "")
+
 ;; errors
 (define-constant ERR-UNWRAP (err u101))
 (define-constant ERR-NOT-AUTHORIZED (err u102))
@@ -71,8 +74,6 @@
 ;; variables
 ;; (new) Counter to keep track of the last minted NFT ID, ensuring unique identifiers
 (define-data-var bns-index uint u0)
-;; (new) Variable to store the token URI, allowing for metadata association with the NFT
-(define-data-var token-uri (string-ascii 246) "")
 
 ;; maps
 ;; (new) Map to track market listings, associating NFT IDs with price and commission details
@@ -102,7 +103,7 @@
         revoked-at: bool,
         zonefile-hash: (optional (buff 20)),
         ;; The fqn used to make the earliest preorder at any given point
-        fully-qualified-name: (optional (buff 20)),
+        hashed-salted-fqn-preorder: (optional (buff 20)),
         ;; Added this field in name-properties to know exactly who has the earliest preorder at any given point
         preordered-by: (optional principal),
         renewal-height: uint,
@@ -116,6 +117,7 @@
     { 
         namespace-manager: (optional principal),
         manager-transferable: bool,
+        manager-frozen: bool,
         namespace-import: principal,
         revealed-at: uint,
         launched-at: (optional uint),
@@ -143,7 +145,7 @@
 ;; Removed the claimed field as it is not necessary
 (define-map name-preorders
     { hashed-salted-fqn: (buff 20), buyer: principal }
-    { created-at: uint, stx-burned: uint}
+    { created-at: uint, stx-burned: uint, claimed: bool}
 )
 
 ;; Defines a map to keep track of the imported names by namespace, so when the namespace is launched we update the renewal time accordingly
@@ -173,7 +175,7 @@
 ;; @desc (new) SIP-09 compliant function to get token URI
 (define-read-only (get-token-uri (id uint))
     ;; Returns a predefined set URI for the token metadata
-    (ok (some (var-get token-uri)))
+    (ok (some token-uri))
 )
 
 ;; @desc (new) SIP-09 compliant function to get the owner of a specific token by its ID
@@ -263,7 +265,7 @@
             (name (get name name-and-namespace))
             ;; Get namespace properties and manager.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            (namespace-manager (get namespace-manager namespace-props))
+            (manager-transfers (get manager-transferable namespace-props))
             ;; Get name properties and owner.
             (name-props (unwrap! (map-get? name-properties name-and-namespace) ERR-NO-NAME))
             (registered-at-value (get registered-at name-props))
@@ -278,25 +280,62 @@
             ;; If it is not registered then continue
             true 
         )
-        ;; Checks if the namespace is managed.
-        (match namespace-manager 
-            manager
-            ;; If the namespace is managed
-            ;; Check if manager transfers are allowed
-            (if (is-eq true (get manager-transferable namespace-props)) 
-                ;; If manager transfers are allowed then check if contract-caller is manager
-                (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
-                ;;If manager transfers are not allowed, then check if tx-sender is the nft-current-owner
-                (asserts! (is-eq tx-sender nft-current-owner) ERR-NOT-AUTHORIZED)
-            )
-            ;; If the namespace does not have a manager
-            ;; Asserts that the tx-sender is the owner.
-            (asserts! (is-eq tx-sender nft-current-owner) ERR-NOT-AUTHORIZED)
-        ) 
+        ;; We only need to check if manager transfers are true or false, if true then they have to do transfers through the manager contract that calls into mng-transfer, if false then they can call into this function
+        (asserts! (not manager-transfers) ERR-NOT-AUTHORIZED)
+        ;; Check tx-sender or contract-caller
+        (asserts! (or (is-eq tx-sender nft-current-owner) (is-eq contract-caller nft-current-owner)) ERR-NOT-AUTHORIZED)
+        ;; Check if in fact the owner is-eq to nft-current-owner
+        (asserts! (is-eq owner nft-current-owner) ERR-NOT-AUTHORIZED)
         ;; Ensures the NFT is not currently listed in the market.
         (asserts! (is-none (map-get? market id)) ERR-LISTED)
         ;; Transfer ownership and update the linked lists and primary names if necessary.
-        (transfer-ownership-updates id owner recipient)
+        (transfer-ownership-updates id nft-current-owner recipient)
+        ;; Update the name properties with the new owner and reset the zonefile hash.
+        (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
+        ;; Execute the NFT transfer.
+        (nft-transfer? BNS-V2 id nft-current-owner recipient)
+    )
+)
+
+;; @desc (new) manager function to be called by managed namespaces that allows manager transfers.
+;; @param id: ID of the NFT being transferred.
+;; @param owner: Principal of the current owner of the NFT.
+;; @param recipient: Principal of the recipient of the NFT.
+(define-public (mng-transfer (id uint) (owner principal) (recipient principal))
+    (let 
+        (
+            ;; Get the name and namespace of the NFT.
+            (name-and-namespace (unwrap! (get-bns-from-id id) ERR-NO-NAME))
+            (namespace (get namespace name-and-namespace))
+            (name (get name name-and-namespace))
+            ;; Get namespace properties and manager.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            (manager-transfers (get manager-transferable namespace-props))
+            (manager (get namespace-manager namespace-props))
+            ;; Get name properties and owner.
+            (name-props (unwrap! (map-get? name-properties name-and-namespace) ERR-NO-NAME))
+            (registered-at-value (get registered-at name-props))
+            (nft-current-owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-NO-NAME))
+        )
+        ;; First check if the name was registered
+        (match registered-at-value
+            is-registered
+            ;; If it was registered, check if registered-at is lower than current blockheight
+            ;; This check works to make sure that if a name is fast-claimed they have to wait 1 block to transfer it
+            (asserts! (< is-registered block-height) ERR-OPERATION-UNAUTHORIZED)
+            ;; If it is not registered then continue
+            true 
+        )
+        ;; We only need to check if manager transfers are true or false, if true then continue, if false then they can call into `transfer` function
+        (asserts! manager-transfers ERR-NOT-AUTHORIZED)
+        ;; Check tx-sender or contract-caller, we unwrap-panic because if manager-transfers is true then there has to be a manager
+        (asserts! (is-eq contract-caller (unwrap-panic manager)) ERR-NOT-AUTHORIZED)
+        ;; Check if in fact the owner is-eq to nft-current-owner
+        (asserts! (is-eq owner nft-current-owner) ERR-NOT-AUTHORIZED)
+        ;; Ensures the NFT is not currently listed in the market.
+        (asserts! (is-none (map-get? market id)) ERR-LISTED)
+        ;; Transfer ownership and update the linked lists and primary names if necessary.
+        (transfer-ownership-updates id nft-current-owner recipient)
         ;; Update the name properties with the new owner and reset the zonefile hash.
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
         ;; Execute the NFT transfer.
@@ -407,17 +446,9 @@
 ;; @desc (new) Sets the primary name for the caller to a specific BNS name they own.
 ;; @param primary-name-id: ID of the name to be set as primary.
 (define-public (set-primary-name (primary-name-id uint))
-    (let 
-        (
-            ;; Retrieve the owner of the specified name ID.
-            (owner (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NO-NAME))
-            ;; Retrieve the current primary name for the tx-sender.
-            (current-primary-name (unwrap! (map-get? primary-name tx-sender) ERR-NO-BNS-NAMES-OWNED))
-        ) 
+    (begin 
         ;; Verify the tx-sender is the owner of the name.
-        (asserts! (is-eq owner tx-sender) ERR-NOT-AUTHORIZED)
-        ;; Ensure the new primary name is different from the current one.
-        (asserts! (not (is-eq primary-name-id current-primary-name)) ERR-ALREADY-PRIMARY-NAME)
+        (asserts! (is-eq (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NO-NAME) tx-sender) ERR-NOT-AUTHORIZED)
         ;; Update the tx-sender's primary name.
         (map-set primary-name tx-sender primary-name-id)
         ;; Return true upon successful execution.
@@ -428,30 +459,18 @@
 ;; @desc (new) Defines a public function to burn an NFT, under managed namespaces.
 ;; @param id: ID of the NFT to be burned.
 (define-public (mng-burn (id uint)) 
-    (let 
-        (
-            ;; Retrieve the name and namespace associated with the NFT.
-            (name-and-namespace (unwrap! (get-bns-from-id id) ERR-NO-NAME))
-            (namespace (get namespace name-and-namespace))
-            ;; Retrieve namespace properties and manager.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
-            ;; Retrieve the current owner of the NFT.
-            (current-name-owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP))
-            ;; Check if it is listed.
-            (is-listed (map-get? market id))
-        ) 
+    (begin 
         ;; Ensure the caller is the current namespace manager.
-        (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
+        (asserts! (is-eq contract-caller (unwrap! (get namespace-manager (unwrap! (map-get? namespaces (get namespace (unwrap! (get-bns-from-id id) ERR-NO-NAME))) ERR-NAMESPACE-NOT-FOUND)) ERR-NO-NAMESPACE-MANAGER)) ERR-NOT-AUTHORIZED)
         ;; Unlist the NFT if it is listed.
-        (match is-listed
+        (match (map-get? market id)
             listed (try! (unlist-in-ustx id))
             {a: "not-listed", id: id}
         )
         ;; Perform the burn updates for maps
         (unwrap! (burn-name-updates id) ERR-BURN-UPDATES-FAILED)
         ;; Executes the burn operation for the specified NFT.
-        (nft-burn? BNS-V2 id current-name-owner)
+        (nft-burn? BNS-V2 id (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP))
     )
 )
 
@@ -463,10 +482,11 @@
         (
             ;; Retrieve namespace properties and current manager.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            (current-namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
         ) 
         ;; Ensure the caller is the current namespace manager.
-        (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
+        (asserts! (is-eq contract-caller (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER)) ERR-NOT-AUTHORIZED)
+        ;; Ensure manager can be changed
+        (asserts! (not (get manager-frozen namespace-props)) ERR-NOT-AUTHORIZED)
         ;; Update the namespace manager to the new manager.
         (ok 
             (map-set namespaces namespace 
@@ -479,29 +499,36 @@
     )
 )
 
+;; @desc (new) freezes the ability to make manager transfers
+;; @param namespace: Buffer of the namespace.
+(define-public (can-not-change-manager (namespace (buff 20)))
+    (let 
+        (
+            ;; Retrieve namespace properties and current manager.
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+        )
+        ;; Ensure the caller is the current namespace manager.
+        (asserts! (is-eq contract-caller (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER)) ERR-NOT-AUTHORIZED)
+        ;; Update the namespace manager to the new manager.
+        (ok 
+            (map-set namespaces namespace 
+                (merge 
+                    namespace-props 
+                    {manager-frozen: true}
+                )
+            )
+        )
+
+    )
+)
+
 ;;;; NAMESPACES
 ;; @desc Public function `namespace-preorder` initiates the registration process for a namespace by sending a transaction with a salted hash of the namespace.
 ;; This transaction burns the registration fee as a commitment.
 ;; @params: hashed-salted-namespace (buff 20): The hashed and salted namespace being preordered.
 ;; @params: stx-to-burn (uint): The amount of STX tokens to be burned as part of the preorder process.
 (define-public (namespace-preorder (hashed-salted-namespace (buff 20)) (stx-to-burn uint))
-    (let 
-        (
-            ;; Check if there's an existing preorder for the same hashed-salted-namespace by the same buyer.
-            (former-preorder (map-get? namespace-preorders { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }))
-        )
-        ;; Verify that any previous preorder by the same buyer has expired.
-        (asserts!
-            ;; Check if there is a former-preorder 
-            (match former-preorder
-                preorder 
-                ;; If a previous preorder exists, check that it has expired based on the PREORDER-CLAIMABILITY-TTL.
-                (>= block-height (+ PREORDER-CLAIMABILITY-TTL (unwrap! (get created-at former-preorder) ERR-PREORDER-ALREADY-EXISTS))) 
-                ;; Proceed if no previous preorder exists.
-                true 
-            ) 
-            ERR-PREORDER-ALREADY-EXISTS
-        )
+    (begin 
         ;; Validate that the hashed-salted-namespace is exactly 20 bytes long.
         (asserts! (is-eq (len hashed-salted-namespace) HASH160LEN) ERR-HASH-MALFORMED)
         ;; Confirm that the STX amount to be burned is positive
@@ -528,7 +555,7 @@
 ;; @param: lifetime (uint): Duration that names within this namespace are valid before needing renewal.
 ;; @param: namespace-import (principal): The principal authorized to import names into this namespace.
 ;; @param: namespace-manager (optional principal): The principal authorized to manage the namespace.
-(define-public (namespace-reveal (namespace (buff 20)) (namespace-salt (buff 20)) (p-func-base uint) (p-func-coeff uint) (p-func-b1 uint) (p-func-b2 uint) (p-func-b3 uint) (p-func-b4 uint) (p-func-b5 uint) (p-func-b6 uint) (p-func-b7 uint) (p-func-b8 uint) (p-func-b9 uint) (p-func-b10 uint) (p-func-b11 uint) (p-func-b12 uint) (p-func-b13 uint) (p-func-b14 uint) (p-func-b15 uint) (p-func-b16 uint) (p-func-non-alpha-discount uint) (p-func-no-vowel-discount uint) (lifetime uint) (namespace-import principal) (namespace-manager (optional principal)))
+(define-public (namespace-reveal (namespace (buff 20)) (namespace-salt (buff 20)) (p-func-base uint) (p-func-coeff uint) (p-func-b1 uint) (p-func-b2 uint) (p-func-b3 uint) (p-func-b4 uint) (p-func-b5 uint) (p-func-b6 uint) (p-func-b7 uint) (p-func-b8 uint) (p-func-b9 uint) (p-func-b10 uint) (p-func-b11 uint) (p-func-b12 uint) (p-func-b13 uint) (p-func-b14 uint) (p-func-b15 uint) (p-func-b16 uint) (p-func-non-alpha-discount uint) (p-func-no-vowel-discount uint) (lifetime uint) (namespace-import principal) (namespace-manager (optional principal)) (can-update-price bool) (manager-transfers bool) (manager-frozen bool))
     (let 
         (
             ;; Generate the hashed, salted namespace identifier to match with its preorder.
@@ -565,12 +592,13 @@
             (map-set namespaces namespace
                 {
                     namespace-manager: namespace-manager,
-                    manager-transferable: true,
+                    manager-transferable: manager-transfers,
+                    manager-frozen: manager-frozen,
                     namespace-import: namespace-import,
                     revealed-at: block-height,
                     launched-at: none,
                     lifetime: u0,
-                    can-update-price-function: false,
+                    can-update-price-function: can-update-price,
                     price-function: price-function 
                 }
             )
@@ -578,12 +606,13 @@
             (map-set namespaces namespace
                 {
                     namespace-manager: none,
-                    manager-transferable: false,
+                    manager-transferable: manager-transfers,
+                    manager-frozen: manager-frozen,
                     namespace-import: namespace-import,
                     revealed-at: block-height,
                     launched-at: none,
                     lifetime: lifetime,
-                    can-update-price-function: true,
+                    can-update-price-function: can-update-price,
                     price-function: price-function 
                 }
             )
@@ -676,7 +705,7 @@
                 imported-at: (some block-height),
                 revoked-at: false,
                 zonefile-hash: (some zonefile-hash),
-                fully-qualified-name: none,
+                hashed-salted-fqn-preorder: none,
                 preordered-by: none,
                 ;; Set to u0, this will be updated when the namespace is launched
                 renewal-height: u0,
@@ -790,8 +819,8 @@
             (asserts! (is-eq contract-caller manager) ERR-NOT-AUTHORIZED)
             ;; If no manager
             (begin 
-                ;; Asserts tx-sender is the send-to
-                (asserts! (is-eq tx-sender send-to) ERR-NOT-AUTHORIZED)
+                ;; Asserts tx-sender or contract-caller is the send-to
+                (asserts! (or (is-eq tx-sender send-to) (is-eq contract-caller send-to)) ERR-NOT-AUTHORIZED)
                 ;; Burns the STX from the user
                 (try! (stx-burn? stx-burn send-to))
                 ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
@@ -811,7 +840,7 @@
                 imported-at: none,
                 revoked-at: false,
                 zonefile-hash: (some zonefile-hash),
-                fully-qualified-name: none,
+                hashed-salted-fqn-preorder: none,
                 preordered-by: none,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 stx-burn: stx-burn,
@@ -832,7 +861,7 @@
             }
         )
         ;; Signals successful completion.
-        (ok true)
+        (ok id-to-be-minted)
     )
 )
 
@@ -841,32 +870,17 @@
 ;; @param: hashed-salted-fqn (buff 20): The hashed and salted fully qualified name.
 ;; @param: stx-to-burn (uint): The amount of STX to burn for the preorder.
 (define-public (name-preorder (hashed-salted-fqn (buff 20)) (stx-to-burn uint))
-    (let 
-        (
-            ;; Retrieve a previous preorder if it exists.
-            (former-preorder (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }))
-        )
-        ;; Checks if there was a previous preorder and if it has expired.
-        (asserts! 
-            (match former-preorder
-                preorder
-                ;; Checks if the current block height is greater than or equal to the creation time of the previous preorder plus the TTL, to see it has expired
-                (>= block-height (+ PREORDER-CLAIMABILITY-TTL (get created-at preorder)))
-                ;; If no previous preorder is found, then true, allowing the process to continue.
-                true
-            )
-            ERR-NAME-PREORDER-ALREADY-EXISTS
-        )
+    (begin 
         ;; Validate the length of the hashed-salted FQN.
         (asserts! (is-eq (len hashed-salted-fqn) HASH160LEN) ERR-HASH-MALFORMED)
         ;; Ensures that the amount of STX specified to burn is greater than zero.
         (asserts! (> stx-to-burn u0) ERR-STX-BURNT-INSUFFICIENT)
-        ;; Burns the specified amount of STX tokens from the tx-sender
-        (try! (stx-burn? stx-to-burn tx-sender))
+        ;; Transfers the specified amount of stx to the BNS contract to burn on register
+        (try! (stx-transfer? stx-to-burn tx-sender .BNS-V2))
         ;; Records the preorder in the 'name-preorders' map.
         (map-set name-preorders
             { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }
-            { created-at: block-height, stx-burned: stx-to-burn}
+            { created-at: block-height, stx-burned: stx-to-burn, claimed: false}
         )
         ;; Returns the block height at which the preorder's claimability period will expire.
         (ok (+ block-height PREORDER-CLAIMABILITY-TTL))
@@ -897,6 +911,8 @@
             ;; Get the height of tx-sender's preorder
             (tx-sender-preorder-height (get created-at preorder))
         )
+        ;; Ensure the preorder has not been claimed before
+        (asserts! (not (get claimed preorder)) ERR-OPERATION-UNAUTHORIZED)
         ;; Ensures that the namespace does not have a manager.
         (asserts! (is-none current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Validates that the preorder was made after the namespace was launched.
@@ -907,40 +923,45 @@
         (asserts! (> block-height (+ (get created-at preorder) u1)) ERR-NAME-NOT-CLAIMABLE-YET)
         ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration.
         (asserts! (>= (get stx-burned preorder) (try! (compute-name-price name (get price-function namespace-props)))) ERR-STX-BURNT-INSUFFICIENT)
-        ;; Check if the name exists or not
+        ;; Update map to claimed for preorder, to avoid people reclaiming stx from an already registered name
+        (map-set name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender } (merge preorder {claimed: true}))
+        ;; Check if the name exists
         (match name-props
             name-props-exist 
-            ;; If it is some, then it exists.. we need to do further checks
+            ;; If the name exists we need to fo further checks
             (begin
-                ;; First check that the current owner is not the tx-sender
-                (asserts! (not (is-eq tx-sender (get owner name-props-exist))) ERR-OWNER-IS-THE-SAME)
-                ;; If the owner and the tx sender are not the same then check if the name was registered
+                ;; Check if the name was registered
                 (match (get registered-at name-props-exist) 
                     registered
-                    ;; If it was registered then check the fully-qualified-name of the name-props to see if it was preordered or fast-minted
-                    (match (get fully-qualified-name name-props-exist) 
+                    ;; If it was registered then check the hashed-salted-fqn-preorder of the name-props to see if it was preordered or fast-minted
+                    (match (get hashed-salted-fqn-preorder name-props-exist) 
                         fqn 
                         ;; If it was preordered we have to compare which one was made first, if the recorded preorder or the tx-sender's
-                        ;; If created-at from the first preorder is bigger than the tx-sender-preorder-height then return true and continue, if it not bigger then return false, indicating that the first preorder happened before
-                        (begin 
-                            (asserts! (> (unwrap-panic (get created-at (map-get? name-preorders {hashed-salted-fqn: fqn, buyer: (unwrap-panic (get preordered-by name-props-exist))}))) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
-                            ;; And also update the map to have the correct preorder used to register the name
-                            ;; Update to the correct fqn and the correct preordered-by principal
-                            (map-set name-properties {name: name, namespace: namespace} (merge name-props-exist {fully-qualified-name: (some hashed-salted-fqn), preordered-by: (some tx-sender)}))
-                        )
+                        ;; If created-at from the first preorder is bigger than the tx-sender-preorder-height then return true and continue, if it is not bigger then return false, indicating that the first preorder happened before
+                        (asserts! (> (unwrap-panic (get created-at (map-get? name-preorders {hashed-salted-fqn: fqn, buyer: (unwrap-panic (get preordered-by name-props-exist))}))) tx-sender-preorder-height) ERR-PREORDERED-BEFORE) 
                         ;; If the name was not preordered it means it was fast minted
                         ;; If it does then compare the 2 heights
-                        (begin 
-                            (asserts! (> registered tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)   
-                            ;; Update to the correct preordered-by principal
-                            (map-set name-properties {name: name, namespace: namespace} (merge name-props-exist {preordered-by: (some tx-sender)}))
-                        )
+                        (asserts! (> registered tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)   
                     )
                     ;; If the name was not registered then it was imported so we need to check agains that
                     (asserts! (> (unwrap-panic (get imported-at (unwrap-panic name-props))) tx-sender-preorder-height) ERR-IMPORTED-BEFORE)
                 )
+                ;; Update to the correct fqn and the correct preordered-by principal
+                (map-set name-properties {name: name, namespace: namespace} (merge name-props-exist {hashed-salted-fqn-preorder: (some hashed-salted-fqn), preordered-by: (some tx-sender)}))
+                ;; if the name exists and we end up getting it then instead of burning, send the stx to the previous owner, because the burn already happened before, so this is like refunding the previous owner
+                (try! (as-contract (stx-transfer? (get stx-burned preorder) .BNS-V2 (get owner name-props-exist))))
                 ;; If any of both scenarios are true then purchase-transfer the name
                 (try! (purchase-transfer (unwrap-panic name-index) (get owner name-props-exist) tx-sender))
+                (print 
+                    {
+                        topic: "new-name",
+                        owner: tx-sender,
+                        name: {name: name, namespace: namespace},
+                        id: (unwrap-panic name-index),
+                    }
+                )
+                ;; Confirms successful registration of the name by returning the ID of the name minted
+                (ok (unwrap-panic name-index))
             ) 
             ;; If it is none then it is not registered then execute all actions required to mint a new name
             (begin
@@ -958,7 +979,7 @@
                         imported-at: none,
                         revoked-at: false,
                         zonefile-hash: (some zonefile-hash),
-                        fully-qualified-name: (some hashed-salted-fqn),
+                        hashed-salted-fqn-preorder: (some hashed-salted-fqn),
                         preordered-by: (some tx-sender),
                         renewal-height: (+ (get lifetime namespace-props) block-height),
                         stx-burn: (get stx-burned preorder),
@@ -975,18 +996,41 @@
                 (add-name-to-principal-updates tx-sender id-to-be-minted)
                 ;; Mints the BNS name as an NFT and assigns it to the tx sender.
                 (try! (nft-mint? BNS-V2 id-to-be-minted tx-sender))
+                ;; If this is the first time the name is being minted then execute the burn
+                (try! (as-contract (stx-burn? u1 .BNS-V2)))
+                (print 
+                    {
+                        topic: "new-name",
+                        owner: tx-sender,
+                        name: {name: name, namespace: namespace},
+                        id: id-to-be-minted,
+                    }
+                )
+                ;; Confirms successful registration of the name by returning the ID of the name minted
+                (ok id-to-be-minted)
             )       
         )
-        ;; Log the new name registration
-        (print 
-            {
-                topic: "new-name",
-                owner: tx-sender,
-                name: {name: name, namespace: namespace},
-                id: id-to-be-minted,
-            }
-        )
-        ;; Confirms successful registration of the name.
+    )
+)
+
+;; @desc (new) Defines a public function `claim-preorder` for claiming back the STX commited to be burnt on registration.
+;; This should only be allowed to go through if preorder-claimability-ttl has passed
+;; @param: hashed-salted-fqn (buff 20): The hashed and salted fully qualified name.
+(define-public (claim-preorder (hashed-salted-fqn (buff 20)))
+    (let
+        (
+            ;; Retrieves the preorder details.
+            (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }) ERR-PREORDER-NOT-FOUND))
+        ) 
+        ;; Verifies the claim is completed after the claimability period.
+        (asserts! (> block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-PREORDER-CLAIMABILITY-EXPIRED)
+        ;; Asserts that the preorder has not been claimed
+        (asserts! (not (get claimed preorder)) ERR-OPERATION-UNAUTHORIZED)
+        ;; Transfers back the specified amount of stx from the BNS contract to the tx-sender
+        (try! (stx-transfer? (get stx-burned preorder) .BNS-v2 tx-sender))
+        ;; Deletes the preorder in the 'name-preorders' map.
+        (map-delete name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender })
+        ;; Returns ok true
         (ok true)
     )
 )
@@ -995,28 +1039,13 @@
 ;; Intended only for managers as mng-name-register & name-register will validate.
 ;; @param: hashed-salted-fqn (buff 20): The hashed and salted fully-qualified name (FQN) being preordered.
 (define-public (mng-name-preorder (hashed-salted-fqn (buff 20)))
-    (let 
-        (
-            ;; Retrieve a previous preorder if it exists, here we use contract-caller instead of tx-sender
-            (former-preorder (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: contract-caller }))
-        )
-        ;; Checks if there was a previous preorder and if it has expired.
-        (asserts! 
-            (match former-preorder
-                preorder
-                ;; This determines if the previous preorder has expired.
-                (>= block-height (+ PREORDER-CLAIMABILITY-TTL (unwrap! (get created-at former-preorder) ERR-UNWRAP)))
-                ;; If no previous preorder is found, then true, allowing the process to continue.
-                true
-            )
-            ERR-NAME-PREORDER-ALREADY-EXISTS
-        )
+    (begin
         ;; Validates that the length of the hashed and salted FQN is exactly 20 bytes.
         (asserts! (is-eq (len hashed-salted-fqn) HASH160LEN) ERR-HASH-MALFORMED)
         ;; Records the preorder in the 'name-preorders' map. Buyer set to contract-caller
         (map-set name-preorders
             { hashed-salted-fqn: hashed-salted-fqn, buyer: contract-caller }
-            { created-at: block-height, stx-burned: u0 }
+            { created-at: block-height, stx-burned: u0, claimed: false }
         )
         ;; Returns the block height at which the preorder's claimability period will expire.
         (ok (+ block-height PREORDER-CLAIMABILITY-TTL))
@@ -1045,6 +1074,8 @@
             ;; Retrieves the index of the name, if it exists, to check for prior registrations.
             (name-index (map-get? name-to-index {name: name, namespace: namespace}))
         )
+        ;; Ensure the preorder has not been claimed before
+        (asserts! (not (get claimed preorder)) ERR-OPERATION-UNAUTHORIZED)
         ;; Ensure the name is not already registered
         (asserts! (map-insert name-to-index {name: name, namespace: namespace} id-to-be-minted) ERR-NAME-NOT-AVAILABLE)
         (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
@@ -1066,7 +1097,7 @@
                 imported-at: none,
                 revoked-at: false,
                 zonefile-hash: (some zonefile-hash),
-                fully-qualified-name: (some hashed-salted-fqn),
+                hashed-salted-fqn-preorder: (some hashed-salted-fqn),
                 preordered-by: (some send-to),
                 renewal-height: (+ (get lifetime namespace-props) block-height),
                 stx-burn: u0,
@@ -1076,6 +1107,8 @@
         ;; Updates BNS-index variable to the newly minted ID.
         (var-set bns-index id-to-be-minted)
         (add-name-to-principal-updates send-to id-to-be-minted)
+        ;; Update map to claimed for preorder, to avoid people reclaiming stx from an already registered name
+        (map-set name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: current-namespace-manager } (merge preorder {claimed: true}))
         ;; Mints the BNS name as an NFT to the send-to address, finalizing the registration.
         (try! (nft-mint? BNS-V2 id-to-be-minted send-to))
         ;; Log the new name registration
@@ -1088,7 +1121,7 @@
             }
         )
         ;; Confirms successful registration of the name.
-        (ok true)
+        (ok id-to-be-minted)
     )
 )
 
@@ -1109,26 +1142,13 @@
             (renewal (get renewal-height name-props))
             (current-zone-file (get zonefile-hash name-props))
             (revoked (get revoked-at name-props))
-            ;; Get namespace props
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            (namespace-manager (get namespace-manager namespace-props))
-            
         )
         ;; Assert we are actually updating the zonefile
         (asserts! (not (is-eq (some zonefile-hash) current-zone-file)) ERR-OPERATION-UNAUTHORIZED)
         ;; Asserts the name has not been revoked.
         (asserts! (not revoked) ERR-NAME-REVOKED)
-        ;; See if the namespace has a manager
-        (asserts! 
-            (match namespace-manager 
-                manager 
-                ;; If it does, then check contract caller is the manager
-                (is-eq contract-caller manager)
-                ;; If not then check that the tx-sender is the owner
-                (is-eq tx-sender owner)
-            ) 
-            ERR-NOT-AUTHORIZED
-        )
+        ;; Check that the tx-sender or contract-caller is the owner
+        (asserts! (or (is-eq tx-sender owner) (is-eq contract-caller owner)) ERR-NOT-AUTHORIZED)
         ;; Assert that the name is in valid time or grace period
         (asserts! (<= block-height (+ renewal NAME-GRACE-PERIOD-DURATION)) ERR-OPERATION-UNAUTHORIZED)
         ;; Update the zonefile hash
@@ -1231,8 +1251,8 @@
             )
 
             ;; If the name is not in grace period then ANYONE can claim the name, including the current owner
-            ;; First check if the tx-sender is the owner            
-            (if (is-eq tx-sender owner)
+            ;; First check if the tx-sender or contract-caller is the owner            
+            (if (or (is-eq tx-sender owner) (is-eq contract-caller owner))
                 ;; If it is true then update the renewal-height to be the current block-height + the lifetime of the namespace
                 (map-set name-properties {name: name, namespace: namespace}
                     (merge 
@@ -1240,7 +1260,7 @@
                         {renewal-height: (+ block-height (get lifetime namespace-props))}
                     )
                 )
-                ;; If the tx-sender is not the owner
+                ;; If the tx-sender or contract-caller is not the owner
                 (begin 
                     ;; First check that it is not listed on the market
                     (match (map-get? market name-index)
@@ -1268,7 +1288,7 @@
         ;; Asserts that the name has not been revoked.
         (asserts! (not (get revoked-at name-props)) ERR-NAME-REVOKED)
         ;; Burns the STX provided
-        (try! (stx-burn? stx-to-burn tx-sender))
+        (try! (stx-burn? stx-to-burn contract-caller))
         ;; Checks if a new zone file hash is specified
         (match zonefile-hash
             zonefile
@@ -1640,7 +1660,6 @@
     )
 )
 
-;; SIP-09 compliant function to transfer a token from one owner to another.
 ;; This function is similar to the 'transfer' function but does not check that the owner is the tx-sender.
 ;; @param id: the id of the nft being transferred.
 ;; @param owner: the principal of the current owner of the nft being transferred.
@@ -1650,28 +1669,15 @@
         (
             ;; Attempts to retrieve the name and namespace associated with the given NFT ID.
             (name-and-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
-            ;; Extracts the namespace part from the retrieved name-and-namespace tuple.
-            (namespace (get namespace name-and-namespace))
-            ;; Extracts the name part from the retrieved name-and-namespace tuple.
-            (name (get name name-and-namespace))
-            ;; Fetches properties of the identified namespace to confirm its existence and retrieve management details.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Extracts the manager of the namespace.
-            (namespace-manager (get namespace-manager namespace-props))
             ;; Retrieves the properties of the name within the namespace.
             (name-props (unwrap! (map-get? name-properties name-and-namespace) ERR-NO-NAME))
-            ;; Gets the registered-at value from the name properties.
-            (registered-at-value (get registered-at name-props))
-            ;; Gets the imported-at value from the name properties.
-            (imported-at-value (get imported-at name-props))
-            ;; Gets the current owner of the name from the name properties.
-            (name-current-owner (get owner name-props))
         )
         ;; Calls the function to update the ownership details, handling necessary updates in the system.
         (transfer-ownership-updates id owner recipient)
         ;; Updates the name properties map with the new information.
         ;; Maintains existing properties but sets the zonefile hash to none for a clean slate and updates the owner to the recipient.
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
+        (asserts! (is-eq owner (get owner name-props)) ERR-NOT-AUTHORIZED)
         ;; Executes the NFT transfer from the current owner to the recipient.
         (nft-transfer? BNS-V2 id owner recipient)
     )
@@ -1706,3 +1712,4 @@
         ) 
     )
 )
+
