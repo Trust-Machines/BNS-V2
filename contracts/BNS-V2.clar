@@ -930,11 +930,13 @@
         (
             ;; Retrieves the preorder details.
             (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }) ERR-PREORDER-NOT-FOUND))
+            (claimer tx-sender)
         ) 
+        
         ;; Asserts that the preorder has not been claimed
         (asserts! (not (get claimed preorder)) ERR-OPERATION-UNAUTHORIZED)
         ;; Transfers back the specified amount of stx from the BNS contract to the tx-sender
-        (try! (as-contract (stx-transfer? (get stx-burned preorder) .BNS-V2 tx-sender)))
+        (try! (as-contract (stx-transfer? (get stx-burned preorder) .BNS-V2 claimer)))
         ;; Deletes the preorder in the 'name-preorders' map.
         (map-delete name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender })
         ;; Returns ok true
