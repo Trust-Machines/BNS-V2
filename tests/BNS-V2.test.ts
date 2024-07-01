@@ -3,6 +3,36 @@ import { describe, expect, it } from "vitest";
 import { initSimnet } from "@hirosystems/clarinet-sdk";
 import crypto from "crypto";
 
+const ERR_UNWRAP = 101;
+const ERR_NOT_AUTHORIZED = 102;
+const ERR_NOT_LISTED = 103;
+const ERR_WRONG_COMMISSION = 104;
+const ERR_LISTED = 105;
+const ERR_NO_NAME = 106;
+const ERR_HASH_MALFORMED = 107;
+const ERR_STX_BURNT_INSUFFICIENT = 108;
+const ERR_PREORDER_NOT_FOUND = 109;
+const ERR_CHARSET_INVALID = 110;
+const ERR_NAMESPACE_ALREADY_EXISTS = 111;
+const ERR_PREORDER_CLAIMABILITY_EXPIRED = 112;
+const ERR_NAMESPACE_NOT_FOUND = 113;
+const ERR_OPERATION_UNAUTHORIZED = 114;
+const ERR_NAMESPACE_ALREADY_LAUNCHED = 115;
+const ERR_NAMESPACE_PREORDER_LAUNCHABILITY_EXPIRED = 116;
+const ERR_NAMESPACE_NOT_LAUNCHED = 117;
+const ERR_NAME_NOT_AVAILABLE = 118;
+const ERR_NAMESPACE_BLANK = 119;
+const ERR_NAME_BLANK = 120;
+const ERR_NAME_REVOKED = 121;
+const ERR_NAME_PREORDERED_BEFORE_NAMESPACE_LAUNCH = 122;
+const ERR_NAMESPACE_HAS_MANAGER = 123;
+const ERR_OVERFLOW = 124;
+const ERR_NO_NAMESPACE_MANAGER = 125;
+const ERR_FAST_MINTED_BEFORE = 126;
+const ERR_PREORDERED_BEFORE = 127;
+const ERR_NAME_NOT_CLAIMABLE_YET = 128;
+const ERR_IMPORTED_BEFORE = 129;
+
 // Initialize simnet
 const simnet = await initSimnet();
 
@@ -93,9 +123,6 @@ const zonefileBuff = encoder.encode("zonefile");
 const zonefile2Buff = encoder.encode("zonefile2");
 const namespaceBuff = encoder.encode("namespacetest");
 
-console.log("namespaceBuff", namespaceBuff);
-console.log("name1Buff", name1Buff);
-
 // Hash 160 the Names with the namespace and salt
 const name1BuffSalt = createHash160Name(
   encoder.encode("name1"),
@@ -103,8 +130,6 @@ const name1BuffSalt = createHash160Name(
   namespaceBuff,
   saltBuff
 );
-console.log("name1BuffSalt", name1BuffSalt);
-console.log("saltBuff", saltBuff);
 
 const name2BuffSalt = createHash160Name(
   encoder.encode("name2"),
@@ -815,7 +840,7 @@ describe("TRANSFER FUNCTION", () => {
     expect(transferName.result).toBeOk(Cl.bool(true));
   });
 
-  it("This should fail to transfer a name the doesn't exist", () => {
+  it("This should fail to transfer a name that doesn't exist", () => {
     // Transfer the name
     const transferName = simnet.callPublicFn(
       "BNS-V2",
@@ -828,8 +853,8 @@ describe("TRANSFER FUNCTION", () => {
       // Called by the managerAddress
       managerAddress
     );
-    // This should give err 107 which is ERR-NO-NAME
-    expect(transferName.result).toBeErr(Cl.uint(107));
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(ERR_NO_NAME));
   });
 
   it("This should fail to transfer a fast claimed name in an unmanaged namespace when trying to transfer before the block time has passed", () => {
@@ -849,7 +874,7 @@ describe("TRANSFER FUNCTION", () => {
       address1
     );
     // This should give err
-    expect(transferName.result).toBeErr(Cl.uint(116));
+    expect(transferName.result).toBeErr(Cl.uint(ERR_OPERATION_UNAUTHORIZED));
   });
 
   it("This should fail to transfer a name in a managed namespace when the contract-caller is the namespace manager but manager transfers are off", () => {
@@ -884,8 +909,8 @@ describe("TRANSFER FUNCTION", () => {
       // Called by manager address
       managerAddress
     );
-    // This should give err 102 which is ERR-NOT-AUTHORIZED
-    expect(transferName.result).toBeErr(Cl.uint(102));
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to transfer a name in an unmanaged namespace when the tx-sender is not the owner", () => {
@@ -907,8 +932,8 @@ describe("TRANSFER FUNCTION", () => {
       // Called by a non-owner address
       managerAddress
     );
-    // This should give err 102 which is ERR-NOT-AUTHORIZED
-    expect(transferName.result).toBeErr(Cl.uint(102));
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to transfer a name in an unmanaged namespace when the name is listed in a market", () => {
@@ -956,8 +981,8 @@ describe("TRANSFER FUNCTION", () => {
       // Called by the owner address
       address1
     );
-    // This should give err 105 which is ERR-LISTED
-    expect(transferName.result).toBeErr(Cl.uint(105));
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(ERR_LISTED));
   });
 
   it("This should fail to transfer a name in a managed namespace when manager transfers are on even if the contract-caller is the manager", () => {
@@ -980,7 +1005,7 @@ describe("TRANSFER FUNCTION", () => {
       managerAddress
     );
     // This should give err 102 which is ERR-NOT-AUTHORIZED
-    expect(transferName.result).toBeErr(Cl.uint(102));
+    expect(transferName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
   it("This should fail to transfer a name in a managed namespace when manager transfers are on even if the tx-sender is the owner", () => {
     // Fast Claim a name
@@ -1001,33 +1026,35 @@ describe("TRANSFER FUNCTION", () => {
       // Called by the owner
       address1
     );
-    // This should give err 102 which is ERR-NOT-AUTHORIZED
-    expect(transferName.result).toBeErr(Cl.uint(102));
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
-});
+  it("This should fail to transfer a name in a managed namespace when manager transfers are on even if the contract-caller is the manager", () => {
+    // Fast Claim a name
+    successfullyFastClaimANameInAManagedNamespace();
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-describe("MNG-TRANSFER FUNCTION", () => {
-  it("This should fail to transfer a 2 step registered name in an unmanaged namespace even if the tx-sender is the owner", () => {
-    // Register a name
-    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    // Mine an empty block
+    simnet.mineEmptyBlock();
 
     // Transfer the name
     const transferName = simnet.callPublicFn(
       "BNS-V2",
-      "mng-transfer",
+      "transfer",
       // Passing 3 arguments:
       // 1. the id of the name,
       // 2. the owner,
       // 3. the recipient
       [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
-      // Called by the address that is the owner
-      address1
+      // Called by the manager
+      managerAddress
     );
-    // This should give err 102
-    expect(transferName.result).toBeErr(Cl.uint(102));
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
+});
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+describe("MNG-TRANSFER FUNCTION", () => {
   it("This should successfully transfer a 2 step registered name in a managed namespace that does allow manager transfers when contract-caller is manager", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAManagedNamespace();
@@ -1046,29 +1073,6 @@ describe("MNG-TRANSFER FUNCTION", () => {
     );
     // This should give ok true since it should be successful
     expect(transferName.result).toBeOk(Cl.bool(true));
-  });
-
-  it("This should fail to transfer a fast claimed name in an unmanaged namespace even if the block time has passed", () => {
-    // Fast Claim a name
-    successfullyFastClaimANameInAnUnmanagedNamespace();
-
-    // Mine an empty block
-    simnet.mineEmptyBlock();
-
-    // Transfer the name
-    const transferName = simnet.callPublicFn(
-      "BNS-V2",
-      "mng-transfer",
-      // Passing 3 arguments:
-      // 1. the id of the name,
-      // 2. the owner,
-      // 3. the recipient
-      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
-      // Called by the address that is the owner
-      address1
-    );
-    // This should give err 102
-    expect(transferName.result).toBeErr(Cl.uint(102));
   });
 
   it("This should successfully transfer a fast claimed name in a managed namespace that does allow manager transfers and contract-caller is manager", () => {
@@ -1094,26 +1098,9 @@ describe("MNG-TRANSFER FUNCTION", () => {
     expect(transferName.result).toBeOk(Cl.bool(true));
   });
 
-  it("This should fail to transfer a name that doesn't exist", () => {
-    // Transfer the name
-    const transferName = simnet.callPublicFn(
-      "BNS-V2",
-      "mng-transfer",
-      // Passing 3 arguments:
-      // 1. the id of the name,
-      // 2. the owner,
-      // 3. the recipient
-      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
-      // Called by the managerAddress
-      managerAddress
-    );
-    // This should give err 107 which is ERR-NO-NAME
-    expect(transferName.result).toBeErr(Cl.uint(107));
-  });
-
-  it("This should fail to transfer a fast claimed name in an unmanaged namespace when trying to transfer before the block time has passed", () => {
-    // Fast Claim a name
-    successfullyFastClaimANameInAnUnmanagedNamespace();
+  it("This should fail to transfer a 2 step registered name in a managed namespace even if the tx-sender is the owner", () => {
+    // Register a name
+    successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // Transfer the name
     const transferName = simnet.callPublicFn(
@@ -1128,12 +1115,12 @@ describe("MNG-TRANSFER FUNCTION", () => {
       address1
     );
     // This should give err
-    expect(transferName.result).toBeErr(Cl.uint(116));
+    expect(transferName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
-  it("This should fail to transfer a name in a managed namespace when the tx-sender is the owner but manager transfers are on", () => {
+  it("This should fail to transfer a fast claimed name in a managed namespace even if the block time has passed and tx-sender is owner", () => {
     // Fast Claim a name
-    successfullyFastClaimANameInAManagedNamespace();
+    successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // Mine an empty block
     simnet.mineEmptyBlock();
@@ -1147,11 +1134,48 @@ describe("MNG-TRANSFER FUNCTION", () => {
       // 2. the owner,
       // 3. the recipient
       [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
-      // Called by owner
+      // Called by the address that is the owner
       address1
     );
-    // This should give err 102 which is ERR-NOT-AUTHORIZED
-    expect(transferName.result).toBeErr(Cl.uint(102));
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
+  });
+
+  it("This should fail to transfer a name that doesn't exist", () => {
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by the managerAddress
+      managerAddress
+    );
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(ERR_NO_NAME));
+  });
+
+  it("This should fail to transfer a fast claimed name in a managed namespace when trying to transfer before the block time has passed", () => {
+    // Fast Claim a name
+    successfullyFastClaimANameInAManagedNamespace();
+
+    // Transfer the name
+    const transferName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-transfer",
+      // Passing 3 arguments:
+      // 1. the id of the name,
+      // 2. the owner,
+      // 3. the recipient
+      [Cl.uint(1), Cl.principal(address1), Cl.principal(address2)],
+      // Called by the address that is the owner
+      managerAddress
+    );
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(ERR_OPERATION_UNAUTHORIZED));
   });
 
   it("This should fail to transfer a name in a managed namespace when the name is listed in a market", () => {
@@ -1199,8 +1223,8 @@ describe("MNG-TRANSFER FUNCTION", () => {
       // Called by the manager
       managerAddress
     );
-    // This should give err 105 which is ERR-LISTED
-    expect(transferName.result).toBeErr(Cl.uint(105));
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(ERR_LISTED));
   });
 
   it("This should fail to transfer a name in a managed namespace when manager transfers are off even if the contract-caller is the manager", () => {
@@ -1235,9 +1259,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
       // Called by the manager address
       managerAddress
     );
-    // This should give err 102 which is ERR-NOT-AUTHORIZED
-    expect(transferName.result).toBeErr(Cl.uint(102));
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
+
   it("This should fail to transfer a name in a managed namespace when manager transfers are off even if the tx-sender is the owner", () => {
     // Fast Claim a name
     successfullyFastClaimANameInAManagedNamespace();
@@ -1270,8 +1295,8 @@ describe("MNG-TRANSFER FUNCTION", () => {
       // Called by the owner
       address1
     );
-    // This should give err 102 which is ERR-NOT-AUTHORIZED
-    expect(transferName.result).toBeErr(Cl.uint(102));
+    // This should give err
+    expect(transferName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 });
 
@@ -1425,7 +1450,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       address2
     );
     // Err 107 ERR-NO-NAME
-    expect(listName.result).toBeErr(Cl.uint(107));
+    expect(listName.result).toBeErr(Cl.uint(ERR_NO_NAME));
   });
 
   it("This should fail to list a name in an unmanaged namespace when it was fast claimed but the lock time has not passed", () => {
@@ -1449,7 +1474,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       address1
     );
     // Err ERR-OPERATION-UNAUTHORIZED
-    expect(listName.result).toBeErr(Cl.uint(116));
+    expect(listName.result).toBeErr(Cl.uint(ERR_OPERATION_UNAUTHORIZED));
   });
 
   it("This should fail to list a name in a managed namespace when it was fast claimed but the lock time has not passed", () => {
@@ -1473,7 +1498,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       managerAddress
     );
     // Err ERR-OPERATION-UNAUTHORIZED
-    expect(listName.result).toBeErr(Cl.uint(116));
+    expect(listName.result).toBeErr(Cl.uint(ERR_OPERATION_UNAUTHORIZED));
   });
 
   it("This should fail to list a name in an unmanaged namespace when the tx-sender is not the owner", () => {
@@ -1500,7 +1525,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       address2
     );
     // Err 102 ERR-NOT-AUTHORIZED
-    expect(listName.result).toBeErr(Cl.uint(102));
+    expect(listName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to list a name in an unmanaged namespace when the contract-caller is not the manager", () => {
@@ -1527,7 +1552,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
       address1
     );
     // Err 102 ERR-NOT-AUTHORIZED
-    expect(listName.result).toBeErr(Cl.uint(102));
+    expect(listName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 });
 
@@ -1733,7 +1758,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       address1
     );
     // Err 107 ERR-NO-NAME
-    expect(unlistName.result).toBeErr(Cl.uint(107));
+    expect(unlistName.result).toBeErr(Cl.uint(ERR_NO_NAME));
   });
 
   it("This should fail to unlist a name without a manager, when tx-sender is not the owner", () => {
@@ -1776,7 +1801,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       address2
     );
     // Err 102 ERR-NOT-AUTHORIZED
-    expect(unlistName.result).toBeErr(Cl.uint(102));
+    expect(unlistName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to unlist a name with a manager, when contrac-caller is not the manager", () => {
@@ -1819,7 +1844,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       address2
     );
     // Err 102 ERR-NOT-AUTHORIZED
-    expect(unlistName.result).toBeErr(Cl.uint(102));
+    expect(unlistName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to unlist a name without a manager, when the name is not listed", () => {
@@ -1836,7 +1861,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       address1
     );
     // Should return err ERR-NOT-LISTED
-    expect(unlistName.result).toBeErr(Cl.uint(103));
+    expect(unlistName.result).toBeErr(Cl.uint(ERR_NOT_LISTED));
   });
 
   it("This should fail to unlist a name with a manager, when the name is not listed", () => {
@@ -1853,7 +1878,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       managerAddress
     );
     // Err 103 ERR-NOT-LISTED
-    expect(unlistName.result).toBeErr(Cl.uint(103));
+    expect(unlistName.result).toBeErr(Cl.uint(ERR_NOT_LISTED));
   });
 
   it("This should successfully buy a name without a manager", () => {
@@ -2335,7 +2360,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       address2
     );
     // Should return err ERR-NO-NAME
-    expect(buyName.result).toBeErr(Cl.uint(107));
+    expect(buyName.result).toBeErr(Cl.uint(ERR_NO_NAME));
   });
 
   it("This should fail to buy a name without a manager, if it is not listed", () => {
@@ -2354,7 +2379,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       address2
     );
     // Should return err ERR-NOT-LISTED
-    expect(buyName.result).toBeErr(Cl.uint(103));
+    expect(buyName.result).toBeErr(Cl.uint(ERR_NOT_LISTED));
   });
 
   it("This should fail to buy a name with a manager, if it is not listed", () => {
@@ -2373,7 +2398,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       address2
     );
     // Should return err ERR-NOT-LISTED
-    expect(buyName.result).toBeErr(Cl.uint(103));
+    expect(buyName.result).toBeErr(Cl.uint(ERR_NOT_LISTED));
   });
 
   it("This should fail to buy a name wrong commission trait", () => {
@@ -2427,7 +2452,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("SET-PRIMARY-NAME FUNCTION", () => {
-  it("This should successfully change the primary name of an address in an unmanaged namespace, when 2 names are 2 step registered", () => {
+  it("This should successfully change the primary name of an address in an unmanaged namespace, when tx-sender is owner", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace();
@@ -2444,7 +2469,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
     expect(changePrimaryName.result).toBeOk(Cl.bool(true));
   });
 
-  it("This should successfully change the primary name of an address in a managed namespace, when 2 names are 2 step registered", () => {
+  it("This should successfully change the primary name of an address in a managed namespace, when tx-sender is owner", () => {
     // Register a name
     successfullyTwoStepRegisterANameInAManagedNamespace();
     successfullyTwoStepRegisterASecondNameInAManagedNamespace();
@@ -2461,41 +2486,6 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
     expect(changePrimaryName.result).toBeOk(Cl.bool(true));
   });
 
-  it("This should successfully change the primary name of an address in an unmanaged namespace, when 2 names are fast claimed", () => {
-    // Register a name
-    successfullyFastClaimANameInAnUnmanagedNamespace();
-    successfullyFastClaimASecondNameInAnUnmanagedNamespace();
-
-    // Change the primary name
-    const changePrimaryName = simnet.callPublicFn(
-      "BNS-V2",
-      "set-primary-name",
-      // 1. the id of the name to set as primary name
-      [Cl.uint(2)],
-      // Called by the owner address
-      address1
-    );
-    expect(changePrimaryName.result).toBeOk(Cl.bool(true));
-  });
-
-  it("This should successfully change the primary name of an address in a managed namespace, when 2 names are fast claimed", () => {
-    // Register a name
-    successfullyFastClaimANameInAManagedNamespace();
-    successfullyFastClaimASecondNameInAManagedNamespace();
-
-    // Change the primary name
-    const changePrimaryName = simnet.callPublicFn(
-      "BNS-V2",
-      "set-primary-name",
-      // 1. the id of the name to set as primary name
-      [Cl.uint(2)],
-      // Called by the owner address
-      address1
-    );
-    // Successful response
-    expect(changePrimaryName.result).toBeOk(Cl.bool(true));
-  });
-
   it("This should fail to change the primary name of an address, if the name doesn't exist", () => {
     // Change the primary name
     const changePrimaryName = simnet.callPublicFn(
@@ -2507,7 +2497,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       address1
     );
     // This returns err ERR-NO-NAME
-    expect(changePrimaryName.result).toBeErr(Cl.uint(107));
+    expect(changePrimaryName.result).toBeErr(Cl.uint(ERR_NO_NAME));
   });
 
   it("This should fail to change the primary name of an address, if the tx-sender is not the owner of the name", () => {
@@ -2545,23 +2535,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
       address2
     );
     // This returns err ERR-NOT-AUTHORIZED
-    expect(changePrimaryName.result).toBeErr(Cl.uint(102));
-  });
-
-  it("This should fail to change the primary name of an address, if the name already is the primary name", () => {
-    successfullyFastClaimANameInAManagedNamespace();
-
-    // Change the primary name
-    const changePrimaryName = simnet.callPublicFn(
-      "BNS-V2",
-      "set-primary-name",
-      // 1. the id of the name to set as primary name
-      [Cl.uint(1)],
-      // Called by a non-owner address
-      address1
-    );
-    // This returns ok
-    expect(changePrimaryName.result).toBeOk(Cl.bool(true));
+    expect(changePrimaryName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 });
 
@@ -2580,50 +2554,6 @@ describe("MNG-BURN FUNCTIONS", () => {
     );
     // Expect and Ok true for success confirmation
     expect(burnName.result).toBeOk(Cl.bool(true));
-  });
-
-  it("This should fail by burning a nonexistent name", () => {
-    // Burn the name
-    const burnName = simnet.callPublicFn(
-      "BNS-V2",
-      "mng-burn",
-      // 1. Pass the uint id of the nft that doesn't exist
-      [Cl.uint(1)],
-      // Called from the manager address
-      managerAddress
-    );
-    // This returns err ERR-NO-NAME
-    expect(burnName.result).toBeErr(Cl.uint(107));
-  });
-
-  it("This should fail in a namespace with no manager", () => {
-    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-    // Burn the name
-    const burnName = simnet.callPublicFn(
-      "BNS-V2",
-      "mng-burn",
-      // 1. Pass the uint id of the nft
-      [Cl.uint(1)],
-      // Called from the manager address (which is not assigned in the namespace)
-      managerAddress
-    );
-    // This returns err ERR-NO-NAMESPACE-MANAGER
-    expect(burnName.result).toBeErr(Cl.uint(132));
-  });
-
-  it("This should fail by not allowing a different address from the manager address to burn an nft from a managed namespace", () => {
-    successfullyTwoStepRegisterANameInAManagedNamespace();
-    // Burn the name
-    const burnName = simnet.callPublicFn(
-      "BNS-V2",
-      "mng-burn",
-      // 1. Pass the uint id of the nft
-      [Cl.uint(1)],
-      // Called from a non manager address
-      address1
-    );
-    // This returns err ERR-NOT-AUTHORIZED
-    expect(burnName.result).toBeErr(Cl.uint(102));
   });
 
   it("This should still burn the name if it is listed when called by the manager address", () => {
@@ -2667,11 +2597,55 @@ describe("MNG-BURN FUNCTIONS", () => {
     // Successful response
     expect(burnName.result).toBeOk(Cl.bool(true));
   });
+
+  it("This should fail to burn a nonexistent name", () => {
+    // Burn the name
+    const burnName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-burn",
+      // 1. Pass the uint id of the nft that doesn't exist
+      [Cl.uint(1)],
+      // Called from the manager address
+      managerAddress
+    );
+    // This returns err ERR-NO-NAME
+    expect(burnName.result).toBeErr(Cl.uint(ERR_NO_NAME));
+  });
+
+  it("This should fail in a namespace with no manager", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    // Burn the name
+    const burnName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-burn",
+      // 1. Pass the uint id of the nft
+      [Cl.uint(1)],
+      // Called from the manager address (which is not assigned in the namespace)
+      managerAddress
+    );
+    // This returns err ERR-NO-NAMESPACE-MANAGER
+    expect(burnName.result).toBeErr(Cl.uint(ERR_NO_NAMESPACE_MANAGER));
+  });
+
+  it("This should fail by not allowing a different address from the manager address to burn an nft from a managed namespace", () => {
+    successfullyTwoStepRegisterANameInAManagedNamespace();
+    // Burn the name
+    const burnName = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-burn",
+      // 1. Pass the uint id of the nft
+      [Cl.uint(1)],
+      // Called from a non manager address
+      address1
+    );
+    // This returns err ERR-NOT-AUTHORIZED
+    expect(burnName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
+  });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
-  it("This should successfully change the manager of a namespace", () => {
+  it("This should successfully change the manager of a namespace if manager is not frozen", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Transfer the Namespace
     const transferNamespace = simnet.callPublicFn(
@@ -2701,7 +2675,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(transferNamespace.result).toBeErr(Cl.uint(115));
+    expect(transferNamespace.result).toBeErr(Cl.uint(ERR_NAMESPACE_NOT_FOUND));
   });
 
   it("This should fail to change the manager of an unmanaged namespace", () => {
@@ -2718,7 +2692,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NO-NAMESPACE-MANAGER
-    expect(transferNamespace.result).toBeErr(Cl.uint(132));
+    expect(transferNamespace.result).toBeErr(Cl.uint(ERR_NO_NAMESPACE_MANAGER));
   });
 
   it("This should fail to change the manager of a namespace if the manager is not the contract-caller", () => {
@@ -2735,7 +2709,103 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       address1
     );
     // Return err ERR-NOT-AUTHORIZED
-    expect(transferNamespace.result).toBeErr(Cl.uint(102));
+    expect(transferNamespace.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
+  });
+  it("This should fail to change the manager of a namespace if the manager is the contract-caller but the manager is frozen", () => {
+    successfullyTwoStepRegisterANameInAManagedNamespace();
+
+    // Freeze manager
+    const freezeManager = simnet.callPublicFn(
+      "BNS-V2",
+      "can-not-change-manager",
+      // Passing 1 argument:
+      // 1. the namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the manager address
+      managerAddress
+    );
+    // Return ok true
+    expect(freezeManager.result).toBeOk(Cl.bool(true));
+
+    // Transfer the Namespace
+    const transferNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "mng-manager-transfer",
+      // Passing 2 arguments:
+      // 1. the new manager principal
+      // 2. the namespace
+      [Cl.principal(address1), Cl.buffer(namespaceBuff)],
+      // Called by the manager address
+      address1
+    );
+    // Return err ERR-NOT-AUTHORIZED
+    expect(transferNamespace.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
+  });
+});
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+describe("CAN-NOT-CHANGE-MANAGER FUNCTION", () => {
+  it("This should successfully freeze the manager", () => {
+    successfullyTwoStepRegisterANameInAManagedNamespace();
+    // Freeze manager
+    const freezeManager = simnet.callPublicFn(
+      "BNS-V2",
+      "can-not-change-manager",
+      // Passing 1 argument:
+      // 1. the namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the manager address
+      managerAddress
+    );
+    // Return ok true
+    expect(freezeManager.result).toBeOk(Cl.bool(true));
+  });
+
+  it("This should fail to freeze the manager of a namespace that doesn't exist", () => {
+    // Freeze manager
+    const freezeManager = simnet.callPublicFn(
+      "BNS-V2",
+      "can-not-change-manager",
+      // Passing 1 argument:
+      // 1. the namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the manager address
+      managerAddress
+    );
+    // Return err
+    expect(freezeManager.result).toBeErr(Cl.uint(ERR_NAMESPACE_NOT_FOUND));
+  });
+
+  it("This should fail to freeze the manager of an unmanaged namespace", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    // Freeze manager
+    const freezeManager = simnet.callPublicFn(
+      "BNS-V2",
+      "can-not-change-manager",
+      // Passing 1 argument:
+      // 1. the namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the manager address
+      managerAddress
+    );
+    // Return err
+    expect(freezeManager.result).toBeErr(Cl.uint(ERR_NO_NAMESPACE_MANAGER));
+  });
+
+  it("This should fail to freeze the manager of a namespace if the manager is not the contract-caller", () => {
+    successfullyTwoStepRegisterANameInAManagedNamespace();
+    // Freeze manager
+    const freezeManager = simnet.callPublicFn(
+      "BNS-V2",
+      "can-not-change-manager",
+      // Passing 1 argument:
+      // 1. the namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the non manager
+      address1
+    );
+    // Return err
+    expect(freezeManager.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 });
 
@@ -2863,7 +2933,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       address1
     );
     // This should give err ERR-HASH-MALFORMED
-    expect(preorderNamespace.result).toBeErr(Cl.uint(109));
+    expect(preorderNamespace.result).toBeErr(Cl.uint(ERR_HASH_MALFORMED));
   });
 
   it("should fail if the stx to burn is 0", () => {
@@ -2879,7 +2949,9 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       address1
     );
     // This should give err ERR-STX-BURNT-INSUFFICIENT
-    expect(preorderNamespace.result).toBeErr(Cl.uint(110));
+    expect(preorderNamespace.result).toBeErr(
+      Cl.uint(ERR_STX_BURNT_INSUFFICIENT)
+    );
   });
 
   it("should fail if the tx-sender has insufficient funds", () => {
@@ -3106,7 +3178,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       address1
     );
     // Return err ERR-PREORDER-NOT-FOUND
-    expect(revealNamespace.result).toBeErr(Cl.uint(111));
+    expect(revealNamespace.result).toBeErr(Cl.uint(ERR_PREORDER_NOT_FOUND));
   });
 
   it("This should fail if the namespace contains invalid characters", () => {
@@ -3180,7 +3252,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       address1
     );
     // Return err ERR-CHARSET-INVALID
-    expect(revealNamespace.result).toBeErr(Cl.uint(112));
+    expect(revealNamespace.result).toBeErr(Cl.uint(ERR_CHARSET_INVALID));
   });
 
   it("This should fail if the namespace already exists", () => {
@@ -3312,7 +3384,9 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-ALREADY-EXISTS
-    expect(revealNamespace2.result).toBeErr(Cl.uint(113));
+    expect(revealNamespace2.result).toBeErr(
+      Cl.uint(ERR_NAMESPACE_ALREADY_EXISTS)
+    );
   });
 
   it("This should fail if burned stx is not enough for the price", () => {
@@ -3386,7 +3460,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       address1
     );
     // Return err ERR-STX-BURNT-INSUFFICIENT
-    expect(revealNamespace.result).toBeErr(Cl.uint(110));
+    expect(revealNamespace.result).toBeErr(Cl.uint(ERR_STX_BURNT_INSUFFICIENT));
   });
 
   it("This should fail if TTL has passed to reveal a namespace", () => {
@@ -3463,12 +3537,14 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-PREORDER-CLAIMABILITY-EXPIRED
-    expect(revealNamespace.result).toBeErr(Cl.uint(114));
+    expect(revealNamespace.result).toBeErr(
+      Cl.uint(ERR_PREORDER_CLAIMABILITY_EXPIRED)
+    );
   });
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-describe("namespace-launch FUNCTION", () => {
+describe("NAMESPACE-LAUNCH FUNCTION", () => {
   it("This should successfully launch a Namespace without a manager", () => {
     // Preorder the Namespace
     const preorderNamespace = simnet.callPublicFn(
@@ -3652,7 +3728,7 @@ describe("namespace-launch FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(launchNamespace.result).toBeErr(Cl.uint(115));
+    expect(launchNamespace.result).toBeErr(Cl.uint(ERR_NAMESPACE_NOT_FOUND));
   });
 
   it("This should fail to launch a Namespace when called by a different address than the import address assigned in the namespace-reveal", () => {
@@ -3738,7 +3814,7 @@ describe("namespace-launch FUNCTION", () => {
       address2
     );
     // Return err ERR-OPERATION-UNAUTHORIZED
-    expect(launchNamespace.result).toBeErr(Cl.uint(116));
+    expect(launchNamespace.result).toBeErr(Cl.uint(ERR_OPERATION_UNAUTHORIZED));
   });
 
   it("This should fail to launch a Namespace that has already been launched", () => {
@@ -3836,7 +3912,9 @@ describe("namespace-launch FUNCTION", () => {
       address1
     );
     // Return ERR-NAMESPACE-ALREADY-LAUNCHED
-    expect(launchNamespace2.result).toBeErr(Cl.uint(117));
+    expect(launchNamespace2.result).toBeErr(
+      Cl.uint(ERR_NAMESPACE_ALREADY_LAUNCHED)
+    );
   });
 
   it("This should fail to launch a Namespace that TTL has already expired", () => {
@@ -3925,7 +4003,79 @@ describe("namespace-launch FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED
-    expect(launchNamespace.result).toBeErr(Cl.uint(118));
+    expect(launchNamespace.result).toBeErr(
+      Cl.uint(ERR_NAMESPACE_PREORDER_LAUNCHABILITY_EXPIRED)
+    );
+  });
+});
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+describe("TURN-OFF-MANAGER-TRANSFERS FUNCTIONS", () => {
+  it("This should successfully turn off manager-transfers when called by the manager from a managed namespace", () => {
+    successfullyTwoStepRegisterANameInAManagedNamespace();
+    // Turn off manager transfers
+    const turnOffManagerTransfers = simnet.callPublicFn(
+      "BNS-V2",
+      "turn-off-manager-transfers",
+      // Passing 1 argument:
+      // 1. namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the managerAddress
+      managerAddress
+    );
+    // This should give ok true since it should be successful
+    expect(turnOffManagerTransfers.result).toBeOk(Cl.bool(true));
+  });
+
+  it("This should fail to turn off transfers of a non existen namespace", () => {
+    // Turn off manager transfers
+    const turnOffManagerTransfers = simnet.callPublicFn(
+      "BNS-V2",
+      "turn-off-manager-transfers",
+      // Passing 1 argument:
+      // 1. namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the managerAddress
+      managerAddress
+    );
+    // This should give err
+    expect(turnOffManagerTransfers.result).toBeErr(
+      Cl.uint(ERR_NAMESPACE_NOT_FOUND)
+    );
+  });
+
+  it("This should fail to turn off manager transfers from an unmanaged namespace", () => {
+    successfullyFastClaimANameInAnUnmanagedNamespace();
+    // Turn off manager transfers
+    const turnOffManagerTransfers = simnet.callPublicFn(
+      "BNS-V2",
+      "turn-off-manager-transfers",
+      // Passing 1 argument:
+      // 1. namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the managerAddress
+      managerAddress
+    );
+    // This should give err
+    expect(turnOffManagerTransfers.result).toBeErr(
+      Cl.uint(ERR_NO_NAMESPACE_MANAGER)
+    );
+  });
+
+  it("This should fail to turn off manager transfers from a managed namespace if contract-caller is not manager", () => {
+    successfullyFastClaimANameInAManagedNamespace();
+    // Turn off manager transfers
+    const turnOffManagerTransfers = simnet.callPublicFn(
+      "BNS-V2",
+      "turn-off-manager-transfers",
+      // Passing 1 argument:
+      // 1. namespace
+      [Cl.buffer(namespaceBuff)],
+      // Called by the managerAddress
+      address1
+    );
+    // This should give err
+    expect(turnOffManagerTransfers.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 });
 
@@ -4050,7 +4200,7 @@ describe("NAME-IMPORT FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(importName.result).toBeErr(Cl.uint(115));
+    expect(importName.result).toBeErr(Cl.uint(ERR_NAMESPACE_NOT_FOUND));
   });
 
   it("This should fail to import a name, if the name has invalid characters", () => {
@@ -4147,7 +4297,7 @@ describe("NAME-IMPORT FUNCTION", () => {
       address1
     );
     // Return err ERR-CHARSET-INVALID
-    expect(importName.result).toBeErr(Cl.uint(112));
+    expect(importName.result).toBeErr(Cl.uint(ERR_CHARSET_INVALID));
   });
 
   it("This should fail to import a name if the tx-sender is not the import address", () => {
@@ -4244,7 +4394,7 @@ describe("NAME-IMPORT FUNCTION", () => {
       address2
     );
     // Return err ERR-OPERATION-UNAUTHORIZED
-    expect(importName.result).toBeErr(Cl.uint(116));
+    expect(importName.result).toBeErr(Cl.uint(ERR_OPERATION_UNAUTHORIZED));
   });
 
   it("This should fail to import a name in a launched namespace", () => {
@@ -4353,7 +4503,7 @@ describe("NAME-IMPORT FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-ALREADY-LAUNCHED
-    expect(importName.result).toBeErr(Cl.uint(117));
+    expect(importName.result).toBeErr(Cl.uint(ERR_NAMESPACE_ALREADY_LAUNCHED));
   });
 
   it("This should fail to import a name if the namespace launchability TTL has passed", () => {
@@ -4453,7 +4603,9 @@ describe("NAME-IMPORT FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED
-    expect(importName.result).toBeErr(Cl.uint(118));
+    expect(importName.result).toBeErr(
+      Cl.uint(ERR_NAMESPACE_PREORDER_LAUNCHABILITY_EXPIRED)
+    );
   });
 });
 
@@ -4541,7 +4693,9 @@ describe("namespace-update-price FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(updatePriceNamespace.result).toBeErr(Cl.uint(115));
+    expect(updatePriceNamespace.result).toBeErr(
+      Cl.uint(ERR_NAMESPACE_NOT_FOUND)
+    );
   });
 
   it("This should successfully update the price in a namespace", () => {
@@ -4584,7 +4738,9 @@ describe("namespace-update-price FUNCTION", () => {
       address2
     );
     // Return err ERR-OPERATION-UNAUTHORIZED
-    expect(updatePriceNamespace.result).toBeErr(Cl.uint(116));
+    expect(updatePriceNamespace.result).toBeErr(
+      Cl.uint(ERR_OPERATION_UNAUTHORIZED)
+    );
   });
 
   it("This should fail to update the price in a namespace that doesn't allow price namespace changes", () => {
@@ -4639,7 +4795,9 @@ describe("namespace-update-price FUNCTION", () => {
       address1
     );
     // Return err ERR-OPERATION-UNAUTHORIZED
-    expect(updatePriceNamespace.result).toBeErr(Cl.uint(116));
+    expect(updatePriceNamespace.result).toBeErr(
+      Cl.uint(ERR_OPERATION_UNAUTHORIZED)
+    );
   });
 });
 
@@ -4671,7 +4829,9 @@ describe("namespace-revoke-price-edition FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(updatePriceFunctionNamespace.result).toBeErr(Cl.uint(115));
+    expect(updatePriceFunctionNamespace.result).toBeErr(
+      Cl.uint(ERR_NAMESPACE_NOT_FOUND)
+    );
   });
 
   it("This should fail to update the can-update-price-function of a namespace if the tx-sender is not the import address", () => {
@@ -4686,7 +4846,9 @@ describe("namespace-revoke-price-edition FUNCTION", () => {
       address2
     );
     // Return err ERR-OPERATION-UNAUTHORIZED
-    expect(updatePriceFunctionNamespace.result).toBeErr(Cl.uint(116));
+    expect(updatePriceFunctionNamespace.result).toBeErr(
+      Cl.uint(ERR_OPERATION_UNAUTHORIZED)
+    );
   });
 });
 
@@ -5195,7 +5357,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(fastClaimName.result).toBeErr(Cl.uint(115));
+    expect(fastClaimName.result).toBeErr(Cl.uint(ERR_NAMESPACE_NOT_FOUND));
   });
 
   it("This should fail to fast mint a name that is already claimed", () => {
@@ -5327,7 +5489,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAME-NOT-AVAILABLE
-    expect(fastClaimName2.result).toBeErr(Cl.uint(120));
+    expect(fastClaimName2.result).toBeErr(Cl.uint(ERR_NAME_NOT_AVAILABLE));
   });
 
   it("This should fail to fast mint name on a launched namespace with a manager when the contract-caller is not the manager", () => {
@@ -5436,7 +5598,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       address1
     );
     // Return err ERR-NOT-AUTHORIZED
-    expect(fastClaimName.result).toBeErr(Cl.uint(102));
+    expect(fastClaimName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to fast mint a name on a launched namespace without a manager when the tx-sender is not the send-to address", () => {
@@ -5545,7 +5707,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       address1
     );
     // Return err ERR-NOT-AUTHORIZED
-    expect(fastClaimName.result).toBeErr(Cl.uint(102));
+    expect(fastClaimName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to fast mint a name on a launched namespace without a manager and the user does not have sufficient funds to burn stx", () => {
@@ -5763,7 +5925,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       address1
     );
     // Return err ERR-STX-BURNT-INSUFFICIENT
-    expect(fastClaimName.result).toBeErr(Cl.uint(110));
+    expect(fastClaimName.result).toBeErr(Cl.uint(ERR_STX_BURNT_INSUFFICIENT));
   });
 });
 
@@ -6065,7 +6227,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // Return err ERR-HASH-MALFORMED
-    expect(preorderName.result).toBeErr(Cl.uint(109));
+    expect(preorderName.result).toBeErr(Cl.uint(ERR_HASH_MALFORMED));
   });
 
   it("This should fail to preorder a name if stx to burn 0", () => {
@@ -6165,7 +6327,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       address1
     );
     // Return err ERR-STX-BURNT-INSUFFICIENT
-    expect(preorderName.result).toBeErr(Cl.uint(110));
+    expect(preorderName.result).toBeErr(Cl.uint(ERR_STX_BURNT_INSUFFICIENT));
   });
 
   it("This should fail to preorder a name if stx to burn not enough in balance of user", () => {
@@ -7095,7 +7257,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-PREORDER-NOT-FOUND
-    expect(registerName.result).toBeErr(Cl.uint(111));
+    expect(registerName.result).toBeErr(Cl.uint(ERR_PREORDER_NOT_FOUND));
   });
 
   it("This should fail to register a name if no namespace", () => {
@@ -7132,7 +7294,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(registerName.result).toBeErr(Cl.uint(115));
+    expect(registerName.result).toBeErr(Cl.uint(ERR_NAMESPACE_NOT_FOUND));
   });
 
   it("This should fail to register a name if the namespace has a manager", () => {
@@ -7253,7 +7415,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-NOT-AUTHORIZED
-    expect(registerName.result).toBeErr(Cl.uint(102));
+    expect(registerName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to register a name if name already exists", () => {
@@ -7397,7 +7559,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err
-    expect(registerName2.result).toBeErr(Cl.uint(116));
+    expect(registerName2.result).toBeErr(Cl.uint(ERR_OPERATION_UNAUTHORIZED));
   });
 
   it("This should fail to register a name if name was preordered before my preorder and registered by the principal of the first preorder", () => {
@@ -7553,7 +7715,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-PREORDERED-BEFORE
-    expect(registerName2.result).toBeErr(Cl.uint(135));
+    expect(registerName2.result).toBeErr(Cl.uint(ERR_PREORDERED_BEFORE));
   });
 
   it("This should fail to register a name if name was fast claimed before my preorder", () => {
@@ -7699,7 +7861,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-FAST-MINTED-BEFORE
-    expect(registerName2.result).toBeErr(Cl.uint(134));
+    expect(registerName2.result).toBeErr(Cl.uint(ERR_FAST_MINTED_BEFORE));
   });
 
   it("This should fail to register a name if name was preordered before namespace launch", () => {
@@ -7817,7 +7979,9 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH
-    expect(registerName.result).toBeErr(Cl.uint(128));
+    expect(registerName.result).toBeErr(
+      Cl.uint(ERR_NAME_PREORDERED_BEFORE_NAMESPACE_LAUNCH)
+    );
   });
 
   it("This should fail to register a name if TTL has passed", () => {
@@ -7941,7 +8105,9 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-PREORDER-CLAIMABILITY-EXPIRED
-    expect(registerName.result).toBeErr(Cl.uint(114));
+    expect(registerName.result).toBeErr(
+      Cl.uint(ERR_PREORDER_CLAIMABILITY_EXPIRED)
+    );
   });
 
   it("This should fail to register a name if burned STX was not enough, this should also act as a blocker to preorder a name with mng-name-preorder", () => {
@@ -8064,7 +8230,360 @@ describe("NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-STX-BURNT-INSUFFICIENT
-    expect(registerName.result).toBeErr(Cl.uint(110));
+    expect(registerName.result).toBeErr(Cl.uint(ERR_STX_BURNT_INSUFFICIENT));
+  });
+});
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+describe("CLAIM-PREORDER FUNCTION", () => {
+  it("This should succesfully claim the stx from a preorder that has not been claimed by the owner of the preorder", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-launch",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(150));
+
+    simnet.mineEmptyBlock();
+
+    // Reclaim preorder of the name
+    const reclaimPreorder = simnet.callPublicFn(
+      "BNS-V2",
+      "claim-preorder",
+      // Passing 1 argument:
+      // 1. hashes-salted-fqn
+      [Cl.buffer(name1BuffSalt)],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(reclaimPreorder.result).toBeOk(Cl.bool(true));
+  });
+
+  it("This should fail to claim the stx from a preorder that has been claimed by the owner of the preorder", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-launch",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
+    // Preorder the name
+    const preorderName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-preorder",
+      // Passing 2 arguments:
+      // 1. the name + salt with hash160
+      // 2. the amount of STX to burn for the name since it is unmanaged
+      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should return 149, the current blockheight 5 plus the TTL 144 of the name preorder
+    expect(preorderName.result).toBeOk(Cl.uint(150));
+
+    simnet.mineEmptyBlock();
+
+    // Register the name
+    const registerName = simnet.callPublicFn(
+      "BNS-V2",
+      "name-register",
+      // Passing 4 arguments:
+      // 1. the namespace,
+      // 2. the name,
+      // 3. the salt used to hash160 the name with
+      // 4. the zonefile
+      [
+        Cl.buffer(namespaceBuff),
+        Cl.buffer(name1Buff),
+        Cl.buffer(saltBuff),
+        Cl.buffer(zonefileBuff),
+      ],
+      // Called by the address that preordered the name
+      address1
+    );
+    // Return ok true
+    expect(registerName.result).toBeOk(Cl.uint(1));
+
+    // Reclaim preorder of the name
+    const reclaimPreorder = simnet.callPublicFn(
+      "BNS-V2",
+      "claim-preorder",
+      // Passing 1 argument:
+      // 1. hashes-salted-fqn
+      [Cl.buffer(name1BuffSalt)],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give err
+    expect(reclaimPreorder.result).toBeErr(Cl.uint(ERR_OPERATION_UNAUTHORIZED));
+  });
+
+  it("This should fail to claim the stx from a preorder that does not exist", () => {
+    // Preorder the Namespace
+    const preorderNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-preorder",
+      // Passing 2 arguments:
+      // 1. the namespace + salt with hash160
+      // 2. the amount of STX to burn for the namespace
+      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      // Called by any address, in this case address1
+      address1
+    );
+    // This should give ok u146 since the blockheight is 2 + 144 TTL
+    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
+
+    // Reveal the namespace
+    simnet.mineEmptyBlock();
+
+    // Reveal the namespace
+    const revealNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-reveal",
+      // Pass all the arguments for the revealing of the name
+      [
+        // 1. The namespace
+        Cl.buffer(namespaceBuff),
+        // 2. The salt used to hash160 the namespace with
+        Cl.buffer(saltBuff),
+
+        // 4. Price base
+        Cl.uint(1),
+        // 5. Price coeff
+        Cl.uint(1),
+        // 6. Price buckets
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        Cl.uint(1),
+        // 7. The non alpha discount
+        Cl.uint(1),
+        // 8. The no vowel discount
+        Cl.uint(1),
+        // 9. Lifetime of the namespace names
+        Cl.uint(5000),
+        // 10. Import address
+        Cl.principal(address1),
+        // 11. Manager address: in this case is none to not have a manager
+        Cl.none(),
+        // 12. can update price
+        Cl.bool(true),
+        // 13. manager transfers
+        Cl.bool(false),
+        // 14. manager frozen
+        Cl.bool(true),
+      ],
+      // Called by the address that made the preorder of the namespace
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(revealNamespace.result).toBeOk(Cl.bool(true));
+
+    // Launch the namespace
+    const launchNamespace = simnet.callPublicFn(
+      "BNS-V2",
+      "namespace-launch",
+      // 1. Only passing the namespace as argument
+      [Cl.buffer(namespaceBuff)],
+      // Called by the import address assigned in the namespace-reveal function
+      address1
+    );
+    // This should give ok true since it should be successful
+    expect(launchNamespace.result).toBeOk(Cl.bool(true));
+
+    // Reclaim preorder of the name
+    const reclaimPreorder = simnet.callPublicFn(
+      "BNS-V2",
+      "claim-preorder",
+      // Passing 1 argument:
+      // 1. hashes-salted-fqn
+      [Cl.buffer(name1BuffSalt)],
+      // Called by the address that preordered the name
+      address1
+    );
+    // This should give err
+    expect(reclaimPreorder.result).toBeErr(Cl.uint(ERR_PREORDER_NOT_FOUND));
   });
 });
 
@@ -8364,7 +8883,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-HASH-MALFORMED
-    expect(preorderName.result).toBeErr(Cl.uint(109));
+    expect(preorderName.result).toBeErr(Cl.uint(ERR_HASH_MALFORMED));
   });
 });
 
@@ -8685,7 +9204,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(registerName.result).toBeErr(Cl.uint(115));
+    expect(registerName.result).toBeErr(Cl.uint(ERR_NAMESPACE_NOT_FOUND));
   });
 
   it("This should fail to register a name if the namespace has no manager", () => {
@@ -8807,7 +9326,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NO-NAMESPACE-MANAGER
-    expect(registerName.result).toBeErr(Cl.uint(132));
+    expect(registerName.result).toBeErr(Cl.uint(ERR_NO_NAMESPACE_MANAGER));
   });
 
   it("This should fail to register a name if no name-preorder", () => {
@@ -8916,7 +9435,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // Return err ER-PREORDER-NOT-FOUND
-    expect(registerName.result).toBeErr(Cl.uint(111));
+    expect(registerName.result).toBeErr(Cl.uint(ERR_PREORDER_NOT_FOUND));
   });
 
   it("This should fail to register a name in a managed namespace if contract-caller not the manager", () => {
@@ -9038,7 +9557,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       address1
     );
     // Return err ERR-PREORDER-NOT-FOUND
-    expect(registerName.result).toBeErr(Cl.uint(111));
+    expect(registerName.result).toBeErr(Cl.uint(ERR_PREORDER_NOT_FOUND));
   });
 
   it("This should fail to register a name if name already exists", () => {
@@ -9199,7 +9718,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAME-NOT-AVAILABLE
-    expect(registerName2.result).toBeErr(Cl.uint(120));
+    expect(registerName2.result).toBeErr(Cl.uint(ERR_NAME_NOT_AVAILABLE));
   });
 
   it("This should fail to register a name if name was preordered before namespace launch", () => {
@@ -9321,7 +9840,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH
-    expect(registerName.result).toBeErr(Cl.uint(128));
+    expect(registerName.result).toBeErr(
+      Cl.uint(ERR_NAME_PREORDERED_BEFORE_NAMESPACE_LAUNCH)
+    );
   });
 
   it("This should fail to register a name if TTL has passed", () => {
@@ -9446,7 +9967,9 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-PREORDER-CLAIMABILITY-EXPIRED
-    expect(registerName.result).toBeErr(Cl.uint(114));
+    expect(registerName.result).toBeErr(
+      Cl.uint(ERR_PREORDER_CLAIMABILITY_EXPIRED)
+    );
   });
 });
 
@@ -9515,7 +10038,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NO-NAME
-    expect(updateZoneName.result).toBeErr(Cl.uint(107));
+    expect(updateZoneName.result).toBeErr(Cl.uint(ERR_NO_NAME));
   });
 
   it("This should fail to update the zonefile hash if the zonefile is the same", () => {
@@ -9533,7 +10056,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-OPERATION-UNAUTHORIZED
-    expect(updateZoneName.result).toBeErr(Cl.uint(116));
+    expect(updateZoneName.result).toBeErr(Cl.uint(ERR_OPERATION_UNAUTHORIZED));
   });
 
   it("This should fail to update the zonefile hash if the name is revoked", () => {
@@ -9568,7 +10091,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-REVOKED
-    expect(updateZoneName.result).toBeErr(Cl.uint(125));
+    expect(updateZoneName.result).toBeErr(Cl.uint(ERR_NAME_REVOKED));
   });
 
   it("This should fail to update the zonefile hash of a name in an unmanaged namespace when the tx-sender is not the owner", () => {
@@ -9590,7 +10113,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       address2
     );
     // Return err ERR-NOT-AUTHORIZED
-    expect(updateZoneName.result).toBeErr(Cl.uint(102));
+    expect(updateZoneName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to update the zonefile hash of a name in a managed namespace when the contract-caller is not the owner", () => {
@@ -9612,7 +10135,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NOT-AUTHORIZED
-    expect(updateZoneName.result).toBeErr(Cl.uint(102));
+    expect(updateZoneName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to update the zonefile hash of a name if the name is not in a valid grace period", () => {
@@ -9638,7 +10161,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       address1
     );
     // Return err ERR-OPERATION-UNAUTHORIZED
-    expect(updateZoneName.result).toBeErr(Cl.uint(116));
+    expect(updateZoneName.result).toBeErr(Cl.uint(ERR_OPERATION_UNAUTHORIZED));
   });
 });
 
@@ -9689,7 +10212,7 @@ describe("NAME-REVOKE FUNCTION", () => {
       managerAddress
     );
     // Return err ERR-NAMESPACE-NOT-FOUND
-    expect(revokeName.result).toBeErr(Cl.uint(115));
+    expect(revokeName.result).toBeErr(Cl.uint(ERR_NAMESPACE_NOT_FOUND));
   });
 
   it("This should fail to revoke a name in a managed namespace but the contract-caller is not the manager", () => {
@@ -9706,7 +10229,7 @@ describe("NAME-REVOKE FUNCTION", () => {
       address1
     );
     // Return err ERR-NOT-AUTHORIZED
-    expect(revokeName.result).toBeErr(Cl.uint(102));
+    expect(revokeName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to revoke a name in an unmanaged namespace but the tx-sender is not the import address", () => {
@@ -9723,7 +10246,7 @@ describe("NAME-REVOKE FUNCTION", () => {
       address2
     );
     // Return err ERR-NOT-AUTHORIZED
-    expect(revokeName.result).toBeErr(Cl.uint(102));
+    expect(revokeName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 });
 
@@ -9857,7 +10380,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NO-NAME
-    expect(renewName.result).toBeErr(Cl.uint(107));
+    expect(renewName.result).toBeErr(Cl.uint(ERR_NO_NAME));
   });
 
   it("This should fail to renew a name in a managed namespace", () => {
@@ -9881,7 +10404,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-HAS-MANAGER
-    expect(renewName.result).toBeErr(Cl.uint(129));
+    expect(renewName.result).toBeErr(Cl.uint(ERR_NAMESPACE_HAS_MANAGER));
   });
 
   it("This should fail to renew a name if the namespace is not launched", () => {
@@ -9999,7 +10522,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NAMESPACE-NOT-LAUNCHED
-    expect(renewName.result).toBeErr(Cl.uint(119));
+    expect(renewName.result).toBeErr(Cl.uint(ERR_NAMESPACE_NOT_LAUNCHED));
   });
 
   it("This should fail to renew a name if the namespace does not require renewals", () => {
@@ -10143,7 +10666,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // Return err ERR-OPERATION-UNAUTHORIZED
-    expect(renewName.result).toBeErr(Cl.uint(116));
+    expect(renewName.result).toBeErr(Cl.uint(ERR_OPERATION_UNAUTHORIZED));
   });
 
   it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current grace period", () => {
@@ -10171,7 +10694,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address2
     );
     // Return err ERR-NOT-AUTHORIZED
-    expect(renewName.result).toBeErr(Cl.uint(102));
+    expect(renewName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current lifetime", () => {
@@ -10196,7 +10719,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address2
     );
     // Return err ERR-NOT-AUTHORIZED
-    expect(renewName.result).toBeErr(Cl.uint(102));
+    expect(renewName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
   });
 
   it("This should fail to renew a name if the stx-burn is not sufficient for the price", () => {
@@ -10216,7 +10739,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // Return err ERR-STX-BURNT-INSUFFICIENT
-    expect(renewName.result).toBeErr(Cl.uint(110));
+    expect(renewName.result).toBeErr(Cl.uint(ERR_STX_BURNT_INSUFFICIENT));
   });
 
   it("This should fail to renew a name if the name is revoked", () => {
@@ -10254,6 +10777,6 @@ describe("NAME-RENEWAL FUNCTION", () => {
       address1
     );
     // Return err ERR-NAME-REVOKED
-    expect(renewName.result).toBeErr(Cl.uint(125));
+    expect(renewName.result).toBeErr(Cl.uint(ERR_NAME_REVOKED));
   });
 });

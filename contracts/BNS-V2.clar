@@ -38,38 +38,30 @@
 (define-constant ERR-NOT-LISTED (err u103))
 (define-constant ERR-WRONG-COMMISSION (err u104))
 (define-constant ERR-LISTED (err u105))
-(define-constant ERR-ALREADY-PRIMARY-NAME (err u106))
-(define-constant ERR-NO-NAME (err u107))
-(define-constant ERR-PREORDER-ALREADY-EXISTS (err u108))
-(define-constant ERR-HASH-MALFORMED (err u109))
-(define-constant ERR-STX-BURNT-INSUFFICIENT (err u110))
-(define-constant ERR-PREORDER-NOT-FOUND (err u111))
-(define-constant ERR-CHARSET-INVALID (err u112))
-(define-constant ERR-NAMESPACE-ALREADY-EXISTS (err u113))
-(define-constant ERR-PREORDER-CLAIMABILITY-EXPIRED (err u114))
-(define-constant ERR-NAMESPACE-NOT-FOUND (err u115))
-(define-constant ERR-OPERATION-UNAUTHORIZED (err u116))
-(define-constant ERR-NAMESPACE-ALREADY-LAUNCHED (err u117))
-(define-constant ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED (err u118))
-(define-constant ERR-NAMESPACE-NOT-LAUNCHED (err u119))
-(define-constant ERR-NAME-NOT-AVAILABLE (err u120))
-(define-constant ERR-NAMESPACE-BLANK (err u121))
-(define-constant ERR-NAME-EXPIRED (err u122))
-(define-constant ERR-NAME-GRACE-PERIOD (err u123))
-(define-constant ERR-NAME-BLANK (err u124))
-(define-constant ERR-NAME-REVOKED (err u125))
-(define-constant ERR-NAME-PREORDER-ALREADY-EXISTS (err u127))
-(define-constant ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH (err u128))
-(define-constant ERR-NAMESPACE-HAS-MANAGER (err u129))
-(define-constant ERR-OVERFLOW (err u130))
-(define-constant ERR-NO-BNS-NAMES-OWNED (err u131))
-(define-constant ERR-NO-NAMESPACE-MANAGER (err u132))
-(define-constant ERR-OWNER-IS-THE-SAME (err u133))
-(define-constant ERR-FAST-MINTED-BEFORE (err u134))
-(define-constant ERR-PREORDERED-BEFORE (err u135))
-(define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u136))
-(define-constant ERR-BURN-UPDATES-FAILED (err u137))
-(define-constant ERR-IMPORTED-BEFORE (err u138))
+(define-constant ERR-NO-NAME (err u106))
+(define-constant ERR-HASH-MALFORMED (err u107))
+(define-constant ERR-STX-BURNT-INSUFFICIENT (err u108))
+(define-constant ERR-PREORDER-NOT-FOUND (err u109))
+(define-constant ERR-CHARSET-INVALID (err u110))
+(define-constant ERR-NAMESPACE-ALREADY-EXISTS (err u111))
+(define-constant ERR-PREORDER-CLAIMABILITY-EXPIRED (err u112))
+(define-constant ERR-NAMESPACE-NOT-FOUND (err u113))
+(define-constant ERR-OPERATION-UNAUTHORIZED (err u114))
+(define-constant ERR-NAMESPACE-ALREADY-LAUNCHED (err u115))
+(define-constant ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED (err u116))
+(define-constant ERR-NAMESPACE-NOT-LAUNCHED (err u117))
+(define-constant ERR-NAME-NOT-AVAILABLE (err u118))
+(define-constant ERR-NAMESPACE-BLANK (err u119))
+(define-constant ERR-NAME-BLANK (err u120))
+(define-constant ERR-NAME-REVOKED (err u121))
+(define-constant ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH (err u122))
+(define-constant ERR-NAMESPACE-HAS-MANAGER (err u123))
+(define-constant ERR-OVERFLOW (err u124))
+(define-constant ERR-NO-NAMESPACE-MANAGER (err u125))
+(define-constant ERR-FAST-MINTED-BEFORE (err u126))
+(define-constant ERR-PREORDERED-BEFORE (err u127))
+(define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u128))
+(define-constant ERR-IMPORTED-BEFORE (err u129))
 
 ;; variables
 ;; (new) Counter to keep track of the last minted NFT ID, ensuring unique identifiers
@@ -588,7 +580,7 @@
         ;; Confirm the reveal action is performed within the allowed timeframe from the preorder.
         (asserts! (< block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-PREORDER-CLAIMABILITY-EXPIRED)
         ;; Ensure at least 1 block has passed after the preorder to avoid namespace sniping.
-        (asserts! (> block-height (+ (get created-at preorder) u1)) ERR-OPERATION-UNAUTHORIZED)
+        (asserts! (>= block-height (+ (get created-at preorder) u1)) ERR-OPERATION-UNAUTHORIZED)
         ;; Check if the namespace manager is assigned
         (match namespace-manager 
             namespace-m
@@ -661,8 +653,6 @@
             ;; Retrieve the properties of the namespace and manager.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
             (namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
-            ;; Ensure the namespace is launched.
-            (launched (unwrap! (get launched-at namespace-props) ERR-NAMESPACE-NOT-LAUNCHED))
         )
         ;; Ensure the function caller is the namespace manager.
         (asserts! (is-eq contract-caller namespace-manager) ERR-NOT-AUTHORIZED)
@@ -941,12 +931,10 @@
             ;; Retrieves the preorder details.
             (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }) ERR-PREORDER-NOT-FOUND))
         ) 
-        ;; Verifies the claim is completed after the claimability period.
-        (asserts! (> block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-PREORDER-CLAIMABILITY-EXPIRED)
         ;; Asserts that the preorder has not been claimed
         (asserts! (not (get claimed preorder)) ERR-OPERATION-UNAUTHORIZED)
         ;; Transfers back the specified amount of stx from the BNS contract to the tx-sender
-        (try! (stx-transfer? (get stx-burned preorder) .BNS-v2 tx-sender))
+        (try! (as-contract (stx-transfer? (get stx-burned preorder) .BNS-V2 tx-sender)))
         ;; Deletes the preorder in the 'name-preorders' map.
         (map-delete name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender })
         ;; Returns ok true
