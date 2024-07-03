@@ -2717,7 +2717,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
     // Freeze manager
     const freezeManager = simnet.callPublicFn(
       "BNS-V2",
-      "can-not-change-manager",
+      "freeze-manager",
       // Passing 1 argument:
       // 1. the namespace
       [Cl.buffer(namespaceBuff)],
@@ -2750,7 +2750,7 @@ describe("CAN-NOT-CHANGE-MANAGER FUNCTION", () => {
     // Freeze manager
     const freezeManager = simnet.callPublicFn(
       "BNS-V2",
-      "can-not-change-manager",
+      "freeze-manager",
       // Passing 1 argument:
       // 1. the namespace
       [Cl.buffer(namespaceBuff)],
@@ -2765,7 +2765,7 @@ describe("CAN-NOT-CHANGE-MANAGER FUNCTION", () => {
     // Freeze manager
     const freezeManager = simnet.callPublicFn(
       "BNS-V2",
-      "can-not-change-manager",
+      "freeze-manager",
       // Passing 1 argument:
       // 1. the namespace
       [Cl.buffer(namespaceBuff)],
@@ -2781,7 +2781,7 @@ describe("CAN-NOT-CHANGE-MANAGER FUNCTION", () => {
     // Freeze manager
     const freezeManager = simnet.callPublicFn(
       "BNS-V2",
-      "can-not-change-manager",
+      "freeze-manager",
       // Passing 1 argument:
       // 1. the namespace
       [Cl.buffer(namespaceBuff)],
@@ -2797,7 +2797,7 @@ describe("CAN-NOT-CHANGE-MANAGER FUNCTION", () => {
     // Freeze manager
     const freezeManager = simnet.callPublicFn(
       "BNS-V2",
-      "can-not-change-manager",
+      "freeze-manager",
       // Passing 1 argument:
       // 1. the namespace
       [Cl.buffer(namespaceBuff)],
@@ -4748,7 +4748,7 @@ describe("namespace-update-price FUNCTION", () => {
     // Update the can-update-price-function
     const updatePriceFunctionNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-revoke-price-edition",
+      "namespace-freeze-price",
       // 1. namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Call from the import address of the namespace
@@ -4802,13 +4802,13 @@ describe("namespace-update-price FUNCTION", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-describe("namespace-revoke-price-edition FUNCTION", () => {
+describe("namespace-freeze-price FUNCTION", () => {
   it("This should successfully update the can-update-price-function of a namespace", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Update the can-update-price-function
     const updatePriceFunctionNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-revoke-price-edition",
+      "namespace-freeze-price",
       // 1. namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Call from the import address of the namespace
@@ -4822,7 +4822,7 @@ describe("namespace-revoke-price-edition FUNCTION", () => {
     // Update the can-update-price-function
     const updatePriceFunctionNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-revoke-price-edition",
+      "namespace-freeze-price",
       // 1. namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Call from the import address of the namespace
@@ -4839,7 +4839,7 @@ describe("namespace-revoke-price-edition FUNCTION", () => {
     // Update the can-update-price-function
     const updatePriceFunctionNamespace = simnet.callPublicFn(
       "BNS-V2",
-      "namespace-revoke-price-edition",
+      "namespace-freeze-price",
       // 1. namespace as argument
       [Cl.buffer(namespaceBuff)],
       // Call from a different address than the import address

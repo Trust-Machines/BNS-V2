@@ -497,7 +497,7 @@
 
 ;; @desc (new) freezes the ability to make manager transfers
 ;; @param namespace: Buffer of the namespace.
-(define-public (can-not-change-manager (namespace (buff 20)))
+(define-public (freeze-manager (namespace (buff 20)))
     (let 
         (
             ;; Retrieve namespace properties and current manager.
@@ -551,7 +551,36 @@
 ;; @param: lifetime (uint): Duration that names within this namespace are valid before needing renewal.
 ;; @param: namespace-import (principal): The principal authorized to import names into this namespace.
 ;; @param: namespace-manager (optional principal): The principal authorized to manage the namespace.
-(define-public (namespace-reveal (namespace (buff 20)) (namespace-salt (buff 20)) (p-func-base uint) (p-func-coeff uint) (p-func-b1 uint) (p-func-b2 uint) (p-func-b3 uint) (p-func-b4 uint) (p-func-b5 uint) (p-func-b6 uint) (p-func-b7 uint) (p-func-b8 uint) (p-func-b9 uint) (p-func-b10 uint) (p-func-b11 uint) (p-func-b12 uint) (p-func-b13 uint) (p-func-b14 uint) (p-func-b15 uint) (p-func-b16 uint) (p-func-non-alpha-discount uint) (p-func-no-vowel-discount uint) (lifetime uint) (namespace-import principal) (namespace-manager (optional principal)) (can-update-price bool) (manager-transfers bool) (manager-frozen bool))
+(define-public (namespace-reveal 
+    (namespace (buff 20)) 
+    (namespace-salt (buff 20)) 
+    (p-func-base uint) 
+    (p-func-coeff uint) 
+    (p-func-b1 uint) 
+    (p-func-b2 uint) 
+    (p-func-b3 uint) 
+    (p-func-b4 uint) 
+    (p-func-b5 uint) 
+    (p-func-b6 uint) 
+    (p-func-b7 uint) 
+    (p-func-b8 uint) 
+    (p-func-b9 uint) 
+    (p-func-b10 uint) 
+    (p-func-b11 uint) 
+    (p-func-b12 uint) 
+    (p-func-b13 uint) 
+    (p-func-b14 uint) 
+    (p-func-b15 uint) 
+    (p-func-b16 uint) 
+    (p-func-non-alpha-discount uint) 
+    (p-func-no-vowel-discount uint) 
+    (lifetime uint) 
+    (namespace-import principal) 
+    (namespace-manager (optional principal)) 
+    (can-update-price bool) 
+    (manager-transfers bool) 
+    (manager-frozen bool)
+)
     (let 
         (
             ;; Generate the hashed, salted namespace identifier to match with its preorder.
@@ -736,7 +765,29 @@
 ;; @param: p-func-b1 to p-func-b16 (uint): The bucket-specific multipliers for the pricing function.
 ;; @param: p-func-non-alpha-discount (uint): The discount applied for non-alphabetic characters.
 ;; @param: p-func-no-vowel-discount (uint): The discount applied when no vowels are present.
-(define-public (namespace-update-price (namespace (buff 20)) (p-func-base uint) (p-func-coeff uint) (p-func-b1 uint) (p-func-b2 uint) (p-func-b3 uint) (p-func-b4 uint) (p-func-b5 uint) (p-func-b6 uint) (p-func-b7 uint) (p-func-b8 uint) (p-func-b9 uint) (p-func-b10 uint) (p-func-b11 uint) (p-func-b12 uint) (p-func-b13 uint) (p-func-b14 uint) (p-func-b15 uint) (p-func-b16 uint) (p-func-non-alpha-discount uint) (p-func-no-vowel-discount uint))
+(define-public (namespace-update-price 
+    (namespace (buff 20)) 
+    (p-func-base uint) 
+    (p-func-coeff uint) 
+    (p-func-b1 uint) 
+    (p-func-b2 uint) 
+    (p-func-b3 uint) 
+    (p-func-b4 uint) 
+    (p-func-b5 uint) 
+    (p-func-b6 uint) 
+    (p-func-b7 uint) 
+    (p-func-b8 uint) 
+    (p-func-b9 uint) 
+    (p-func-b10 uint) 
+    (p-func-b11 uint) 
+    (p-func-b12 uint) 
+    (p-func-b13 uint) 
+    (p-func-b14 uint) 
+    (p-func-b15 uint) 
+    (p-func-b16 uint) 
+    (p-func-non-alpha-discount uint) 
+    (p-func-no-vowel-discount uint)
+)
     (let 
         (
             ;; Retrieve the current properties of the namespace.
@@ -763,9 +814,9 @@
     )
 )
 
-;; @desc Public function `namespace-revoke-price-edition` disables the ability to update the price function for a given namespace.
+;; @desc Public function `namespace-freeze-price` disables the ability to update the price function for a given namespace.
 ;; @param: namespace (buff 20): The target namespace for which the price function update capability is being revoked.
-(define-public (namespace-revoke-price-edition (namespace (buff 20)))
+(define-public (namespace-freeze-price (namespace (buff 20)))
     (let 
         (
             ;; Retrieve the properties of the specified namespace to verify its existence and fetch its current settings.
@@ -1163,7 +1214,26 @@
 )
 
 ;; Private function to handle renewals within the grace period
-(define-private (handle-renewal-in-grace-period (name (buff 48)) (namespace (buff 20)) (name-props {registered-at: (optional uint), imported-at: (optional uint), revoked-at: bool, zonefile-hash: (optional (buff 20)), hashed-salted-fqn-preorder: (optional (buff 20)), preordered-by: (optional principal), renewal-height: uint, stx-burn: uint, owner: principal}) (owner principal) (lifetime uint) (new-renewal-height uint))
+(define-private (handle-renewal-in-grace-period 
+    (name (buff 48)) 
+    (namespace (buff 20)) 
+    (name-props 
+        {
+            registered-at: (optional uint), 
+            imported-at: (optional uint), 
+            revoked-at: bool, 
+            zonefile-hash: (optional (buff 20)), 
+            hashed-salted-fqn-preorder: (optional (buff 20)), 
+            preordered-by: (optional principal), 
+            renewal-height: uint, 
+            stx-burn: uint, 
+            owner: principal
+        }
+    ) 
+    (owner principal) 
+    (lifetime uint) 
+    (new-renewal-height uint)
+)
     (begin
         ;; Ensure only the owner can renew within the grace period
         (asserts! (or (is-eq tx-sender owner) (is-eq contract-caller owner)) ERR-NOT-AUTHORIZED)
@@ -1185,7 +1255,26 @@
 )
 
 ;; Private function to handle renewals after the grace period
-(define-private (handle-renewal-after-grace-period (name (buff 48)) (namespace (buff 20)) (name-props {registered-at: (optional uint), imported-at: (optional uint), revoked-at: bool, zonefile-hash: (optional (buff 20)), hashed-salted-fqn-preorder: (optional (buff 20)), preordered-by: (optional principal), renewal-height: uint, stx-burn: uint, owner: principal}) (owner principal) (name-index uint) (new-renewal-height uint))
+(define-private (handle-renewal-after-grace-period 
+    (name (buff 48)) 
+    (namespace (buff 20)) 
+    (name-props 
+        {
+            registered-at: (optional uint), 
+            imported-at: (optional uint), 
+            revoked-at: bool, 
+            zonefile-hash: (optional (buff 20)), 
+            hashed-salted-fqn-preorder: (optional (buff 20)), 
+            preordered-by: (optional principal), 
+            renewal-height: uint, 
+            stx-burn: uint, 
+            owner: principal
+        }
+    ) 
+    (owner principal) 
+    (name-index uint) 
+    (new-renewal-height uint)
+)
     (if (or (is-eq tx-sender owner) (is-eq contract-caller owner))
         ;; If the owner is renewing, simply update the renewal height
         (ok 
@@ -1452,24 +1541,40 @@
     )
 )
 
-(define-private (handle-existing-name (name-props {registered-at: (optional uint), imported-at: (optional uint), revoked-at: bool, zonefile-hash: (optional (buff 20)), hashed-salted-fqn-preorder: (optional (buff 20)), preordered-by: (optional principal), renewal-height: uint, stx-burn: uint, owner: principal}) (hashed-salted-fqn (buff 20)) (tx-sender-preorder-height uint) (stx-burned uint) (name (buff 48)) (namespace (buff 20)) (zonefile-hash (buff 20)))
+(define-private (handle-existing-name 
+    (name-props 
+        {
+            registered-at: (optional uint), 
+            imported-at: (optional uint), 
+            revoked-at: bool, 
+            zonefile-hash: (optional (buff 20)), 
+            hashed-salted-fqn-preorder: (optional (buff 20)), 
+            preordered-by: (optional principal), 
+            renewal-height: uint, 
+            stx-burn: uint, 
+            owner: principal
+        }
+    ) 
+    (hashed-salted-fqn (buff 20)) 
+    (tx-sender-preorder-height uint) 
+    (stx-burned uint) (name (buff 48)) 
+    (namespace (buff 20)) 
+    (zonefile-hash (buff 20))
+)
     (let 
         (
             ;; Retrieve the index of the existing name
             (name-index (unwrap-panic (map-get? name-to-index {name: name, namespace: namespace})))
         )
-        ;; Check if the name was previously registered or imported
-        (match (get registered-at name-props)
-            registered
-            (match (get hashed-salted-fqn-preorder name-props)
-                fqn 
-                ;; Compare both preorder's height
-                (asserts! (> (unwrap-panic (get created-at (map-get? name-preorders {hashed-salted-fqn: fqn, buyer: (unwrap-panic (get preordered-by name-props))}))) tx-sender-preorder-height) ERR-PREORDERED-BEFORE)
-                ;; Compare registered with preorder height
-                (asserts! (> registered tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)
-            )
-            ;; If the name was imported, compare imported-at with preorder height
-            (asserts! (> (unwrap-panic (get imported-at name-props)) tx-sender-preorder-height) ERR-IMPORTED-BEFORE)
+        ;; Straight up check if the name was imported
+        (asserts! (is-none (get imported-at name-props)) ERR-IMPORTED-BEFORE)
+        ;; If the check passes then it is registered, we can straight up check the hashed-salted-fqn-preorder
+        (match (get hashed-salted-fqn-preorder name-props)
+            fqn 
+            ;; Compare both preorder's height
+            (asserts! (> (unwrap-panic (get created-at (map-get? name-preorders {hashed-salted-fqn: fqn, buyer: (unwrap-panic (get preordered-by name-props))}))) tx-sender-preorder-height) ERR-PREORDERED-BEFORE)
+            ;; Compare registered with preorder height
+            (asserts! (> (unwrap-panic (get registered-at name-props)) tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)
         )
         ;; Update the name properties with the new preorder information since it is the best preorder
         (map-set name-properties {name: name, namespace: namespace} (merge name-props {hashed-salted-fqn-preorder: (some hashed-salted-fqn), preordered-by: (some tx-sender)}))
