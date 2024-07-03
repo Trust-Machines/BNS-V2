@@ -99,9 +99,13 @@ const encoder = new TextEncoder();
 
 // Define the salt
 const salt = "stratalabs";
+const salt2 = "trustmachines";
 
 // Encode the salt string to a Uint8Array
 const saltBuff = encoder.encode(salt);
+
+// Encode the salt string to a Uint8Array
+const saltBuff2 = encoder.encode(salt2);
 
 // Hash the strings and encode to a Uint8Array
 const namespaceBuffSalt = createHash160NameSpace(
@@ -129,6 +133,14 @@ const name1BuffSalt = createHash160Name(
   ".",
   namespaceBuff,
   saltBuff
+);
+
+// Hash 160 the Names with the namespace and salt
+const name1BuffDifferentSalt = createHash160Name(
+  encoder.encode("name1"),
+  ".",
+  namespaceBuff,
+  saltBuff2
 );
 
 const name2BuffSalt = createHash160Name(
@@ -553,13 +565,11 @@ const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
     // 1. the name
     // 2. the namespace
     // 3. the zonefile
-    // 4. the stx to burn
     // 5. the address to receive the name
     [
       Cl.buffer(name1Buff),
       Cl.buffer(namespaceBuff),
       Cl.buffer(zonefileBuff),
-      Cl.uint(10000000),
       Cl.principal(address1),
     ],
     // Called by the address that is the send-to address in unmanaged namespaces, in this case address1
@@ -577,13 +587,11 @@ const successfullyFastClaimASecondNameInAnUnmanagedNamespace = () => {
     // 1. the name
     // 2. the namespace
     // 3. the zonefile
-    // 4. the stx to burn
     // 5. the address to receive the name
     [
       Cl.buffer(name2Buff),
       Cl.buffer(namespaceBuff),
       Cl.buffer(zonefileBuff),
-      Cl.uint(10000000),
       Cl.principal(address1),
     ],
     // Called by the address that is the send-to address in unmanaged namespaces, in this case address1
@@ -685,13 +693,11 @@ const successfullyFastClaimANameInAManagedNamespace = () => {
     // 1. the name
     // 2. the namespace
     // 3. the zonefile
-    // 4. the stx to burn
     // 5. the address to receive the name
     [
       Cl.buffer(name1Buff),
       Cl.buffer(namespaceBuff),
       Cl.buffer(zonefileBuff),
-      Cl.uint(10000000),
       Cl.principal(address1),
     ],
     // Called by the manager address
@@ -710,13 +716,11 @@ const successfullyFastClaimASecondNameInAManagedNamespace = () => {
     // 1. the name
     // 2. the namespace
     // 3. the zonefile
-    // 4. the stx to burn
     // 5. the address to receive the name
     [
       Cl.buffer(name2Buff),
       Cl.buffer(namespaceBuff),
       Cl.buffer(zonefileBuff),
-      Cl.uint(10000000),
       Cl.principal(address1),
     ],
     // Called by the manager address
@@ -1967,13 +1971,11 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       // Pass the name in Uint8Array Format
       // Pass the namespace in Uint8Array Format
       // Pass the zonefile in Uint8Array Format
-      // Pass the STX amount to burn
       // Pass the address to send to
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(200000000),
         Cl.principal(address1),
       ],
       address1
@@ -2100,13 +2102,11 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
       // Pass the name in Uint8Array Format
       // Pass the namespace in Uint8Array Format
       // Pass the zonefile in Uint8Array Format
-      // Pass the STX amount to burn
       // Pass the address to send to
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(200000000),
         Cl.principal(address1),
       ],
       managerAddress
@@ -2506,17 +2506,15 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
     const fastClaimName = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name2Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
         Cl.principal(address2),
       ],
       // Called by the manager address
@@ -2654,7 +2652,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       // Passing 2 arguments:
       // 1. the new manager principal
       // 2. the namespace
-      [Cl.principal(address1), Cl.buffer(namespaceBuff)],
+      [Cl.some(Cl.principal(address1)), Cl.buffer(namespaceBuff)],
       // Called by the manager address
       managerAddress
     );
@@ -2670,7 +2668,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       // Passing 2 arguments:
       // 1. the new manager principal
       // 2. the namespace
-      [Cl.principal(address1), Cl.buffer(namespaceBuff)],
+      [Cl.some(Cl.principal(address1)), Cl.buffer(namespaceBuff)],
       // Called by the manager address
       managerAddress
     );
@@ -2687,7 +2685,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       // Passing 2 arguments:
       // 1. the new manager principal
       // 2. the namespace
-      [Cl.principal(address1), Cl.buffer(namespaceBuff)],
+      [Cl.some(Cl.principal(address1)), Cl.buffer(namespaceBuff)],
       // Called by the manager address
       managerAddress
     );
@@ -2704,7 +2702,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       // Passing 2 arguments:
       // 1. the new manager principal
       // 2. the namespace
-      [Cl.principal(address1), Cl.buffer(namespaceBuff)],
+      [Cl.some(Cl.principal(address1)), Cl.buffer(namespaceBuff)],
       // Called by the manager address
       address1
     );
@@ -2734,7 +2732,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       // Passing 2 arguments:
       // 1. the new manager principal
       // 2. the namespace
-      [Cl.principal(address1), Cl.buffer(namespaceBuff)],
+      [Cl.some(Cl.principal(address1)), Cl.buffer(namespaceBuff)],
       // Called by the manager address
       address1
     );
@@ -4943,17 +4941,15 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     const fastClaimName = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
         Cl.principal(address1),
       ],
       // Called by the address that is the send-to address in unmanaged namespaces, in this case address1
@@ -5052,17 +5048,15 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     const fastClaimName = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
         Cl.principal(address1),
       ],
       // Called by the manager address
@@ -5161,17 +5155,15 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     const fastClaimName = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
         Cl.principal(address1),
       ],
       // Called by the address that is the send-to address in unmanaged namespaces, in this case address1
@@ -5184,17 +5176,15 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     const fastClaimName2 = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name2Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefile2Buff),
-        Cl.uint(10000000),
         Cl.principal(address1),
       ],
       // Called by the address that is the send-to address in unmanaged namespaces, in this case address1
@@ -5293,17 +5283,15 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     const fastClaimName = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
         Cl.principal(address1),
       ],
       // Called by the manager address
@@ -5315,17 +5303,15 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     const fastClaimName2 = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name2Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefile2Buff),
-        Cl.uint(10000000),
         Cl.principal(address1),
       ],
       // Called by the manager address
@@ -5340,17 +5326,15 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     const fastClaimName = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
         Cl.principal(address1),
       ],
       // Called by a non manager address
@@ -5449,17 +5433,15 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     const fastClaimName = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
         Cl.principal(address1),
       ],
       // Called by the manager address
@@ -5472,17 +5454,15 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     const fastClaimName2 = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
         Cl.principal(address1),
       ],
       // Called by the manager address
@@ -5581,17 +5561,15 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     const fastClaimName = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
         Cl.principal(address1),
       ],
       // Called by a non manager address
@@ -5690,17 +5668,15 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     const fastClaimName = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
         Cl.principal(address2),
       ],
       // Called by a different address than the send-to address
@@ -5708,224 +5684,6 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     );
     // Return err ERR-NOT-AUTHORIZED
     expect(fastClaimName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
-  });
-
-  it("This should fail to fast mint a name on a launched namespace without a manager and the user does not have sufficient funds to burn stx", () => {
-    // Preorder the Namespace
-    const preorderNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Passing 2 arguments:
-      // 1. the namespace + salt with hash160
-      // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
-
-    // Reveal the namespace
-    simnet.mineEmptyBlock();
-
-    // Reveal the namespace
-    const revealNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-reveal",
-      // Pass all the arguments for the revealing of the name
-      [
-        // 1. The namespace
-        Cl.buffer(namespaceBuff),
-        // 2. The salt used to hash160 the namespace with
-        Cl.buffer(saltBuff),
-
-        // 4. Price base
-        Cl.uint(1),
-        // 5. Price coeff
-        Cl.uint(1),
-        // 6. Price buckets
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        // 7. The non alpha discount
-        Cl.uint(1),
-        // 8. The no vowel discount
-        Cl.uint(1),
-        // 9. Lifetime of the namespace names
-        Cl.uint(5000),
-        // 10. Import address
-        Cl.principal(address1),
-        // 11. Manager address: in this case is none to not have a manager
-        Cl.none(),
-        // 12. can update price
-        Cl.bool(true),
-        // 13. manager transfers
-        Cl.bool(false),
-        // 14. manager frozen
-        Cl.bool(true),
-      ],
-      // Called by the address that made the preorder of the namespace
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(revealNamespace.result).toBeOk(Cl.bool(true));
-
-    // Launch the namespace
-    const launchNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-launch",
-      // 1. Only passing the namespace as argument
-      [Cl.buffer(namespaceBuff)],
-      // Called by the import address assigned in the namespace-reveal function
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(launchNamespace.result).toBeOk(Cl.bool(true));
-
-    // Fast claim the name
-    const fastClaimName = simnet.callPublicFn(
-      "BNS-V2",
-      "name-claim-fast",
-      // Passing 5 arguments:
-      // 1. the name
-      // 2. the namespace
-      // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
-      [
-        Cl.buffer(name1Buff),
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(zonefileBuff),
-        Cl.uint(9007199254740991),
-        Cl.principal(address1),
-      ],
-      // Called by the send-to address
-      address1
-    );
-    // Return err ERR-INSUFFICIENT-FUNDS
-    expect(fastClaimName.result).toBeErr(Cl.uint(1));
-  });
-
-  it("This should fail to fast mint a name on a launched namespace without a manager and the user does not burn enough for the name price", () => {
-    // Preorder the Namespace
-    const preorderNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-preorder",
-      // Passing 2 arguments:
-      // 1. the namespace + salt with hash160
-      // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
-      // Called by any address, in this case address1
-      address1
-    );
-    // This should give ok u146 since the blockheight is 2 + 144 TTL
-    expect(preorderNamespace.result).toBeOk(Cl.uint(146));
-
-    // Reveal the namespace
-    simnet.mineEmptyBlock();
-
-    // Reveal the namespace
-    const revealNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-reveal",
-      // Pass all the arguments for the revealing of the name
-      [
-        // 1. The namespace
-        Cl.buffer(namespaceBuff),
-        // 2. The salt used to hash160 the namespace with
-        Cl.buffer(saltBuff),
-
-        // 4. Price base
-        Cl.uint(1),
-        // 5. Price coeff
-        Cl.uint(1),
-        // 6. Price buckets
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        Cl.uint(1),
-        // 7. The non alpha discount
-        Cl.uint(1),
-        // 8. The no vowel discount
-        Cl.uint(1),
-        // 9. Lifetime of the namespace names
-        Cl.uint(5000),
-        // 10. Import address
-        Cl.principal(address1),
-        // 11. Manager address: in this case is none to not have a manager
-        Cl.none(),
-        // 12. can update price
-        Cl.bool(true),
-        // 13. manager transfers
-        Cl.bool(false),
-        // 14. manager frozen
-        Cl.bool(true),
-      ],
-      // Called by the address that made the preorder of the namespace
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(revealNamespace.result).toBeOk(Cl.bool(true));
-
-    // Launch the namespace
-    const launchNamespace = simnet.callPublicFn(
-      "BNS-V2",
-      "namespace-launch",
-      // 1. Only passing the namespace as argument
-      [Cl.buffer(namespaceBuff)],
-      // Called by the import address assigned in the namespace-reveal function
-      address1
-    );
-    // This should give ok true since it should be successful
-    expect(launchNamespace.result).toBeOk(Cl.bool(true));
-
-    // Fast claim the name
-    const fastClaimName = simnet.callPublicFn(
-      "BNS-V2",
-      "name-claim-fast",
-      // Passing 5 arguments:
-      // 1. the name
-      // 2. the namespace
-      // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
-      [
-        Cl.buffer(name1Buff),
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(zonefileBuff),
-        Cl.uint(1),
-        Cl.principal(address1),
-      ],
-      // Called by the send-to address
-      address1
-    );
-    // Return err ERR-STX-BURNT-INSUFFICIENT
-    expect(fastClaimName.result).toBeErr(Cl.uint(ERR_STX_BURNT_INSUFFICIENT));
   });
 });
 
@@ -6662,7 +6420,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Passing 2 arguments:
       // 1. the name + salt with hash160
       // 2. the amount of STX to burn for the name since it is unmanaged
-      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      [Cl.buffer(name1BuffDifferentSalt), Cl.uint(200000000)],
       // Called by any address, in this case address2
       address2
     );
@@ -6797,7 +6555,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Passing 2 arguments:
       // 1. the name + salt with hash160
       // 2. the amount of STX to burn for the name since it is unmanaged
-      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      [Cl.buffer(name1BuffDifferentSalt), Cl.uint(200000000)],
       // Called by any address, in this case address2
       address2
     );
@@ -6818,7 +6576,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       [
         Cl.buffer(namespaceBuff),
         Cl.buffer(name1Buff),
-        Cl.buffer(saltBuff),
+        Cl.buffer(saltBuff2),
         Cl.buffer(zonefileBuff),
       ],
       // Called by the address that preordered the name
@@ -6952,17 +6710,15 @@ describe("NAME-REGISTER FUNCTION", () => {
     const fastClaimName = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
         Cl.principal(address2),
       ],
       // Called by the address that is the send-to address in unmanaged namespaces, in this case address2
@@ -7654,7 +7410,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Passing 2 arguments:
       // 1. the name + salt with hash160
       // 2. the amount of STX to burn for the name since it is unmanaged
-      [Cl.buffer(name1BuffSalt), Cl.uint(200000000)],
+      [Cl.buffer(name1BuffDifferentSalt), Cl.uint(200000000)],
       // Called by any address, in this case address2
       address2
     );
@@ -7687,7 +7443,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       [
         Cl.buffer(namespaceBuff),
         Cl.buffer(name1Buff),
-        Cl.buffer(saltBuff),
+        Cl.buffer(saltBuff2),
         Cl.buffer(zonefileBuff),
       ],
       // Called by the address that preordered the name
@@ -7807,17 +7563,15 @@ describe("NAME-REGISTER FUNCTION", () => {
     const fastClaimName = simnet.callPublicFn(
       "BNS-V2",
       "name-claim-fast",
-      // Passing 5 arguments:
+      // Passing 4 arguments:
       // 1. the name
       // 2. the namespace
       // 3. the zonefile
-      // 4. the stx to burn
-      // 5. the address to receive the name
+      // 4. the address to receive the name
       [
         Cl.buffer(name1Buff),
         Cl.buffer(namespaceBuff),
         Cl.buffer(zonefileBuff),
-        Cl.uint(10000000),
         Cl.principal(address2),
       ],
       // Called by the address that is the send-to address in unmanaged namespaces, in this case address1
@@ -9690,7 +9444,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       "mng-name-preorder",
       // Passing 1 argument:
       // 1. the name + salt with hash160
-      [Cl.buffer(name1BuffSalt)],
+      [Cl.buffer(name1BuffDifferentSalt)],
       // Called by the managerAddress
       managerAddress
     );
@@ -9710,7 +9464,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       [
         Cl.buffer(namespaceBuff),
         Cl.buffer(name1Buff),
-        Cl.buffer(saltBuff),
+        Cl.buffer(saltBuff2),
         Cl.buffer(zonefileBuff),
         Cl.principal(address1),
       ],
