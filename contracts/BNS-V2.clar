@@ -133,8 +133,10 @@
     { created-at: uint, stx-burned: uint }
 )
 
+;; Tracks preorders, to avoid attacks
+(define-map name-single-preorder (buff 20) bool)
+
 ;; Tracks preorders for names, including their creation times, and STX burned.
-;; Removed the claimed field as it is not necessary
 (define-map name-preorders
     { hashed-salted-fqn: (buff 20), buyer: principal }
     { created-at: uint, stx-burned: uint, claimed: bool}
@@ -473,7 +475,7 @@
 ;; @desc (new) Transfers the management role of a specific namespace to a new principal.
 ;; @param new-manager: Principal of the new manager.
 ;; @param namespace: Buffer of the namespace.
-(define-public (mng-manager-transfer (new-manager principal) (namespace (buff 20)))
+(define-public (mng-manager-transfer (new-manager (optional principal)) (namespace (buff 20)))
     (let 
         (
             ;; Retrieve namespace properties and current manager.
@@ -488,7 +490,7 @@
             (map-set namespaces namespace 
                 (merge 
                     namespace-props 
-                    {namespace-manager: (some new-manager)}
+                    {namespace-manager: new-manager}
                 )
             )
         )
@@ -840,7 +842,7 @@
 ;; @param: zonefile-hash (buff 20): The hash of the zone file associated with the name.
 ;; @param: stx-burn (uint): The amount of STX to burn for the claim.
 ;; @param: send-to (principal): The principal to whom the name will be sent.
-(define-public (name-claim-fast (name (buff 48)) (namespace (buff 20)) (zonefile-hash (buff 20)) (stx-burn uint) (send-to principal)) 
+(define-public (name-claim-fast (name (buff 48)) (namespace (buff 20)) (zonefile-hash (buff 20)) (send-to principal)) 
     (let 
         (
             ;; Retrieve namespace properties.
@@ -850,6 +852,7 @@
             (id-to-be-minted (+ (var-get bns-index) u1))
             ;; Check if the name already exists.
             (name-props (map-get? name-properties {name: name, namespace: namespace}))
+            (name-price (try! (compute-name-price name (get price-function namespace-props))))
         )
         ;; Ensure the name is not already registered.
         (asserts! (map-insert name-to-index {name: name, namespace: namespace} id-to-be-minted) ERR-NAME-NOT-AVAILABLE)
@@ -865,10 +868,8 @@
             (begin 
                 ;; Asserts tx-sender or contract-caller is the send-to
                 (asserts! (or (is-eq tx-sender send-to) (is-eq contract-caller send-to)) ERR-NOT-AUTHORIZED)
-                ;; Burns the STX from the user
-                (try! (stx-burn? stx-burn send-to))
-                ;; Confirms that the amount of STX burned with the preorder is sufficient for the name registration based on a computed price.
-                (asserts! (>= stx-burn (try! (compute-name-price name (get price-function namespace-props)))) ERR-STX-BURNT-INSUFFICIENT)
+                ;; Updated this to burn the actual ammount of the name-price
+                (try! (stx-burn? name-price send-to))
             )
         )
         ;; Update the index
@@ -887,7 +888,7 @@
                 hashed-salted-fqn-preorder: none,
                 preordered-by: none,
                 renewal-height: (+ (get lifetime namespace-props) block-height),
-                stx-burn: stx-burn,
+                stx-burn: name-price,
                 owner: send-to,
             }
         )
@@ -919,6 +920,8 @@
         (asserts! (is-eq (len hashed-salted-fqn) HASH160LEN) ERR-HASH-MALFORMED)
         ;; Ensures that the amount of STX specified to burn is greater than zero.
         (asserts! (> stx-to-burn u0) ERR-STX-BURNT-INSUFFICIENT)
+        ;; Check if the same hashed-salted-fqn has been used before
+        (asserts! (is-none (map-get? name-single-preorder hashed-salted-fqn)) ERR-PREORDERED-BEFORE)
         ;; Transfers the specified amount of stx to the BNS contract to burn on register
         (try! (stx-transfer? stx-to-burn tx-sender .BNS-V2))
         ;; Records the preorder in the 'name-preorders' map.
@@ -926,6 +929,8 @@
             { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }
             { created-at: block-height, stx-burned: stx-to-burn, claimed: false}
         )
+        ;; Sets the map with just the hashed-salted-fqn as the key
+        (map-set name-single-preorder hashed-salted-fqn true)
         ;; Returns the block height at which the preorder's claimability period will expire.
         (ok (+ block-height PREORDER-CLAIMABILITY-TTL))
     )
@@ -1002,11 +1007,15 @@
     (begin
         ;; Validates that the length of the hashed and salted FQN is exactly 20 bytes.
         (asserts! (is-eq (len hashed-salted-fqn) HASH160LEN) ERR-HASH-MALFORMED)
+        ;; Check if the same hashed-salted-fqn has been used before
+        (asserts! (is-none (map-get? name-single-preorder hashed-salted-fqn)) ERR-PREORDERED-BEFORE)
         ;; Records the preorder in the 'name-preorders' map. Buyer set to contract-caller
         (map-set name-preorders
             { hashed-salted-fqn: hashed-salted-fqn, buyer: contract-caller }
             { created-at: block-height, stx-burned: u0, claimed: false }
         )
+        ;; Sets the map with just the hashed-salted-fqn as the key
+        (map-set name-single-preorder hashed-salted-fqn true)
         ;; Returns the block height at which the preorder's claimability period will expire.
         (ok (+ block-height PREORDER-CLAIMABILITY-TTL))
     )
