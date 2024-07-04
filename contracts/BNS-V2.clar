@@ -275,9 +275,9 @@
         ;; Update the name properties with the new owner and reset the zonefile hash.
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
         ;; Update primary name if needed for owner
-        (update-primary-name id owner)
+        (update-primary-name-owner id owner)
         ;; Update primary name if needed for recipient
-        (update-primary-name id recipient)
+        (update-primary-name-recipient id recipient)
         ;; Execute the NFT transfer.
         (nft-transfer? BNS-V2 id nft-current-owner recipient)
     )
@@ -323,9 +323,9 @@
         ;; Ensures the NFT is not currently listed in the market.
         (asserts! (is-none (map-get? market id)) ERR-LISTED)
         ;; Update primary name if needed for owner
-        (update-primary-name id owner)
+        (update-primary-name-owner id owner)
         ;; Update primary name if needed for recipient
-        (update-primary-name id recipient)
+        (update-primary-name-recipient id recipient)
         ;; Update the name properties with the new owner and reset the zonefile hash.
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
         ;; Execute the NFT transfer.
@@ -465,7 +465,7 @@
             true
         )
         ;; Update primary name if needed for the owner of the name
-        (update-primary-name id owner)
+        (update-primary-name-owner id owner)
         ;; Delete the name from all maps:
         ;; Remove the name-to-index.
         (map-delete name-to-index name-and-namespace)
@@ -753,7 +753,7 @@
         (map-set index-to-name current-mint {name: name, namespace: namespace})
         (map-set bns-name-owner current-mint beneficiary)
         ;; Update primary name if needed for send-to
-        (update-primary-name current-mint beneficiary)
+        (update-primary-name-recipient current-mint beneficiary)
         ;; Update the index of the minting
         (var-set bns-index current-mint)
         ;; Update the imported names list for the namespace
@@ -912,7 +912,7 @@
         (map-set index-to-name id-to-be-minted {name: name, namespace: namespace}) 
         (map-set bns-name-owner id-to-be-minted send-to)
         ;; Update primary name if needed for send-to
-        (update-primary-name id-to-be-minted send-to)
+        (update-primary-name-recipient id-to-be-minted send-to)
         ;; Mints the new BNS name.
         (try! (nft-mint? BNS-V2 id-to-be-minted send-to))
         ;; Log the new name registration
@@ -1100,7 +1100,7 @@
         (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
         (map-set bns-name-owner id-to-be-minted send-to)
         ;; Update primary name if needed for send-to
-        (update-primary-name id-to-be-minted send-to)
+        (update-primary-name-recipient id-to-be-minted send-to)
         ;; Updates BNS-index variable to the newly minted ID.
         (var-set bns-index id-to-be-minted)
         ;; Update map to claimed for preorder, to avoid people reclaiming stx from an already registered name
@@ -1519,9 +1519,9 @@
         ;; Check owner and recipient is not the same
         (asserts! (not (is-eq owner recipient)) ERR-OPERATION-UNAUTHORIZED)
         ;; Update primary name if needed for owner
-        (update-primary-name id owner)
+        (update-primary-name-owner id owner)
         ;; Update primary name if needed for recipient
-        (update-primary-name id recipient)
+        (update-primary-name-recipient id recipient)
         ;; Updates the name properties map with the new information.
         ;; Maintains existing properties but sets the zonefile hash to none for a clean slate and updates the owner to the recipient.
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
@@ -1532,19 +1532,28 @@
     )
 )
 
-(define-private (update-primary-name (id uint) (address principal)) 
-    ;; Check if address has a primary name
-    (match (map-get? primary-name address)
-        address-primary-name
-        ;; If owner has a primary name, check if the primary name is the id, this is to check if the address is transferring the primary name
-        (if (is-eq address-primary-name id) 
-            ;; If it is, then delete the primary name map
-            (map-delete primary-name address)
-            ;; If it is not, do nothing, keep the current primary name
-            false
-        )
-        ;; If address does not have a primary name
-        (map-set primary-name address id)
+;; Private function to update the primary name of an address when transfering a name
+;; If the id is = to the primary name then it means that a transfer is happening and we should delete it
+(define-private (update-primary-name-owner (id uint) (owner principal)) 
+    ;; Check if the owner is transferring the primary name
+    (if (is-eq (map-get? primary-name owner) (some id)) 
+        ;; If it is, then delete the primary name map
+        (map-delete primary-name owner)
+        ;; If it is not, do nothing, keep the current primary name
+        false
+    )
+)
+
+;; Private function to update the primary name of an address when recieving
+(define-private (update-primary-name-recipient (id uint) (recipient principal)) 
+    ;; Check if recipient has a primary name
+    (match (map-get? primary-name recipient)
+        recipient-primary-name
+        ;; If recipient has a primary name do nothing
+        true
+        ;; If recipient doesn't have a primary name
+        (map-set primary-name recipient id)
+
     )
 )
 
@@ -1652,7 +1661,7 @@
         ;; Increment the BNS index
         (var-set bns-index id-to-be-minted)
         ;; Update the primary name for the new owner if necessary
-        (update-primary-name id-to-be-minted tx-sender)
+        (update-primary-name-recipient id-to-be-minted tx-sender)
         ;; Mint a new NFT for the BNS name
         (try! (nft-mint? BNS-V2 id-to-be-minted tx-sender))
         ;; Burn the STX paid for the name registration
