@@ -4608,7 +4608,7 @@ describe("NAME-IMPORT FUNCTION", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-describe("namespace-update-price FUNCTION", () => {
+describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
   it("This should successfully update the price in a namespace", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Update the price
@@ -4800,7 +4800,7 @@ describe("namespace-update-price FUNCTION", () => {
 });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-describe("namespace-freeze-price FUNCTION", () => {
+describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
   it("This should successfully update the can-update-price-function of a namespace", () => {
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Update the can-update-price-function

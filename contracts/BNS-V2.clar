@@ -852,6 +852,7 @@
             (id-to-be-minted (+ (var-get bns-index) u1))
             ;; Check if the name already exists.
             (name-props (map-get? name-properties {name: name, namespace: namespace}))
+            ;; new to get the price of the name
             (name-price (try! (compute-name-price name (get price-function namespace-props))))
         )
         ;; Ensure the name is not already registered.
@@ -953,6 +954,8 @@
             ;; Get the amount of burned STX
             (stx-burned (get stx-burned preorder))
         )
+        ;; Ensure that the namespace is launched
+        (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Ensure the preorder hasn't been claimed before
         (asserts! (not (get claimed preorder)) ERR-OPERATION-UNAUTHORIZED)
         ;; Check that the namespace doesn't have a manager (implying it's open for registration)
