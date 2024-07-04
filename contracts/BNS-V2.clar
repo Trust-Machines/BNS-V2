@@ -463,7 +463,7 @@
             listed (try! (unlist-in-ustx id))
             {a: "not-listed", id: id}
         )
-        ;; Update primary name if needed for send-to
+        ;; Update primary name if needed for the owner of the name
         (update-primary-name id owner)
         ;; Delete the name from all maps:
         ;; Remove the name-to-index.
