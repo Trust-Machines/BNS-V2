@@ -712,7 +712,7 @@
 ;; @param: beneficiary (principal): The principal who will own the imported name.
 ;; @param: zonefile-hash (buff 20): The hash of the zone file associated with the imported name.
 ;; @param: stx-burn (uint): The amount of STX tokens to be burned as part of the import process.
-(define-public (name-import (namespace (buff 20)) (name (buff 48)) (beneficiary principal) (zonefile-hash (buff 20)) (stx-burn uint))
+(define-public (name-import (namespace (buff 20)) (name (buff 48)) (beneficiary principal) (zonefile-hash (buff 20)))
     (let 
         (
             ;; Fetch properties of the specified namespace.
@@ -721,6 +721,7 @@
             (current-mint (+ (var-get bns-index) u1))
             ;; Fetch the list of imported names for the namespace.
             (imported-list-of-names (default-to (list) (map-get? imported-names namespace)))
+            (price (try! (compute-name-price name (get price-function namespace-props))))
         )
         ;; Ensure the name is not already registered.
         (asserts! (map-insert name-to-index {name: name, namespace: namespace} current-mint) ERR-NAME-NOT-AVAILABLE)
@@ -728,8 +729,8 @@
         (asserts! (map-insert bns-name-owner current-mint beneficiary) ERR-NAME-NOT-AVAILABLE) 
         ;; Verify that the name contains only valid characters.
         (asserts! (not (has-invalid-chars name)) ERR-CHARSET-INVALID)
-        ;; Ensure the transaction sender is the namespace's designated import principal.
-        (asserts! (is-eq (get namespace-import namespace-props) tx-sender) ERR-OPERATION-UNAUTHORIZED)
+        ;; Ensure the transaction sender is the namespace's designated import principal or the namespace manager
+        (asserts! (or (is-eq (get namespace-import namespace-props) tx-sender) (is-eq (get namespace-manager namespace-props) (some contract-caller))) ERR-OPERATION-UNAUTHORIZED)
         ;; Check that the namespace has not been launched yet, as names can only be imported to namespaces that are revealed but not launched.
         (asserts! (is-none (get launched-at namespace-props)) ERR-NAMESPACE-ALREADY-LAUNCHED)
         ;; Confirm that the import is occurring within the allowed timeframe since the namespace was revealed.
@@ -745,7 +746,7 @@
                 preordered-by: none,
                 ;; Set to u0, this will be updated when the namespace is launched
                 renewal-height: u0,
-                stx-burn: stx-burn,
+                stx-burn: price,
                 owner: beneficiary,
             }
         )
@@ -871,6 +872,8 @@
         (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
         (asserts! (map-insert bns-name-owner id-to-be-minted send-to) ERR-NAME-NOT-AVAILABLE) 
         (asserts! (is-none name-props) ERR-NAME-NOT-AVAILABLE)
+        ;; Verify that the name contains only valid characters.
+        (asserts! (not (has-invalid-chars name)) ERR-CHARSET-INVALID)
         ;; Ensure that the namespace is launched
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Check namespace manager
@@ -981,6 +984,8 @@
         (asserts! (> block-height (+ (get created-at preorder) u1)) ERR-NAME-NOT-CLAIMABLE-YET)
         ;; Verify that enough STX was burned during preorder to cover the name price
         (asserts! (>= stx-burned (try! (compute-name-price name (get price-function namespace-props)))) ERR-STX-BURNT-INSUFFICIENT)
+        ;; Verify that the name contains only valid characters.
+        (asserts! (not (has-invalid-chars name)) ERR-CHARSET-INVALID)
         ;; Mark the preorder as claimed to prevent double-spending
         (map-set name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender } (merge preorder {claimed: true}))
         ;; Check if the name already exists

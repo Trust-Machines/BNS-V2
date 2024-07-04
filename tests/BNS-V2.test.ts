@@ -112,6 +112,11 @@ const namespaceBuffSalt = createHash160NameSpace(
   encoder.encode("namespacetest"),
   saltBuff
 );
+// Hash the strings and encode to a Uint8Array
+const namespaceBuffSalt2 = createHash160NameSpace(
+  encoder.encode("namespacetest"),
+  saltBuff2
+);
 
 const invalidNamespaceBuffSalt = createHash160NameSpace(
   encoder.encode("namespace*"),
@@ -2850,7 +2855,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Passing 2 arguments:
       // 1. the namespace + salt with hash160
       // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      [Cl.buffer(namespaceBuffSalt2), Cl.uint(1000000000)],
       // Called by any address, in this case address1
       address1
     );
@@ -2880,7 +2885,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Passing 2 arguments:
       // 1. the namespace + salt with hash160
       // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      [Cl.buffer(namespaceBuffSalt2), Cl.uint(1000000000)],
       // Called by the same address that created the first order, in this case address1
       address1
     );
@@ -2910,7 +2915,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Passing 2 arguments:
       // 1. the namespace + salt with hash160
       // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(1000000000)],
+      [Cl.buffer(namespaceBuffSalt2), Cl.uint(1000000000)],
       // Called by any address different than address1, in this case address2
       address2
     );
@@ -2942,7 +2947,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
       // Passing 2 arguments:
       // 1. the namespace + salt with hash160
       // 2. the amount of STX to burn for the namespace
-      [Cl.buffer(namespaceBuffSalt), Cl.uint(0)],
+      [Cl.buffer(namespaceBuffSalt2), Cl.uint(0)],
       // Called by any address, in this case address1
       address1
     );
@@ -4167,7 +4172,6 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.buffer(name1Buff),
         Cl.principal(address2),
         Cl.buffer(zonefileBuff),
-        Cl.uint(1000000000),
       ],
       // Called by the import address
       address1
@@ -4192,7 +4196,6 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.buffer(name1Buff),
         Cl.principal(address2),
         Cl.buffer(zonefileBuff),
-        Cl.uint(1000000000),
       ],
       // Called by the import address
       address1
@@ -4289,7 +4292,6 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.buffer(invalidNameBuff),
         Cl.principal(address2),
         Cl.buffer(zonefileBuff),
-        Cl.uint(1000000000),
       ],
       // Called by the import address
       address1
@@ -4386,7 +4388,6 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.buffer(name1Buff),
         Cl.principal(address2),
         Cl.buffer(zonefileBuff),
-        Cl.uint(1000000000),
       ],
       // Called by a different address than the import address
       address2
@@ -4495,7 +4496,6 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.buffer(name1Buff),
         Cl.principal(address2),
         Cl.buffer(zonefileBuff),
-        Cl.uint(1000000000),
       ],
       // Called by the import address
       address1
@@ -4595,7 +4595,6 @@ describe("NAME-IMPORT FUNCTION", () => {
         Cl.buffer(name1Buff),
         Cl.principal(address2),
         Cl.buffer(zonefileBuff),
-        Cl.uint(1000000000),
       ],
       // Called by the import address
       address1
@@ -10249,7 +10248,6 @@ describe("NAME-RENEWAL FUNCTION", () => {
         Cl.buffer(name1Buff),
         Cl.principal(address2),
         Cl.buffer(zonefileBuff),
-        Cl.uint(1000000000),
       ],
       // Called by the import address
       address1
