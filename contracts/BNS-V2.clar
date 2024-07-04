@@ -460,8 +460,9 @@
         (asserts! (is-eq contract-caller (unwrap! (get namespace-manager (unwrap! (map-get? namespaces (get namespace name-and-namespace)) ERR-NAMESPACE-NOT-FOUND)) ERR-NO-NAMESPACE-MANAGER)) ERR-NOT-AUTHORIZED)
         ;; Unlist the NFT if it is listed.
         (match (map-get? market id)
-            listed (try! (unlist-in-ustx id))
-            {a: "not-listed", id: id}
+            listed-name 
+            (map-delete market id) 
+            true
         )
         ;; Update primary name if needed for the owner of the name
         (update-primary-name id owner)
@@ -724,9 +725,7 @@
             (price (try! (compute-name-price name (get price-function namespace-props))))
         )
         ;; Ensure the name is not already registered.
-        (asserts! (map-insert name-to-index {name: name, namespace: namespace} current-mint) ERR-NAME-NOT-AVAILABLE)
-        (asserts! (map-insert index-to-name current-mint {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
-        (asserts! (map-insert bns-name-owner current-mint beneficiary) ERR-NAME-NOT-AVAILABLE) 
+        (asserts! (is-none (map-get? name-properties {name: name, namespace: namespace})) ERR-NAME-NOT-AVAILABLE)
         ;; Verify that the name contains only valid characters.
         (asserts! (not (has-invalid-chars name)) ERR-CHARSET-INVALID)
         ;; Ensure the transaction sender is the namespace's designated import principal or the namespace manager
@@ -750,6 +749,9 @@
                 owner: beneficiary,
             }
         )
+        (map-set name-to-index {name: name, namespace: namespace} current-mint)
+        (map-set index-to-name current-mint {name: name, namespace: namespace})
+        (map-set bns-name-owner current-mint beneficiary)
         ;; Update primary name if needed for send-to
         (update-primary-name current-mint beneficiary)
         ;; Update the index of the minting
@@ -868,9 +870,6 @@
             (name-price (try! (compute-name-price name (get price-function namespace-props))))
         )
         ;; Ensure the name is not already registered.
-        (asserts! (map-insert name-to-index {name: name, namespace: namespace} id-to-be-minted) ERR-NAME-NOT-AVAILABLE)
-        (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
-        (asserts! (map-insert bns-name-owner id-to-be-minted send-to) ERR-NAME-NOT-AVAILABLE) 
         (asserts! (is-none name-props) ERR-NAME-NOT-AVAILABLE)
         ;; Verify that the name contains only valid characters.
         (asserts! (not (has-invalid-chars name)) ERR-CHARSET-INVALID)
@@ -909,6 +908,9 @@
                 owner: send-to,
             }
         )
+        (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted) 
+        (map-set index-to-name id-to-be-minted {name: name, namespace: namespace}) 
+        (map-set bns-name-owner id-to-be-minted send-to)
         ;; Update primary name if needed for send-to
         (update-primary-name id-to-be-minted send-to)
         ;; Mints the new BNS name.
@@ -1067,10 +1069,9 @@
         ;; Ensure the preorder has not been claimed before
         (asserts! (not (get claimed preorder)) ERR-OPERATION-UNAUTHORIZED)
         ;; Ensure the name is not already registered
-        (asserts! (map-insert name-to-index {name: name, namespace: namespace} id-to-be-minted) ERR-NAME-NOT-AVAILABLE)
-        (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
-        (asserts! (map-insert bns-name-owner id-to-be-minted send-to) ERR-NAME-NOT-AVAILABLE) 
-        (asserts! (is-none name-index) ERR-NAME-NOT-AVAILABLE)
+        (asserts! (is-none (map-get? name-properties {name: name, namespace: namespace})) ERR-NAME-NOT-AVAILABLE)
+        ;; Verify that the name contains only valid characters.
+        (asserts! (not (has-invalid-chars name)) ERR-CHARSET-INVALID)
         ;; Verifies that the caller is the namespace manager.
         (asserts! (is-eq contract-caller current-namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Validates that the preorder was made after the namespace was officially launched.
@@ -1094,6 +1095,9 @@
                 owner: send-to,
             }
         )
+        (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
+        (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
+        (map-set bns-name-owner id-to-be-minted send-to)
         ;; Update primary name if needed for send-to
         (update-primary-name id-to-be-minted send-to)
         ;; Updates BNS-index variable to the newly minted ID.
@@ -1316,7 +1320,8 @@
         (begin 
             ;; Check if the name is listed on the market and remove the listing if it is
             (match (map-get? market name-index)
-                listed-name (map-delete market name-index) 
+                listed-name 
+                (map-delete market name-index) 
                 true
             )
             ;; Transfer ownership of the name to the new owner
@@ -1324,9 +1329,10 @@
             ;; Update the name properties with the new renewal height and owner
             (ok 
                 (map-set name-properties {name: name, namespace: namespace}
-                    (merge name-props {renewal-height: new-renewal-height, owner: tx-sender})
+                    (merge name-props {renewal-height: new-renewal-height})
                 )
             )
+
         )
     )  
 )
@@ -1521,6 +1527,7 @@
         ;; Updates the name properties map with the new information.
         ;; Maintains existing properties but sets the zonefile hash to none for a clean slate and updates the owner to the recipient.
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
+        (map-set bns-name-owner id recipient)
         (asserts! (is-eq owner (get owner name-props)) ERR-NOT-AUTHORIZED)
         ;; Executes the NFT transfer from the current owner to the recipient.
         (nft-transfer? BNS-V2 id owner recipient)
