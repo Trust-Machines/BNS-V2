@@ -8089,6 +8089,7 @@ describe("CLAIM-PREORDER FUNCTION", () => {
     expect(preorderName.result).toBeOk(Cl.uint(150));
 
     simnet.mineEmptyBlock();
+    simnet.mineEmptyBlocks(144);
 
     // Reclaim preorder of the name
     const reclaimPreorder = simnet.callPublicFn(
@@ -10016,12 +10017,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // 2. name
       // 3. stx-to-burn
       // 4. zonefile-hash
-      [
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(name1Buff),
-        Cl.uint(20000000),
-        Cl.none(),
-      ],
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.none()],
       // Called from the owner address
       address1
     );
@@ -10044,12 +10040,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // 2. name
       // 3. stx-to-burn
       // 4. zonefile-hash
-      [
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(name1Buff),
-        Cl.uint(20000000),
-        Cl.none(),
-      ],
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.none()],
       // Called from the owner address
       address1
     );
@@ -10072,12 +10063,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // 2. name
       // 3. stx-to-burn
       // 4. zonefile-hash
-      [
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(name1Buff),
-        Cl.uint(20000000),
-        Cl.none(),
-      ],
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.none()],
       // Called from the owner address
       address1
     );
@@ -10100,12 +10086,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // 2. name
       // 3. stx-to-burn
       // 4. zonefile-hash
-      [
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(name1Buff),
-        Cl.uint(20000000),
-        Cl.none(),
-      ],
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.none()],
       // Called from a non owner address
       address2
     );
@@ -10123,12 +10104,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // 2. name
       // 3. stx-to-burn
       // 4. zonefile-hash
-      [
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(name1Buff),
-        Cl.uint(20000000),
-        Cl.none(),
-      ],
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.none()],
       // Called from owner address
       address1
     );
@@ -10147,12 +10123,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // 2. name
       // 3. stx-to-burn
       // 4. zonefile-hash
-      [
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(name1Buff),
-        Cl.uint(20000000),
-        Cl.none(),
-      ],
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.none()],
       // Called from owner address
       address1
     );
@@ -10264,12 +10235,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // 2. name
       // 3. stx-to-burn
       // 4. zonefile-hash
-      [
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(name1Buff),
-        Cl.uint(20000000),
-        Cl.none(),
-      ],
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.none()],
       // Called from owner address
       address1
     );
@@ -10408,12 +10374,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // 2. name
       // 3. stx-to-burn
       // 4. zonefile-hash
-      [
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(name1Buff),
-        Cl.uint(20000000),
-        Cl.none(),
-      ],
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.none()],
       // Called from owner address
       address1
     );
@@ -10436,12 +10397,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // 2. name
       // 3. stx-to-burn
       // 4. zonefile-hash
-      [
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(name1Buff),
-        Cl.uint(20000000),
-        Cl.none(),
-      ],
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.none()],
       // Called from non owner address
       address2
     );
@@ -10461,37 +10417,12 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // 2. name
       // 3. stx-to-burn
       // 4. zonefile-hash
-      [
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(name1Buff),
-        Cl.uint(20000000),
-        Cl.none(),
-      ],
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.none()],
       // Called from non owner address
       address2
     );
     // Return err ERR-NOT-AUTHORIZED
     expect(renewName.result).toBeErr(Cl.uint(ERR_NOT_AUTHORIZED));
-  });
-
-  it("This should fail to renew a name if the stx-burn is not sufficient for the price", () => {
-    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-
-    // Renew the name
-    const renewName = simnet.callPublicFn(
-      "BNS-V2",
-      "name-renewal",
-      // Pass 4 arguments
-      // 1. namespace
-      // 2. name
-      // 3. stx-to-burn
-      // 4. zonefile-hash
-      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.uint(2), Cl.none()],
-      // Called from owner address
-      address1
-    );
-    // Return err ERR-STX-BURNT-INSUFFICIENT
-    expect(renewName.result).toBeErr(Cl.uint(ERR_STX_BURNT_INSUFFICIENT));
   });
 
   it("This should fail to renew a name if the name is revoked", () => {
@@ -10519,12 +10450,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       // 2. name
       // 3. stx-to-burn
       // 4. zonefile-hash
-      [
-        Cl.buffer(namespaceBuff),
-        Cl.buffer(name1Buff),
-        Cl.uint(200000000),
-        Cl.none(),
-      ],
+      [Cl.buffer(namespaceBuff), Cl.buffer(name1Buff), Cl.none()],
       // Called from owner address
       address1
     );

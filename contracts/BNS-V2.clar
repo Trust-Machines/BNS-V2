@@ -1011,13 +1011,16 @@
             (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }) ERR-PREORDER-NOT-FOUND))
             (claimer tx-sender)
         ) 
-        
+        ;; Check if the preorder-claimability-ttl has passed
+        (asserts! (> block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-OPERATION-UNAUTHORIZED)
         ;; Asserts that the preorder has not been claimed
         (asserts! (not (get claimed preorder)) ERR-OPERATION-UNAUTHORIZED)
         ;; Transfers back the specified amount of stx from the BNS contract to the tx-sender
         (try! (as-contract (stx-transfer? (get stx-burned preorder) .BNS-V2 claimer)))
         ;; Deletes the preorder in the 'name-preorders' map.
         (map-delete name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender })
+        ;; Remove the entry from the name-single-preorder map
+        (map-delete name-single-preorder hashed-salted-fqn)
         ;; Returns ok true
         (ok true)
     )
@@ -1063,8 +1066,6 @@
             (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: current-namespace-manager }) ERR-PREORDER-NOT-FOUND))
             ;; Calculates the ID for the new name to be minted.
             (id-to-be-minted (+ (var-get bns-index) u1))
-            ;; Retrieves the index of the name, if it exists, to check for prior registrations.
-            (name-index (map-get? name-to-index {name: name, namespace: namespace}))
         )
         ;; Ensure the preorder has not been claimed before
         (asserts! (not (get claimed preorder)) ERR-OPERATION-UNAUTHORIZED)
@@ -1187,7 +1188,6 @@
                     revoked-at: true,
                     zonefile-hash: none,
                 } 
-
             )
         )
         ;; Return a success response indicating the name has been successfully revoked.
@@ -1200,7 +1200,7 @@
 ;; @param: name (buff 48): The actual name to be renewed.
 ;; @param: stx-to-burn (uint): The amount of STX tokens to be burned for renewal.
 ;; @param: zonefile-hash (optional (buff 20)): The new zone file hash to be associated with the name.
-(define-public (name-renewal (namespace (buff 20)) (name (buff 48)) (stx-to-burn uint) (zonefile-hash (optional (buff 20))))
+(define-public (name-renewal (namespace (buff 20)) (name (buff 48)) (zonefile-hash (optional (buff 20))))
     (let 
         (
             ;; Get the unique identifier for this name
@@ -1226,8 +1226,6 @@
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Check if renewals are required for this namespace
         (asserts! (> lifetime u0) ERR-OPERATION-UNAUTHORIZED)
-        ;; Ensure sufficient STX is being burned for the renewal
-        (asserts! (>= stx-to-burn (try! (compute-name-price name (get price-function namespace-props)))) ERR-STX-BURNT-INSUFFICIENT)
         ;; Verify that the name has not been revoked
         (asserts! (not (get revoked-at name-props)) ERR-NAME-REVOKED) 
         ;; Handle renewal based on whether it's within the grace period or not
@@ -1236,7 +1234,7 @@
             (try! (handle-renewal-after-grace-period name namespace name-props owner name-index new-renewal-height))
         )
         ;; Burn the specified amount of STX
-        (try! (stx-burn? stx-to-burn contract-caller))
+        (try! (stx-burn? (try! (compute-name-price name (get price-function namespace-props))) contract-caller))
         ;; Update the zonefile hash if provided
         (match zonefile-hash
             zonefile (try! (update-zonefile-hash namespace name zonefile))
