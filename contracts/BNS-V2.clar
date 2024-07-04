@@ -134,6 +134,9 @@
 )
 
 ;; Tracks preorders, to avoid attacks
+(define-map namespace-single-preorder (buff 20) bool)
+
+;; Tracks preorders, to avoid attacks
 (define-map name-single-preorder (buff 20) bool)
 
 ;; Tracks preorders for names, including their creation times, and STX burned.
@@ -259,6 +262,8 @@
             ;; If it is not registered then continue
             true 
         )
+        ;; Check owner and recipient is not the same
+        (asserts! (not (is-eq nft-current-owner recipient)) ERR-OPERATION-UNAUTHORIZED)
         ;; We only need to check if manager transfers are true or false, if true then they have to do transfers through the manager contract that calls into mng-transfer, if false then they can call into this function
         (asserts! (not manager-transfers) ERR-NOT-AUTHORIZED)
         ;; Check tx-sender or contract-caller
@@ -307,6 +312,8 @@
             ;; If it is not registered then continue
             true 
         )
+        ;; Check owner and recipient is not the same
+        (asserts! (not (is-eq nft-current-owner recipient)) ERR-OPERATION-UNAUTHORIZED)
         ;; We only need to check if manager transfers are true or false, if true then continue, if false then they can call into `transfer` function
         (asserts! manager-transfers ERR-NOT-AUTHORIZED)
         ;; Check tx-sender or contract-caller, we unwrap-panic because if manager-transfers is true then there has to be a manager
@@ -450,7 +457,7 @@
             (owner (unwrap! (map-get? bns-name-owner id) ERR-UNWRAP)) 
         ) 
         ;; Ensure the caller is the current namespace manager.
-        (asserts! (is-eq contract-caller (unwrap! (get namespace-manager (unwrap! (map-get? namespaces (get namespace (unwrap! (get-bns-from-id id) ERR-NO-NAME))) ERR-NAMESPACE-NOT-FOUND)) ERR-NO-NAMESPACE-MANAGER)) ERR-NOT-AUTHORIZED)
+        (asserts! (is-eq contract-caller (unwrap! (get namespace-manager (unwrap! (map-get? namespaces (get namespace name-and-namespace)) ERR-NAMESPACE-NOT-FOUND)) ERR-NO-NAMESPACE-MANAGER)) ERR-NOT-AUTHORIZED)
         ;; Unlist the NFT if it is listed.
         (match (map-get? market id)
             listed (try! (unlist-in-ustx id))
@@ -529,6 +536,8 @@
     (begin 
         ;; Validate that the hashed-salted-namespace is exactly 20 bytes long.
         (asserts! (is-eq (len hashed-salted-namespace) HASH160LEN) ERR-HASH-MALFORMED)
+        ;; Check if the same hashed-salted-fqn has been used before
+        (asserts! (is-none (map-get? namespace-single-preorder hashed-salted-namespace)) ERR-PREORDERED-BEFORE)
         ;; Confirm that the STX amount to be burned is positive
         (asserts! (> stx-to-burn u0) ERR-STX-BURNT-INSUFFICIENT)
         ;; Execute the token burn operation.
@@ -538,6 +547,8 @@
             { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }
             { created-at: block-height, stx-burned: stx-to-burn }
         )
+        ;; Sets the map with just the hashed-salted-namespace as the key
+        (map-set namespace-single-preorder hashed-salted-namespace true)
         ;; Return the block height at which the preorder claimability expires.
         (ok (+ block-height PREORDER-CLAIMABILITY-TTL))
     )
@@ -1496,6 +1507,8 @@
             ;; Retrieves the properties of the name within the namespace.
             (name-props (unwrap! (map-get? name-properties name-and-namespace) ERR-NO-NAME))
         )
+        ;; Check owner and recipient is not the same
+        (asserts! (not (is-eq owner recipient)) ERR-OPERATION-UNAUTHORIZED)
         ;; Update primary name if needed for owner
         (update-primary-name id owner)
         ;; Update primary name if needed for recipient
