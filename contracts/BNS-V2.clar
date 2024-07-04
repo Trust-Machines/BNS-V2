@@ -860,6 +860,8 @@
         (asserts! (map-insert index-to-name id-to-be-minted {name: name, namespace: namespace}) ERR-NAME-NOT-AVAILABLE)
         (asserts! (map-insert bns-name-owner id-to-be-minted send-to) ERR-NAME-NOT-AVAILABLE) 
         (asserts! (is-none name-props) ERR-NAME-NOT-AVAILABLE)
+        ;; Ensure that the namespace is launched
+        (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Check namespace manager
         (match current-namespace-manager 
             manager 
