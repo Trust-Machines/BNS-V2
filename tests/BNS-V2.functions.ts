@@ -719,6 +719,8 @@ export const callMngTransfer = (
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 export const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
+  // Block 1 to start
+  // Call Preorder a Namespace happens on block 2
   callPreorderAValidNamespace(
     namespaceBuffSalt,
     1000000000,
@@ -726,7 +728,9 @@ export const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
     146,
     false
   );
+  // Mine an empty block happens on block 3, to allow one block to pass between preorder and reveal
   simnet.mineEmptyBlock();
+  // Reveal happens on block 4
   callRevealNamespace(
     namespaceBuff,
     saltBuff,
@@ -745,9 +749,13 @@ export const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
     true,
     false
   );
+  // Launch happens on block 5
   callLaunchNamespace(namespaceBuff, address1, true, false);
+  // preorder happens on block 6
   callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+  // Mine the empty block to fulfill request of 1 block between preorder and register, block 7
   simnet.mineEmptyBlock();
+  // Register happens on block 8
   callRegisterName(
     namespaceBuff,
     name1Buff,
@@ -761,8 +769,12 @@ export const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 export const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace =
   () => {
+    // Block 9
+    // Preorder happens on block 10
     callPreorderName(name2BuffSalt, 200000000, address1, 153, false);
+    // Mine an empty block to allow one block between preorder and register, block 11
     simnet.mineEmptyBlock();
+    // Register happens on the next block 12
     callRegisterName(
       namespaceBuff,
       name2Buff,
@@ -773,9 +785,10 @@ export const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace =
       false
     );
   };
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 export const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
+  // Block 1
+  // Preorder a namespace block 2
   callPreorderAValidNamespace(
     namespaceBuffSalt,
     1000000000,
@@ -783,7 +796,9 @@ export const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
     146,
     false
   );
+  // Mine an empty block to allow one block between preorder and reveal block 3
   simnet.mineEmptyBlock();
+  // Reveal the namespace block 4
   callRevealNamespace(
     namespaceBuff,
     saltBuff,
@@ -802,8 +817,11 @@ export const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
     true,
     false
   );
+  // Launch the namespace block 5
   callLaunchNamespace(namespaceBuff, address1, true, false);
+  // Preorder a name in the managed namespace block 6
   callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
+  // Register the name in the managed namespace block 7
   callManagedRegisterNameWithAddress(
     namespaceBuff,
     name1Buff,
@@ -817,8 +835,10 @@ export const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 export const successfullyTwoStepRegisterASecondNameInAManagedNamespace = () => {
+  // Block 8
+  // Preorder a second name in the managed namespace block 9
   callManagedPreorderName(name2BuffSalt, managerAddress, 152, false);
-  simnet.mineEmptyBlock();
+  // Register the second name in the managed namespace block 10
   callManagedRegisterNameWithAddress(
     namespaceBuff,
     name2Buff,
@@ -832,6 +852,8 @@ export const successfullyTwoStepRegisterASecondNameInAManagedNamespace = () => {
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 export const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
+  // Block 1
+  // Preorder a namespace block 2
   callPreorderAValidNamespace(
     namespaceBuffSalt,
     1000000000,
@@ -839,7 +861,9 @@ export const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
     146,
     false
   );
+  // Mine an empty block to allow one block between preorder and reveal block 3
   simnet.mineEmptyBlock();
+  // Reveal the namespace block 4
   callRevealNamespace(
     namespaceBuff,
     saltBuff,
@@ -858,7 +882,9 @@ export const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
     true,
     false
   );
+  // Launch the namespace block 5
   callLaunchNamespace(namespaceBuff, address1, true, false);
+  // Fast claim a name in the unmanaged namespace block 6, that for fast claim should register at block 7
   callFastClaimName(
     name1Buff,
     namespaceBuff,
@@ -871,6 +897,8 @@ export const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 export const successfullyFastClaimASecondNameInAnUnmanagedNamespace = () => {
+  // Block 8
+  // Fast claim a second name in the unmanaged namespace block 9, that for fast claim should register at block 10
   callFastClaimName(
     name2Buff,
     namespaceBuff,
@@ -883,6 +911,8 @@ export const successfullyFastClaimASecondNameInAnUnmanagedNamespace = () => {
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 export const successfullyFastClaimANameInAManagedNamespace = () => {
+  // Block 1
+  // Preorder a namespace block 2
   callPreorderAValidNamespace(
     namespaceBuffSalt,
     1000000000,
@@ -890,7 +920,9 @@ export const successfullyFastClaimANameInAManagedNamespace = () => {
     146,
     false
   );
+  // Mine an empty block to allow one block between preorder and reveal block 3
   simnet.mineEmptyBlock();
+  // Reveal the namespace as managed block 4
   callRevealNamespace(
     namespaceBuff,
     saltBuff,
@@ -909,7 +941,9 @@ export const successfullyFastClaimANameInAManagedNamespace = () => {
     true,
     false
   );
+  // Launch the namespace block 5
   callLaunchNamespace(namespaceBuff, address1, true, false);
+  // Fast claim a name in the managed namespace block 6, should register at block 7
   callFastClaimName(
     name1Buff,
     namespaceBuff,
@@ -922,6 +956,8 @@ export const successfullyFastClaimANameInAManagedNamespace = () => {
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 export const successfullyFastClaimASecondNameInAManagedNamespace = () => {
+  // Block 8
+  // Fast claim a second name in the managed namespace block 9, should register at block 10
   callFastClaimName(
     name2Buff,
     namespaceBuff,

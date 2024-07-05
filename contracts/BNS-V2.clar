@@ -262,6 +262,10 @@
             ;; If it is not registered then continue
             true 
         )
+        ;; Check that the namespace is launched
+        (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
+        ;; Check that the name is not revoked
+        (asserts! (not (get revoked-at name-props)) ERR-NAME-REVOKED)
         ;; Check owner and recipient is not the same
         (asserts! (not (is-eq nft-current-owner recipient)) ERR-OPERATION-UNAUTHORIZED)
         ;; We only need to check if manager transfers are true or false, if true then they have to do transfers through the manager contract that calls into mng-transfer, if false then they can call into this function
@@ -314,6 +318,10 @@
             ;; If it is not registered then continue
             true 
         )
+        ;; Check that the namespace is launched
+        (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
+        ;; Check that the name is not revoked
+        (asserts! (not (get revoked-at name-props)) ERR-NAME-REVOKED)
         ;; Check owner and recipient is not the same
         (asserts! (not (is-eq nft-current-owner recipient)) ERR-OPERATION-UNAUTHORIZED)
         ;; We only need to check if manager transfers are true or false, if true then continue, if false then they can call into `transfer` function
@@ -821,8 +829,14 @@
                 }
             )
         )
-        ;; Ensure that the transaction sender is the namespace's designated import principal.
-        (asserts! (is-eq (get namespace-import namespace-props) tx-sender) ERR-OPERATION-UNAUTHORIZED)
+        (match (get namespace-manager namespace-props) 
+            manager
+            ;; Ensure that the transaction sender is the namespace's designated import principal.
+            (asserts! (is-eq manager contract-caller) ERR-OPERATION-UNAUTHORIZED)
+            ;; Ensure that the transaction sender is the namespace's designated import principal.
+            (asserts! (or (is-eq (get namespace-import namespace-props) tx-sender) (is-eq (get namespace-import namespace-props) contract-caller)) ERR-OPERATION-UNAUTHORIZED)
+        )
+        
         ;; Verify the namespace's price function can still be updated.
         (asserts! (get can-update-price-function namespace-props) ERR-OPERATION-UNAUTHORIZED)
         ;; Update the namespace's record in the `namespaces` map with the new price function.
@@ -840,8 +854,13 @@
             ;; Retrieve the properties of the specified namespace to verify its existence and fetch its current settings.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
         )
-        ;; Ensure that the transaction sender is the same as the namespace's designated import principal.
-        (asserts! (is-eq (get namespace-import namespace-props) tx-sender) ERR-OPERATION-UNAUTHORIZED)
+        (match (get namespace-manager namespace-props) 
+            manager 
+            ;; Ensure that the transaction sender is the same as the namespace's designated import principal.
+            (asserts! (is-eq manager contract-caller) ERR-OPERATION-UNAUTHORIZED)
+            ;; Ensure that the transaction sender is the same as the namespace's designated import principal.
+            (asserts! (or (is-eq (get namespace-import namespace-props) tx-sender) (is-eq (get namespace-import namespace-props) contract-caller)) ERR-OPERATION-UNAUTHORIZED)
+        )
         ;; Update the namespace properties in the `namespaces` map, setting `can-update-price-function` to false.
         (map-set namespaces namespace 
             (merge namespace-props { can-update-price-function: false })
@@ -1585,7 +1604,10 @@
                     {
                         ;; Calculate the new renewal-height.
                         ;; It is set to the namespace's launched-at time plus the namespace's lifetime.
-                        renewal-height: (+ (unwrap! (get launched-at namespace-props) ERR-UNWRAP) (get lifetime namespace-props))
+                        renewal-height: (if (is-some (get namespace-manager namespace-props)) 
+                                            u0
+                                            (+ (unwrap! (get launched-at namespace-props) ERR-UNWRAP) (get lifetime namespace-props))
+                                        )
                     }
                 )
             )
