@@ -81,7 +81,7 @@ export const namespaceBuffSalt = createHash160NameSpace(
   saltBuff
 );
 export const namespaceBuffSalt2 = createHash160NameSpace(
-  encoder.encode("namespacetest"),
+  encoder.encode("namespacetest2"),
   saltBuff2
 );
 export const invalidNamespaceBuffSalt = createHash160NameSpace(
@@ -95,6 +95,7 @@ export const invalidNamespaceBuff = encoder.encode("namespace*");
 export const zonefileBuff = encoder.encode("zonefile");
 export const zonefile2Buff = encoder.encode("zonefile2");
 export const namespaceBuff = encoder.encode("namespacetest");
+export const namespaceBuff2 = encoder.encode("namespacetest2");
 export const name1BuffSalt = createHash160Name(
   encoder.encode("name1"),
   ".",
@@ -111,5 +112,12 @@ export const name2BuffSalt = createHash160Name(
   encoder.encode("name2"),
   ".",
   namespaceBuff,
+  saltBuff
+);
+
+export const name1BuffSaltDiff = createHash160Name(
+  encoder.encode("name1"),
+  ".",
+  namespaceBuff2,
   saltBuff
 );
