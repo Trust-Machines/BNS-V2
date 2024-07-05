@@ -121,3 +121,10 @@ export const name1BuffSaltDiff = createHash160Name(
   namespaceBuff2,
   saltBuff
 );
+
+export const invalidNameBuffSalt = createHash160Name(
+  encoder.encode("name*"),
+  ".",
+  namespaceBuff,
+  saltBuff
+);

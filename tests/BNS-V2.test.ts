@@ -51,6 +51,7 @@ import {
   name2BuffSalt,
   namespaceBuff2,
   name1BuffSaltDiff,
+  invalidNameBuffSalt,
 } from "./BNS-V2.helper";
 import {
   callPreorderAValidNamespace,
@@ -244,7 +245,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     // Check Primary Names
@@ -263,7 +264,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address3,
     });
     // Check Primary Names
@@ -654,7 +655,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     // Check Primary Names
@@ -680,7 +681,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     // Check Primary Names
@@ -898,7 +899,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     // Check Primary Names
@@ -924,7 +925,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     // Check Primary Names
@@ -947,7 +948,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     // Check Primary Names
@@ -966,7 +967,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     // Check Primary Names
@@ -991,7 +992,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     // Check Primary Names
@@ -1017,7 +1018,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     // Check Primary Names
@@ -1219,7 +1220,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     callGetPrimaryName(address1, 1);
@@ -1237,7 +1238,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address3,
     });
     callGetPrimaryName(address1, null);
@@ -1293,7 +1294,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     callGetPrimaryName(address1, 1);
@@ -1311,7 +1312,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address3,
     });
     callGetPrimaryName(address1, null);
@@ -1447,7 +1448,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
   });
@@ -1500,7 +1501,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
 
@@ -1524,7 +1525,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
   });
@@ -1602,7 +1603,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
   });
@@ -1692,7 +1693,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
   });
@@ -2052,7 +2053,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address3,
     });
     callGetPrimaryName(address3, 1);
@@ -4982,7 +4983,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     callGetOwner(1, address1);
@@ -5050,7 +5051,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     callGetBnsInfo(name2Buff, namespaceBuff, {
@@ -5061,7 +5062,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     callGetOwner(1, address1);
@@ -5105,7 +5106,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
+      "stx-burn": 0,
       owner: address1,
     });
     callGetOwner(1, address1);
@@ -6433,675 +6434,1000 @@ describe("NAME-REGISTER FUNCTION", () => {
   });
 });
 
-// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// describe("CLAIM-PREORDER FUNCTION", () => {
-//   it("This should succesfully claim the stx from a preorder that has not been claimed by the owner of the preorder", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       null,
-//       true,
-//       false,
-//       true,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
-//     simnet.mineEmptyBlock();
-//     simnet.mineEmptyBlocks(144);
-//     callClaimPreorder(name1BuffSalt, address1, true, false);
-//   });
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+describe("CLAIM-PREORDER FUNCTION", () => {
+  it("This should succesfully claim the stx from a preorder that has not been claimed by the owner of the preorder", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      null,
+      true,
+      false,
+      true,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    simnet.mineEmptyBlock();
+    simnet.mineEmptyBlocks(144);
+    callClaimPreorder(name1BuffSalt, address1, true, false);
+  });
 
-//   it("This should fail to claim the stx from a preorder that has been claimed by the owner of the preorder", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       null,
-//       true,
-//       false,
-//       true,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
-//     simnet.mineEmptyBlock();
-//     callRegisterName(
-//       namespaceBuff,
-//       name1Buff,
-//       saltBuff,
-//       zonefileBuff,
-//       address1,
-//       1,
-//       false
-//     );
-//     callClaimPreorder(
-//       name1BuffSalt,
-//       address1,
-//       ERR_OPERATION_UNAUTHORIZED,
-//       true
-//     );
-//   });
+  it("This should fail to claim the stx from a preorder that has been claimed by the owner of the preorder", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      null,
+      true,
+      false,
+      true,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    simnet.mineEmptyBlock();
+    callRegisterName(
+      namespaceBuff,
+      name1Buff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      1,
+      false
+    );
+    callClaimPreorder(
+      name1BuffSalt,
+      address1,
+      ERR_OPERATION_UNAUTHORIZED,
+      true
+    );
+  });
 
-//   it("This should fail to claim the stx from a preorder that does not exist", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       null,
-//       true,
-//       false,
-//       true,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callClaimPreorder(name1BuffSalt, address1, ERR_PREORDER_NOT_FOUND, true);
-//   });
-// });
+  it("This should fail to claim the stx from a preorder that does not exist", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      null,
+      true,
+      false,
+      true,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callClaimPreorder(name1BuffSalt, address1, ERR_PREORDER_NOT_FOUND, true);
+  });
+});
 
-// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// describe("MNG-NAME-PREORDER FUNCTION", () => {
-//   it("This should successfully preorder a name on a launched namespace without a manager even though it is not its intended use", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       null,
-//       true,
-//       false,
-//       true,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callManagedPreorderName(name1BuffSalt, address1, 150, false);
-//   });
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+describe("MNG-NAME-PREORDER FUNCTION", () => {
+  it("This should successfully preorder a name on a launched namespace without a manager even though it is not its intended use", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      null,
+      true,
+      false,
+      true,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedPreorderName(name1BuffSalt, address1, 150, false);
+  });
 
-//   it("This should successfully preorder a name on a launched namespace with a manager", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       managerAddress,
-//       false,
-//       true,
-//       false,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
-//   });
+  it("This should successfully preorder a name on a launched namespace with a manager", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      managerAddress,
+      false,
+      true,
+      false,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
+  });
 
-//   it("This should fail to preorder a name if hash is malformed", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       managerAddress,
-//       false,
-//       true,
-//       false,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callManagedPreorderName(
-//       name1Buff,
-//       managerAddress,
-//       ERR_HASH_MALFORMED,
-//       true
-//     );
-//   });
-// });
+  it("This should fail to preorder a name if hash is malformed", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      managerAddress,
+      false,
+      true,
+      false,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedPreorderName(
+      name1Buff,
+      managerAddress,
+      ERR_HASH_MALFORMED,
+      true
+    );
+  });
 
-// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// describe("MNG-NAME-REGISTER FUNCTION", () => {
-//   it("This should successfully register a name in a managed namespace", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       managerAddress,
-//       false,
-//       true,
-//       false,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
-//     callManagedRegisterNameWithAddress(
-//       namespaceBuff,
-//       name1Buff,
-//       saltBuff,
-//       zonefileBuff,
-//       address1,
-//       managerAddress,
-//       1,
-//       false
-//     );
-//   });
+  it("This should fail to preorder a name that was preordered before", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      managerAddress,
+      false,
+      true,
+      false,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
+    callManagedPreorderName(
+      name1BuffSalt,
+      managerAddress,
+      ERR_PREORDERED_BEFORE,
+      true
+    );
+  });
+});
 
-//   it("This should succesfully register 2 different names in a managed namespace", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       managerAddress,
-//       false,
-//       true,
-//       false,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
-//     callManagedRegisterNameWithAddress(
-//       namespaceBuff,
-//       name1Buff,
-//       saltBuff,
-//       zonefileBuff,
-//       address1,
-//       managerAddress,
-//       1,
-//       false
-//     );
-//     callManagedPreorderName(name2BuffSalt, managerAddress, 152, false);
-//     callManagedRegisterNameWithAddress(
-//       namespaceBuff,
-//       name2Buff,
-//       saltBuff,
-//       zonefileBuff,
-//       address1,
-//       managerAddress,
-//       2,
-//       false
-//     );
-//   });
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+describe("MNG-NAME-REGISTER FUNCTION", () => {
+  it("This should successfully register a name in a managed namespace", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      managerAddress,
+      false,
+      true,
+      false,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
+    callManagedRegisterNameWithAddress(
+      namespaceBuff,
+      name1Buff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      managerAddress,
+      1,
+      false
+    );
+    // State Checking
+    callGetBnsFromId(1, name1Buff, namespaceBuff);
+    callGetIdFromBns(name1Buff, namespaceBuff, 1);
+    callGetOwner(1, address1);
+    callGetPrimaryName(address1, 1);
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "zonefile-hash": zonefileBuff,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "renewal-height": 0,
+      "stx-burn": 0,
+      owner: address1,
+    });
+  });
 
-//   it("This should fail to register a name if the namespace has no manager", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       null,
-//       true,
-//       false,
-//       true,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
-//     callManagedRegisterNameWithAddress(
-//       namespaceBuff,
-//       name1Buff,
-//       saltBuff,
-//       zonefileBuff,
-//       address1,
-//       managerAddress,
-//       ERR_NO_NAMESPACE_MANAGER,
-//       true
-//     );
-//   });
+  it("This should succesfully register 2 different names in a managed namespace", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      managerAddress,
+      false,
+      true,
+      false,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
+    callManagedRegisterNameWithAddress(
+      namespaceBuff,
+      name1Buff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      managerAddress,
+      1,
+      false
+    );
+    // State Checking
+    callGetBnsFromId(1, name1Buff, namespaceBuff);
+    callGetIdFromBns(name1Buff, namespaceBuff, 1);
+    callGetOwner(1, address1);
+    callGetPrimaryName(address1, 1);
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "zonefile-hash": zonefileBuff,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "renewal-height": 0,
+      "stx-burn": 0,
+      owner: address1,
+    });
+    callManagedPreorderName(name2BuffSalt, managerAddress, 152, false);
+    callManagedRegisterNameWithAddress(
+      namespaceBuff,
+      name2Buff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      managerAddress,
+      2,
+      false
+    );
+    // State Checking
+    callGetBnsFromId(2, name2Buff, namespaceBuff);
+    callGetIdFromBns(name2Buff, namespaceBuff, 2);
+    callGetOwner(2, address1);
+    callGetPrimaryName(address1, 1);
+    callGetBnsInfo(name2Buff, namespaceBuff, {
+      "registered-at": 9,
+      "imported-at": null,
+      "revoked-at": false,
+      "zonefile-hash": zonefileBuff,
+      "hashed-salted-fqn-preorder": name2BuffSalt,
+      "preordered-by": address1,
+      "renewal-height": 0,
+      "stx-burn": 0,
+      owner: address1,
+    });
+  });
 
-//   it("This should fail to register a name if no name-preorder", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       managerAddress,
-//       false,
-//       true,
-//       false,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callManagedRegisterNameWithAddress(
-//       namespaceBuff,
-//       name1Buff,
-//       saltBuff,
-//       zonefileBuff,
-//       address1,
-//       managerAddress,
-//       ERR_PREORDER_NOT_FOUND,
-//       true
-//     );
-//   });
+  it("This should fail to register a name if no namespace", () => {
+    callManagedPreorderName(name1BuffSalt, managerAddress, 146, false);
+    callManagedRegisterNameWithAddress(
+      namespaceBuff,
+      name1Buff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      managerAddress,
+      ERR_NAMESPACE_NOT_FOUND,
+      true
+    );
+  });
 
-//   it("This should fail to register a name in a managed namespace if contract-caller not the manager", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       managerAddress,
-//       false,
-//       true,
-//       false,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callManagedPreorderName(name1BuffSalt, address1, 150, false);
-//     callManagedRegisterNameWithAddress(
-//       namespaceBuff,
-//       name1Buff,
-//       saltBuff,
-//       zonefileBuff,
-//       address1,
-//       address1,
-//       ERR_PREORDER_NOT_FOUND,
-//       true
-//     );
-//   });
+  it("This should fail to register a name if the namespace has no manager", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      null,
+      true,
+      false,
+      true,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
+    callManagedRegisterNameWithAddress(
+      namespaceBuff,
+      name1Buff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      managerAddress,
+      ERR_NO_NAMESPACE_MANAGER,
+      true
+    );
+  });
 
-//   it("This should fail to register a name if name already exists", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       managerAddress,
-//       false,
-//       true,
-//       false,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
-//     callManagedRegisterNameWithAddress(
-//       namespaceBuff,
-//       name1Buff,
-//       saltBuff,
-//       zonefileBuff,
-//       address1,
-//       managerAddress,
-//       1,
-//       false
-//     );
-//     simnet.mineEmptyBlocks(144);
-//     callManagedPreorderName(name1BuffDifferentSalt, managerAddress, 296, false);
-//     callManagedRegisterNameWithAddress(
-//       namespaceBuff,
-//       name1Buff,
-//       saltBuff2,
-//       zonefileBuff,
-//       address1,
-//       managerAddress,
-//       ERR_NAME_NOT_AVAILABLE,
-//       true
-//     );
-//   });
+  it("This should fail to register a name if no name-preorder", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      managerAddress,
+      false,
+      true,
+      false,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedRegisterNameWithAddress(
+      namespaceBuff,
+      name1Buff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      managerAddress,
+      ERR_PREORDER_NOT_FOUND,
+      true
+    );
+  });
 
-//   it("This should fail to register a name if name was preordered before namespace launch", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       managerAddress,
-//       false,
-//       true,
-//       false,
-//       address1,
-//       true,
-//       false
-//     );
-//     callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callManagedRegisterNameWithAddress(
-//       namespaceBuff,
-//       name1Buff,
-//       saltBuff,
-//       zonefileBuff,
-//       address1,
-//       managerAddress,
-//       ERR_NAME_PREORDERED_BEFORE_NAMESPACE_LAUNCH,
-//       true
-//     );
-//   });
+  it("This should fail to register a name in a managed namespace if contract-caller not the manager", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      managerAddress,
+      false,
+      true,
+      false,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedPreorderName(name1BuffSalt, address1, 150, false);
+    callManagedRegisterNameWithAddress(
+      namespaceBuff,
+      name1Buff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      address1,
+      ERR_PREORDER_NOT_FOUND,
+      true
+    );
+  });
 
-//   it("This should fail to register a name if TTL has passed", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       managerAddress,
-//       false,
-//       true,
-//       false,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
-//     simnet.mineEmptyBlocks(150);
-//     callManagedRegisterNameWithAddress(
-//       namespaceBuff,
-//       name1Buff,
-//       saltBuff,
-//       zonefileBuff,
-//       address1,
-//       managerAddress,
-//       ERR_PREORDER_CLAIMABILITY_EXPIRED,
-//       true
-//     );
-//   });
-// });
+  it("This should fail to register a name if name already exists", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      managerAddress,
+      false,
+      true,
+      false,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
+    callManagedRegisterNameWithAddress(
+      namespaceBuff,
+      name1Buff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      managerAddress,
+      1,
+      false
+    );
+    simnet.mineEmptyBlocks(144);
+    callManagedPreorderName(name1BuffDifferentSalt, managerAddress, 296, false);
+    callManagedRegisterNameWithAddress(
+      namespaceBuff,
+      name1Buff,
+      saltBuff2,
+      zonefileBuff,
+      address1,
+      managerAddress,
+      ERR_NAME_NOT_AVAILABLE,
+      true
+    );
+  });
 
-// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
-//   it("This should successfully update the zonefile hash of a name in an unmanaged namespace", () => {
-//     successfullyFastClaimANameInAnUnmanagedNamespace();
-//     callUpdateZonefileHash(
-//       namespaceBuff,
-//       name1Buff,
-//       zonefile2Buff,
-//       address1,
-//       true,
-//       false
-//     );
-//   });
+  it("This should fail to register a name if name invalid", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      managerAddress,
+      false,
+      true,
+      false,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedPreorderName(invalidNameBuffSalt, managerAddress, 150, false);
+    callManagedRegisterNameWithAddress(
+      namespaceBuff,
+      invalidNameBuff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      managerAddress,
+      ERR_CHARSET_INVALID,
+      true
+    );
+  });
 
-//   it("This should successfully update the zonefile hash of a name in a managed namespace", () => {
-//     successfullyTwoStepRegisterANameInAManagedNamespace();
-//     callUpdateZonefileHash(
-//       namespaceBuff,
-//       name1Buff,
-//       zonefile2Buff,
-//       address1,
-//       true,
-//       false
-//     );
-//   });
+  it("This should fail to register a name if name was preordered before namespace launch", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      managerAddress,
+      false,
+      true,
+      false,
+      address1,
+      true,
+      false
+    );
+    callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedRegisterNameWithAddress(
+      namespaceBuff,
+      name1Buff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      managerAddress,
+      ERR_NAME_PREORDERED_BEFORE_NAMESPACE_LAUNCH,
+      true
+    );
+  });
 
-//   it("This should fail to update the zonefile hash of a nonexistent name", () => {
-//     callUpdateZonefileHash(
-//       namespaceBuff,
-//       name1Buff,
-//       zonefile2Buff,
-//       managerAddress,
-//       ERR_NO_NAME,
-//       true
-//     );
-//   });
+  it("This should fail to register a name if TTL has passed", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      managerAddress,
+      false,
+      true,
+      false,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
+    simnet.mineEmptyBlocks(150);
+    callManagedRegisterNameWithAddress(
+      namespaceBuff,
+      name1Buff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      managerAddress,
+      ERR_PREORDER_CLAIMABILITY_EXPIRED,
+      true
+    );
+  });
+});
 
-//   it("This should fail to update the zonefile hash if the zonefile is the same", () => {
-//     successfullyTwoStepRegisterANameInAManagedNamespace();
-//     callUpdateZonefileHash(
-//       namespaceBuff,
-//       name1Buff,
-//       zonefileBuff,
-//       managerAddress,
-//       ERR_OPERATION_UNAUTHORIZED,
-//       true
-//     );
-//   });
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
+  it("This should successfully update the zonefile hash of a name in an unmanaged namespace", () => {
+    successfullyFastClaimANameInAnUnmanagedNamespace();
 
-//   it("This should fail to update the zonefile hash if the name is revoked", () => {
-//     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-//     callRevokeName(namespaceBuff, name1Buff, address1, true, false);
-//     callUpdateZonefileHash(
-//       namespaceBuff,
-//       name1Buff,
-//       zonefile2Buff,
-//       address1,
-//       ERR_NAME_REVOKED,
-//       true
-//     );
-//   });
+    // Check initial state
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 5007,
+      owner: address1,
+      "stx-burn": 10,
+    });
 
-//   it("This should fail to update the zonefile hash of a name in an unmanaged namespace when the tx-sender is not the owner", () => {
-//     successfullyFastClaimANameInAnUnmanagedNamespace();
-//     callUpdateZonefileHash(
-//       namespaceBuff,
-//       name1Buff,
-//       zonefile2Buff,
-//       address3,
-//       ERR_NOT_AUTHORIZED,
-//       true
-//     );
-//   });
+    callUpdateZonefileHash(
+      namespaceBuff,
+      name1Buff,
+      zonefile2Buff,
+      address1,
+      true,
+      false
+    );
 
-//   it("This should fail to update the zonefile hash of a name in a managed namespace when the contract-caller is not the owner", () => {
-//     successfullyTwoStepRegisterANameInAManagedNamespace();
-//     callUpdateZonefileHash(
-//       namespaceBuff,
-//       name1Buff,
-//       zonefile2Buff,
-//       managerAddress,
-//       ERR_NOT_AUTHORIZED,
-//       true
-//     );
-//   });
+    // Check updated state
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "zonefile-hash": zonefile2Buff,
+      "renewal-height": 5007,
+      owner: address1,
+      "stx-burn": 10,
+    });
+  });
 
-//   it("This should fail to update the zonefile hash of a name if the name is not in a valid grace period", () => {
-//     successfullyTwoStepRegisterANameInAManagedNamespace();
-//     simnet.mineEmptyBlocks(11000);
-//     callUpdateZonefileHash(
-//       namespaceBuff,
-//       name1Buff,
-//       zonefile2Buff,
-//       address1,
-//       ERR_OPERATION_UNAUTHORIZED,
-//       true
-//     );
-//   });
-// });
+  it("This should successfully update the zonefile hash of a name in a managed namespace", () => {
+    successfullyTwoStepRegisterANameInAManagedNamespace();
+
+    // Check initial state
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 0,
+      owner: address1,
+      "stx-burn": 0,
+    });
+
+    callUpdateZonefileHash(
+      namespaceBuff,
+      name1Buff,
+      zonefile2Buff,
+      address1,
+      true,
+      false
+    );
+
+    // Check updated state
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "zonefile-hash": zonefile2Buff,
+      "renewal-height": 0,
+      owner: address1,
+      "stx-burn": 0,
+    });
+  });
+
+  it("This should fail to update the zonefile hash of a nonexistent name", () => {
+    callUpdateZonefileHash(
+      namespaceBuff,
+      name1Buff,
+      zonefile2Buff,
+      managerAddress,
+      ERR_NO_NAME,
+      true
+    );
+  });
+
+  it("This should fail to update the zonefile hash if the zonefile is the same", () => {
+    successfullyTwoStepRegisterANameInAManagedNamespace();
+
+    // Check initial state
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 0,
+      owner: address1,
+      "stx-burn": 0,
+    });
+
+    callUpdateZonefileHash(
+      namespaceBuff,
+      name1Buff,
+      zonefileBuff,
+      managerAddress,
+      ERR_OPERATION_UNAUTHORIZED,
+      true
+    );
+
+    // Check that the state hasn't changed
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 0,
+      owner: address1,
+      "stx-burn": 0,
+    });
+  });
+
+  it("This should fail to update the zonefile hash if the name is revoked", () => {
+    successfullyFastClaimANameInAnUnmanagedNamespace();
+    callRevokeName(namespaceBuff, name1Buff, address1, true, false);
+
+    // Check revoked state
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": true,
+      "hashed-salted-fqn-preorder": null,
+      "preordered-by": null,
+      "zonefile-hash": null,
+      "renewal-height": 5007,
+      owner: address1,
+      "stx-burn": 10,
+    });
+
+    callUpdateZonefileHash(
+      namespaceBuff,
+      name1Buff,
+      zonefile2Buff,
+      address1,
+      ERR_NAME_REVOKED,
+      true
+    );
+
+    // Check that the state hasn't changed
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": true,
+      "hashed-salted-fqn-preorder": null,
+      "preordered-by": null,
+      "zonefile-hash": null,
+      "renewal-height": 5007,
+      owner: address1,
+      "stx-burn": 10,
+    });
+  });
+
+  it("This should fail to update the zonefile hash of a name in an unmanaged namespace when the tx-sender is not the owner", () => {
+    successfullyFastClaimANameInAnUnmanagedNamespace();
+
+    // Check initial state
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": null,
+      "preordered-by": null,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 5007,
+      owner: address1,
+      "stx-burn": 10,
+    });
+
+    callUpdateZonefileHash(
+      namespaceBuff,
+      name1Buff,
+      zonefile2Buff,
+      address3,
+      ERR_NOT_AUTHORIZED,
+      true
+    );
+
+    // Check that the state hasn't changed
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": null,
+      "preordered-by": null,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 5007,
+      owner: address1,
+      "stx-burn": 10,
+    });
+  });
+
+  it("This should fail to update the zonefile hash of a name in a managed namespace when the contract-caller is not the owner", () => {
+    successfullyFastClaimANameInAManagedNamespace();
+
+    // Check initial state
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": null,
+      "preordered-by": null,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 0,
+      owner: address1,
+      "stx-burn": 0,
+    });
+
+    callUpdateZonefileHash(
+      namespaceBuff,
+      name1Buff,
+      zonefile2Buff,
+      managerAddress,
+      ERR_NOT_AUTHORIZED,
+      true
+    );
+
+    // Check that the state hasn't changed
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": null,
+      "preordered-by": null,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 0,
+      owner: address1,
+      "stx-burn": 0,
+    });
+  });
+
+  it("This should fail to update the zonefile hash of a name if the name is not in a valid grace period", () => {
+    successfullyFastClaimANameInAnUnmanagedNamespace();
+
+    // Check initial state
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": null,
+      "preordered-by": null,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 5007,
+      owner: address1,
+      "stx-burn": 10,
+    });
+
+    simnet.mineEmptyBlocks(11000);
+    callUpdateZonefileHash(
+      namespaceBuff,
+      name1Buff,
+      zonefile2Buff,
+      address1,
+      ERR_OPERATION_UNAUTHORIZED,
+      true
+    );
+
+    // Check that the state hasn't changed
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": null,
+      "preordered-by": null,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 5007,
+      owner: address1,
+      "stx-burn": 10,
+    });
+  });
+});
 
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // describe("NAME-REVOKE FUNCTION", () => {

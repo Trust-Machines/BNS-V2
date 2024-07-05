@@ -732,7 +732,11 @@
             (current-mint (+ (var-get bns-index) u1))
             ;; Fetch the list of imported names for the namespace.
             (imported-list-of-names (default-to (list) (map-get? imported-names namespace)))
-            (price (try! (compute-name-price name (get price-function namespace-props))))
+            (price (if (is-none (get namespace-manager namespace-props))
+                        (try! (compute-name-price name (get price-function namespace-props)))
+                        u0
+                    )
+            )
         )
         ;; Ensure the name is not already registered.
         (asserts! (is-none (map-get? name-properties {name: name, namespace: namespace})) ERR-NAME-NOT-AVAILABLE)
@@ -888,7 +892,11 @@
             ;; Check if the name already exists.
             (name-props (map-get? name-properties {name: name, namespace: namespace}))
             ;; new to get the price of the name
-            (name-price (try! (compute-name-price name (get price-function namespace-props))))
+            (name-price (if (is-none current-namespace-manager)
+                            (try! (compute-name-price name (get price-function namespace-props)))
+                            u0
+                        )
+            )
         )
         ;; Ensure the name is not already registered.
         (asserts! (is-none name-props) ERR-NAME-NOT-AVAILABLE)
