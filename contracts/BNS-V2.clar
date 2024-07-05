@@ -274,6 +274,8 @@
         (asserts! (is-none (map-get? market id)) ERR-LISTED)
         ;; Update the name properties with the new owner and reset the zonefile hash.
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
+        ;; Updates the owner of the name
+        (map-set bns-name-owner id recipient)
         ;; Update primary name if needed for owner
         (update-primary-name-owner id owner)
         ;; Update primary name if needed for recipient
@@ -1220,10 +1222,10 @@
             ;; Calculate the new renewal height based on current block height
             (new-renewal-height (+ block-height lifetime))
         )
-        ;; Ensure the namespace doesn't have a manager
-        (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
         ;; Verify that the namespace has been launched
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
+        ;; Ensure the namespace doesn't have a manager
+        (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
         ;; Check if renewals are required for this namespace
         (asserts! (> lifetime u0) ERR-OPERATION-UNAUTHORIZED)
         ;; Verify that the name has not been revoked
@@ -1553,7 +1555,6 @@
         true
         ;; If recipient doesn't have a primary name
         (map-set primary-name recipient id)
-
     )
 )
 
