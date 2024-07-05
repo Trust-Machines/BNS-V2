@@ -932,3 +932,262 @@ export const successfullyFastClaimASecondNameInAManagedNamespace = () => {
     false
   );
 };
+
+// Read Only
+
+export const callGetLastTokenId = (expectedId: number) => {
+  const result = simnet.callReadOnlyFn(
+    "BNS-V2",
+    "get-last-token-id",
+    [],
+    address1
+  );
+  expect(result.result).toBeOk(Cl.uint(expectedId));
+};
+
+export const callGetTokenUri = (id: number, expectedUri: string | null) => {
+  const result = simnet.callReadOnlyFn(
+    "BNS-V2",
+    "get-token-uri",
+    [Cl.uint(id)],
+    address1
+  );
+  expect(result.result).toBeOk(
+    expectedUri ? Cl.some(Cl.stringAscii(expectedUri)) : Cl.none()
+  );
+};
+
+export const callGetOwner = (id: number, expectedOwner: string | null) => {
+  const result = simnet.callReadOnlyFn(
+    "BNS-V2",
+    "get-owner",
+    [Cl.uint(id)],
+    address1
+  );
+  expect(result.result).toBeOk(
+    expectedOwner ? Cl.some(Cl.principal(expectedOwner)) : Cl.none()
+  );
+};
+
+export const callGetNamespacePrice = (
+  namespace: Uint8Array,
+  expectedPrice: number
+) => {
+  const result = simnet.callReadOnlyFn(
+    "BNS-V2",
+    "get-namespace-price",
+    [Cl.buffer(namespace)],
+    address1
+  );
+  expect(result.result).toBeOk(Cl.uint(expectedPrice));
+};
+
+export const callCanNamespaceBeRegistered = (
+  namespace: Uint8Array,
+  expectedResult: boolean
+) => {
+  const result = simnet.callReadOnlyFn(
+    "BNS-V2",
+    "can-namespace-be-registered",
+    [Cl.buffer(namespace)],
+    address1
+  );
+  expect(result.result).toBeOk(Cl.bool(expectedResult));
+};
+
+export const callGetNamespaceProperties = (
+  namespace: Uint8Array,
+  expectedProperties: {
+    "namespace-manager"?: string | null;
+    "manager-transferable": boolean;
+    "manager-frozen": boolean;
+    "namespace-import": string;
+    "revealed-at": number;
+    "launched-at"?: number | null;
+    lifetime: number;
+    "can-update-price-function": boolean;
+    "price-function": {
+      buckets: number[];
+      base: number;
+      coeff: number;
+      "nonalpha-discount": number;
+      "no-vowel-discount": number;
+    };
+  }
+) => {
+  const result = simnet.callReadOnlyFn(
+    "BNS-V2",
+    "get-namespace-properties",
+    [Cl.buffer(namespace)],
+    address1
+  );
+
+  expect(result.result).toBeOk(
+    Cl.tuple({
+      namespace: Cl.buffer(namespace),
+      properties: Cl.tuple({
+        "namespace-manager":
+          expectedProperties["namespace-manager"] !== undefined
+            ? expectedProperties["namespace-manager"] !== null
+              ? Cl.some(Cl.principal(expectedProperties["namespace-manager"]))
+              : Cl.none()
+            : Cl.none(),
+        "manager-transferable": Cl.bool(
+          expectedProperties["manager-transferable"]
+        ),
+        "manager-frozen": Cl.bool(expectedProperties["manager-frozen"]),
+        "namespace-import": Cl.principal(
+          expectedProperties["namespace-import"]
+        ),
+        "revealed-at": Cl.uint(expectedProperties["revealed-at"]),
+        "launched-at":
+          expectedProperties["launched-at"] !== undefined
+            ? expectedProperties["launched-at"] !== null
+              ? Cl.some(Cl.uint(expectedProperties["launched-at"]))
+              : Cl.none()
+            : Cl.none(),
+        lifetime: Cl.uint(expectedProperties["lifetime"]),
+        "can-update-price-function": Cl.bool(
+          expectedProperties["can-update-price-function"]
+        ),
+        "price-function": Cl.tuple({
+          buckets: Cl.list(
+            expectedProperties["price-function"].buckets.map((b) => Cl.uint(b))
+          ),
+          base: Cl.uint(expectedProperties["price-function"].base),
+          coeff: Cl.uint(expectedProperties["price-function"].coeff),
+          "nonalpha-discount": Cl.uint(
+            expectedProperties["price-function"]["nonalpha-discount"]
+          ),
+          "no-vowel-discount": Cl.uint(
+            expectedProperties["price-function"]["no-vowel-discount"]
+          ),
+        }),
+      }),
+    })
+  );
+};
+
+export const callGetBnsInfo = (
+  name: Uint8Array,
+  namespace: Uint8Array,
+  expectedInfo: {
+    "registered-at"?: number | null;
+    "imported-at"?: number | null;
+    "revoked-at": boolean;
+    "zonefile-hash"?: Uint8Array | null;
+    "hashed-salted-fqn-preorder"?: Uint8Array | null;
+    "preordered-by"?: string | null;
+    "renewal-height": number;
+    "stx-burn": number;
+    owner: string;
+  } | null
+) => {
+  const result = simnet.callReadOnlyFn(
+    "BNS-V2",
+    "get-bns-info",
+    [Cl.buffer(name), Cl.buffer(namespace)],
+    address1
+  );
+
+  if (expectedInfo) {
+    expect(result.result).toBeSome(
+      Cl.tuple({
+        "registered-at":
+          expectedInfo["registered-at"] !== undefined
+            ? expectedInfo["registered-at"] !== null
+              ? Cl.some(Cl.uint(expectedInfo["registered-at"]))
+              : Cl.none()
+            : Cl.none(),
+        "imported-at":
+          expectedInfo["imported-at"] !== undefined
+            ? expectedInfo["imported-at"] !== null
+              ? Cl.some(Cl.uint(expectedInfo["imported-at"]))
+              : Cl.none()
+            : Cl.none(),
+        "revoked-at": Cl.bool(expectedInfo["revoked-at"]),
+        "zonefile-hash":
+          expectedInfo["zonefile-hash"] !== undefined
+            ? expectedInfo["zonefile-hash"] !== null
+              ? Cl.some(Cl.buffer(expectedInfo["zonefile-hash"]))
+              : Cl.none()
+            : Cl.none(),
+        "hashed-salted-fqn-preorder":
+          expectedInfo["hashed-salted-fqn-preorder"] !== undefined
+            ? expectedInfo["hashed-salted-fqn-preorder"] !== null
+              ? Cl.some(Cl.buffer(expectedInfo["hashed-salted-fqn-preorder"]))
+              : Cl.none()
+            : Cl.none(),
+        "preordered-by":
+          expectedInfo["preordered-by"] !== undefined
+            ? expectedInfo["preordered-by"] !== null
+              ? Cl.some(Cl.principal(expectedInfo["preordered-by"]))
+              : Cl.none()
+            : Cl.none(),
+        "renewal-height": Cl.uint(expectedInfo["renewal-height"]),
+        "stx-burn": Cl.uint(expectedInfo["stx-burn"]),
+        owner: Cl.principal(expectedInfo["owner"]),
+      })
+    );
+  } else {
+    expect(result.result).toBeNone();
+  }
+};
+
+export const callGetIdFromBns = (
+  name: Uint8Array,
+  namespace: Uint8Array,
+  expectedId: number | null
+) => {
+  const result = simnet.callReadOnlyFn(
+    "BNS-V2",
+    "get-id-from-bns",
+    [Cl.buffer(name), Cl.buffer(namespace)],
+    address1
+  );
+  if (expectedId !== null) {
+    expect(result.result).toBeSome(Cl.uint(expectedId));
+  } else {
+    expect(result.result).toBeNone();
+  }
+};
+
+export const callGetBnsFromId = (
+  id: number,
+  expectedName: Uint8Array | null,
+  expectedNamespace: Uint8Array | null
+) => {
+  const result = simnet.callReadOnlyFn(
+    "BNS-V2",
+    "get-bns-from-id",
+    [Cl.uint(id)],
+    address1
+  );
+  if (expectedName && expectedNamespace) {
+    expect(result.result).toBeSome(
+      Cl.tuple({
+        name: Cl.buffer(expectedName),
+        namespace: Cl.buffer(expectedNamespace),
+      })
+    );
+  } else {
+    expect(result.result).toBeNone();
+  }
+};
+
+export const callGetPrimaryName = (
+  owner: string,
+  expectedId: number | null
+) => {
+  const result = simnet.callReadOnlyFn(
+    "BNS-V2",
+    "get-primary-name",
+    [Cl.principal(owner)],
+    address1
+  );
+  if (expectedId !== null) {
+    expect(result.result).toBeSome(Cl.uint(expectedId));
+  } else {
+    expect(result.result).toBeNone();
+  }
+};

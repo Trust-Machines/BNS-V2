@@ -30,7 +30,7 @@
 )
 
 ;; (new) Constant to store the token URI, allowing for metadata association with the NFT
-(define-constant token-uri "")
+(define-constant token-uri "test")
 
 ;; errors
 (define-constant ERR-UNWRAP (err u101))
@@ -905,7 +905,11 @@
                 zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: none,
                 preordered-by: none,
-                renewal-height: (+ (get lifetime namespace-props) block-height),
+                ;; Updated this to actually start with the registered-at date/block, and also to be u0 if it is a managed namespace
+                renewal-height: (if (is-some current-namespace-manager)
+                                    u0
+                                    (+ (get lifetime namespace-props) block-height u1)
+                                ),
                 stx-burn: name-price,
                 owner: send-to,
             }
@@ -1093,7 +1097,8 @@
                 zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: (some hashed-salted-fqn),
                 preordered-by: (some send-to),
-                renewal-height: (+ (get lifetime namespace-props) block-height),
+                ;; Updated this to be u0, so that renewals are handled through the namespace manager 
+                renewal-height: u0,
                 stx-burn: u0,
                 owner: send-to,
             }
