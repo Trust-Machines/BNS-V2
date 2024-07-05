@@ -1019,7 +1019,7 @@
         (match (map-get? name-properties {name: name, namespace: namespace})
             name-props-exist
             ;; If the name exists 
-            (handle-existing-name name-props-exist hashed-salted-fqn (get created-at preorder) stx-burned name namespace zonefile-hash)
+            (handle-existing-name name-props-exist hashed-salted-fqn (get created-at preorder) stx-burned name namespace zonefile-hash (get lifetime namespace-props))
             ;; If the name does not exist
             (register-new-name (+ (var-get bns-index) u1) hashed-salted-fqn zonefile-hash stx-burned name namespace (get lifetime namespace-props))    
         )
@@ -1634,6 +1634,7 @@
     (stx-burned uint) (name (buff 48)) 
     (namespace (buff 20)) 
     (zonefile-hash (buff 20))
+    (renewal uint)
 )
     (let 
         (
@@ -1651,10 +1652,23 @@
             (asserts! (> (unwrap-panic (get registered-at name-props)) tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)
         )
         ;; Update the name properties with the new preorder information since it is the best preorder
-        (map-set name-properties {name: name, namespace: namespace} (merge name-props {hashed-salted-fqn-preorder: (some hashed-salted-fqn), preordered-by: (some tx-sender)}))
+        (map-set name-properties {name: name, namespace: namespace} (merge name-props {hashed-salted-fqn-preorder: (some hashed-salted-fqn), preordered-by: (some tx-sender), registered-at: (some block-height), renewal-height: (+ block-height renewal), stx-burn: stx-burned}))
         (map-set bns-name-owner name-index tx-sender)
-        ;; Transfer the burned STX to the previous owner as compensation for the previously burnt stx
-        (try! (as-contract (stx-transfer? stx-burned .BNS-V2 (get owner name-props))))
+        ;; Check if the initial fast claim or peorder burnt less than what the current owner did
+        (if (< (get stx-burn name-props) stx-burned) 
+            ;; If the burn of fast claim or peordered name was less
+            ;; case, fast claim the name, and burn only 10 stx, then this preorder which will get the name burnt 20
+            (begin 
+                ;; Then transfer back that amount to the previous owner, we transfer back 10
+                (try! (as-contract (stx-transfer? (get stx-burn name-props) .BNS-V2 (get owner name-props))))
+                ;; And burn the rest, the other 10
+                (try! (as-contract (stx-burn? (- stx-burned (get stx-burn name-props)) .BNS-V2)))
+            )
+            ;; Case if the preorder burnt 50 and I only burn 20, then we can only transfer back 20 
+            ;; If it is lower then transfer back the amount of the current owners preorder since we can not refund a higher amount
+            (try! (as-contract (stx-transfer? stx-burned .BNS-V2 (get owner name-props))))
+        )
+        
         ;; Transfer ownership of the name to the new owner
         (try! (purchase-transfer name-index (get owner name-props) tx-sender))
         (try! (update-zonefile-hash namespace name zonefile-hash))
