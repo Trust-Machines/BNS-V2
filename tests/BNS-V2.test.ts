@@ -107,7 +107,7 @@ describe("TRANSFER FUNCTION", () => {
   it("This should successfully transfer a 2 step registered name in an unmanaged namespace", () => {
     // Register a name with the 2 step flow in an unmanaged namespace
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-    // Check the information of the name
+    // Check the information of the name, this should be a standard creation, for unmanaged namespaces it should always show registered at 8 and renewal height at 5008, because the namespace is lifetime 5000
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,

@@ -150,8 +150,7 @@
 
 ;; It maps a user's principal to the ID of their primary name.
 (define-map primary-name principal uint)
-;; Maps name ID to the owner principal
-(define-map bns-name-owner uint principal) 
+
 
 ;; read-only
 ;; @desc (new) SIP-09 compliant function to get the last minted token's ID
@@ -278,8 +277,6 @@
         (asserts! (is-none (map-get? market id)) ERR-LISTED)
         ;; Update the name properties with the new owner and reset the zonefile hash.
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
-        ;; Updates the owner of the name
-        (map-set bns-name-owner id recipient)
         ;; Update primary name if needed for owner
         (update-primary-name-owner id owner)
         ;; Update primary name if needed for recipient
@@ -464,7 +461,7 @@
             ;; Get the name details associated with the given ID.
             (name-and-namespace (unwrap! (get-bns-from-id id) ERR-NO-NAME))
             ;; Get the owner of the name.
-            (owner (unwrap! (map-get? bns-name-owner id) ERR-UNWRAP)) 
+            (owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP)) 
         ) 
         ;; Ensure the caller is the current namespace manager.
         (asserts! (is-eq contract-caller (unwrap! (get namespace-manager (unwrap! (map-get? namespaces (get namespace name-and-namespace)) ERR-NAMESPACE-NOT-FOUND)) ERR-NO-NAMESPACE-MANAGER)) ERR-NOT-AUTHORIZED)
@@ -481,8 +478,6 @@
         (map-delete name-to-index name-and-namespace)
         ;; Remove the index-to-name.
         (map-delete index-to-name id)
-        ;; Remove the name-owner.
-        (map-delete bns-name-owner id)
         ;; Remove the name-properties.
         (map-delete name-properties name-and-namespace)
         ;; Executes the burn operation for the specified NFT.
@@ -765,7 +760,6 @@
         )
         (map-set name-to-index {name: name, namespace: namespace} current-mint)
         (map-set index-to-name current-mint {name: name, namespace: namespace})
-        (map-set bns-name-owner current-mint beneficiary)
         ;; Update primary name if needed for send-to
         (update-primary-name-recipient current-mint beneficiary)
         ;; Update the index of the minting
@@ -943,7 +937,6 @@
         )
         (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted) 
         (map-set index-to-name id-to-be-minted {name: name, namespace: namespace}) 
-        (map-set bns-name-owner id-to-be-minted send-to)
         ;; Update primary name if needed for send-to
         (update-primary-name-recipient id-to-be-minted send-to)
         ;; Mints the new BNS name.
@@ -1132,7 +1125,6 @@
         )
         (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
         (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
-        (map-set bns-name-owner id-to-be-minted send-to)
         ;; Update primary name if needed for send-to
         (update-primary-name-recipient id-to-be-minted send-to)
         ;; Updates BNS-index variable to the newly minted ID.
@@ -1559,7 +1551,6 @@
         ;; Updates the name properties map with the new information.
         ;; Maintains existing properties but sets the zonefile hash to none for a clean slate and updates the owner to the recipient.
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
-        (map-set bns-name-owner id recipient)
         ;; Executes the NFT transfer from the current owner to the recipient.
         (nft-transfer? BNS-V2 id owner recipient)
     )
@@ -1660,7 +1651,6 @@
         )
         ;; Update the name properties with the new preorder information since it is the best preorder
         (map-set name-properties {name: name, namespace: namespace} (merge name-props {hashed-salted-fqn-preorder: (some hashed-salted-fqn), preordered-by: (some tx-sender), registered-at: (some block-height), renewal-height: (+ block-height renewal), stx-burn: stx-burned}))
-        (map-set bns-name-owner name-index tx-sender)
         ;; Check if the initial fast claim or peorder burnt less than what the current owner did
         (if (< (get stx-burn name-props) stx-burned) 
             ;; If the burn of fast claim or peordered name was less
@@ -1706,7 +1696,6 @@
         ;; Update the index-to-name and name-to-index mappings
         (map-set index-to-name id-to-be-minted {name: name, namespace: namespace})
         (map-set name-to-index {name: name, namespace: namespace} id-to-be-minted)
-        (map-set bns-name-owner id-to-be-minted tx-sender)
         ;; Increment the BNS index
         (var-set bns-index id-to-be-minted)
         ;; Update the primary name for the new owner if necessary
