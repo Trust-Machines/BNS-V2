@@ -105,9 +105,30 @@ const managerAddress = accounts.get("wallet_2")!;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("TRANSFER FUNCTION", () => {
   it("This should successfully transfer a 2 step registered name in an unmanaged namespace", () => {
+    // Get last token id before the first mint should be 0
+    callGetLastTokenId(0);
     // Register a name with the 2 step flow in an unmanaged namespace
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    // Check the state of the namespace, only an import address since it is unmanaged
+    callGetNamespaceProperties(namespaceBuff, {
+      "namespace-import": address1,
+      "revealed-at": 4,
+      "launched-at": 5,
+      lifetime: 5000,
+      "can-update-price-function": true,
+      "price-function": {
+        buckets: new Array(16).fill(1),
+        base: 1,
+        coeff: 1,
+        "nonalpha-discount": 1,
+        "no-vowel-discount": 1,
+      },
+      "manager-transferable": false,
+      "manager-frozen": true,
+    });
+    // Check state, it should all map to address 1
     // Check the information of the name, this should be a standard creation, for unmanaged namespaces it should always show registered at 8 and renewal height at 5008, because the namespace is lifetime 5000
+    // when two step registering it should also show the hashed-salted-fqn-preorder, and the preordered by
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
@@ -119,14 +140,18 @@ describe("TRANSFER FUNCTION", () => {
       "stx-burn": 200000000,
       owner: address1,
     });
+    // Make sure maps where created correctly, for tracking purposes
+    callGetBnsFromId(1, name1Buff, namespaceBuff);
+    callGetIdFromBns(name1Buff, namespaceBuff, 1);
+    // Get the owner
     callGetOwner(1, address1);
-    // Check Primary Names
+    // Check Primary Names this should add the minted to be the primary name because it is the first name the address has
     callGetPrimaryName(address1, 1);
+    // Just a sanity check to see the state actually changes
     callGetPrimaryName(address3, null);
-
     // Call the transfer function
     callTransferName(1, address1, address3, address1, true, false);
-    // Check the information of the name
+    // Check the information of the name, now should map to address3
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
@@ -139,18 +164,63 @@ describe("TRANSFER FUNCTION", () => {
       "stx-burn": 200000000,
       owner: address3,
     });
+    // Make sure maps stay the same here
+    callGetBnsFromId(1, name1Buff, namespaceBuff);
+    callGetIdFromBns(name1Buff, namespaceBuff, 1);
     // Check Primary names
     callGetPrimaryName(address1, null);
     callGetPrimaryName(address3, 1);
+    // Get last token id, should be 1 because only one name was minted
+    callGetLastTokenId(1);
   });
 
-  it("This should successfully transfer a 2 step registered name in a managed namespace where manager transfers are turned off", () => {
+  it("This should successfully transfer a 2 step registered name in a managed namespace where manager transfers are turned off, and tx-sender is the owner of the name", () => {
     // Register a name with the 2 step flow in a managed namespace
     successfullyTwoStepRegisterANameInAManagedNamespace();
+    // Check the state of the namespace,
+    callGetNamespaceProperties(namespaceBuff, {
+      "namespace-manager": managerAddress,
+      "namespace-import": address1,
+      "revealed-at": 4,
+      "launched-at": 5,
+      lifetime: 0,
+      "can-update-price-function": false,
+      "price-function": {
+        buckets: new Array(16).fill(1),
+        base: 1,
+        coeff: 1,
+        "nonalpha-discount": 1,
+        "no-vowel-discount": 1,
+      },
+      "manager-transferable": true,
+      "manager-frozen": false,
+    });
     // Turn off manager transfers
     callTurnOffManagerTransfers(namespaceBuff, managerAddress, true, false);
-    // Check the initial state
+    // Check that manager transfers are off
+    callGetNamespaceProperties(namespaceBuff, {
+      "namespace-manager": managerAddress,
+      "namespace-import": address1,
+      "revealed-at": 4,
+      "launched-at": 5,
+      lifetime: 0,
+      "can-update-price-function": false,
+      "price-function": {
+        buckets: new Array(16).fill(1),
+        base: 1,
+        coeff: 1,
+        "nonalpha-discount": 1,
+        "no-vowel-discount": 1,
+      },
+      "manager-transferable": false,
+      "manager-frozen": false,
+    });
+    // Make sure maps where created correctly, for tracking purposes
+    callGetBnsFromId(1, name1Buff, namespaceBuff);
+    callGetIdFromBns(name1Buff, namespaceBuff, 1);
+    // Check the initial state, mapped to address 1
     callGetOwner(1, address1);
+    // This returns registered-at 7 because in managed namespaces we do not have a 1 block blocker for preordering and registering, no renewal height, because managers should set their own conditions for renewal, no stx-burn is executed so 0
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
@@ -165,10 +235,9 @@ describe("TRANSFER FUNCTION", () => {
     // Check Primary Names
     callGetPrimaryName(address1, 1);
     callGetPrimaryName(address3, null);
-
     // Call the transfer function
     callTransferName(1, address1, address3, address1, true, false);
-    // Check the final state
+    // Check the final state, everything should map to address 3
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
@@ -184,15 +253,18 @@ describe("TRANSFER FUNCTION", () => {
     // Check Primary Names
     callGetPrimaryName(address1, null);
     callGetPrimaryName(address3, 1);
+    callGetBnsFromId(1, name1Buff, namespaceBuff);
+    callGetIdFromBns(name1Buff, namespaceBuff, 1);
   });
 
-  it("This should successfully transfer a fast claimed name in an unmanaged namespace, when allowing one block before transfering", () => {
+  it("This should successfully transfer a fast claimed name in an unmanaged namespace, when allowing one block before transfering, and tx-sender is the owner", () => {
     // Fast claim a name in an unmanaged namespace
     successfullyFastClaimANameInAnUnmanagedNamespace();
     // Mine an empty block to allow transfer
     simnet.mineEmptyBlock();
-    // Check the initial state
+    // Check the initial state mapped to address 1
     callGetOwner(1, address1);
+    // This shows stx-burn 10 because the name only cost 10, because we could determine the value of the name from the beginning, no hashed-salted-fqn-preorder and no preordered by, because no preorder to mint this name
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
@@ -204,13 +276,14 @@ describe("TRANSFER FUNCTION", () => {
       "stx-burn": 10,
       owner: address1,
     });
+    callGetBnsFromId(1, name1Buff, namespaceBuff);
+    callGetIdFromBns(name1Buff, namespaceBuff, 1);
     // Check Primary Names
     callGetPrimaryName(address1, 1);
     callGetPrimaryName(address3, null);
-
     // Call the transfer function
     callTransferName(1, address1, address3, address1, true, false);
-    // Check the final state
+    // Check the final state should now be mapped to address 3
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
@@ -228,7 +301,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetPrimaryName(address3, 1);
   });
 
-  it("This should successfully transfer a fast claimed name, when one block has passed in a managed namespace that has manager transfers turned off", () => {
+  it("This should successfully transfer a fast claimed name, when one block has passed in a managed namespace that has manager transfers turned off, and tx-sender is the owner", () => {
     // Fast claim a name in a managed namespace
     successfullyFastClaimANameInAManagedNamespace();
     // Mine an empty block to allow transfer
@@ -251,7 +324,6 @@ describe("TRANSFER FUNCTION", () => {
     // Check Primary Names
     callGetPrimaryName(address1, 1);
     callGetPrimaryName(address3, null);
-
     // Call the transfer function
     callTransferName(1, address1, address3, address1, true, false);
     // Check the final state
@@ -275,7 +347,7 @@ describe("TRANSFER FUNCTION", () => {
   it("This should successfully transfer a name that was previously transferred", () => {
     // Register a name with the 2 step flow in an unmanaged namespace
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-    // Check the initial state
+    // Check the initial state everything should map to address 1
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
@@ -291,10 +363,9 @@ describe("TRANSFER FUNCTION", () => {
     // Check Primary Names
     callGetPrimaryName(address1, 1);
     callGetPrimaryName(address3, null);
-
     // First transfer
     callTransferName(1, address1, address3, address1, true, false);
-    // Check state after first transfer
+    // Check state after first transfer everything should map to address3
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
@@ -307,13 +378,12 @@ describe("TRANSFER FUNCTION", () => {
       "stx-burn": 200000000,
       owner: address3,
     });
-    // Check Primary Names after first transfer
+    // Check Primary Names after first transfer, address 1 should be null
     callGetPrimaryName(address1, null);
     callGetPrimaryName(address3, 1);
-
     // Second transfer
     callTransferName(1, address3, address2, address3, true, false);
-    // Check state after second transfer
+    // Check state after second transfer, everything should map to address2 now
     callGetOwner(1, address2);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
@@ -330,12 +400,14 @@ describe("TRANSFER FUNCTION", () => {
     callGetPrimaryName(address1, null);
     callGetPrimaryName(address3, null);
     callGetPrimaryName(address2, 1);
+    callGetBnsFromId(1, name1Buff, namespaceBuff);
+    callGetIdFromBns(name1Buff, namespaceBuff, 1);
   });
 
   it("This should successfully transfer a name back to its original owner", () => {
     // Register a name with the 2 step flow in an unmanaged namespace
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-    // Check the initial state
+    // Check the initial state, mapped to address 1
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
@@ -354,7 +426,7 @@ describe("TRANSFER FUNCTION", () => {
 
     // Transfer to address3
     callTransferName(1, address1, address3, address1, true, false);
-    // Check state after first transfer
+    // Check state after first transfer everything mapped to address3
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
@@ -373,7 +445,7 @@ describe("TRANSFER FUNCTION", () => {
 
     // Transfer back to address1
     callTransferName(1, address3, address1, address3, true, false);
-    // Check state after second transfer
+    // Check state after second transfer, everything should be mapped to address1 again
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
@@ -392,8 +464,10 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer a name to an address that already has a primary name, and should not change the primary name of the recipient", () => {
+    callGetLastTokenId(0);
     // Register a name with the 2 step flow in an unmanaged namespace
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    callGetLastTokenId(1);
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
@@ -413,18 +487,33 @@ describe("TRANSFER FUNCTION", () => {
     callFastClaimName(
       name2Buff,
       namespaceBuff,
-      zonefileBuff,
+      zonefile2Buff,
       address3,
       address3,
       2,
       false
     );
+    callGetBnsInfo(name2Buff, namespaceBuff, {
+      "registered-at": 10,
+      "imported-at": null,
+      "revoked-at": false,
+      "zonefile-hash": zonefile2Buff,
+      "hashed-salted-fqn-preorder": null,
+      "preordered-by": null,
+      "renewal-height": 5010,
+      "stx-burn": 10,
+      owner: address3,
+    });
+    callGetOwner(2, address3);
+    callGetBnsFromId(2, name2Buff, namespaceBuff);
+    callGetIdFromBns(name2Buff, namespaceBuff, 2);
+    callGetLastTokenId(2);
+    // Each address should have a primary name
     callGetPrimaryName(address1, 1);
     callGetPrimaryName(address3, 2);
-
     // Transfer to address3
     callTransferName(1, address1, address3, address1, true, false);
-    // Check state after first transfer
+    // Check state after transfer, now id 1 should map to address3
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
@@ -437,14 +526,16 @@ describe("TRANSFER FUNCTION", () => {
       "stx-burn": 200000000,
       owner: address3,
     });
-    // Check Primary Names after first transfer
+    // Check Primary Names after transfer, address 1 should be null, and address3 should stay with id 2 as primary name
     callGetPrimaryName(address1, null);
     callGetPrimaryName(address3, 2);
   });
 
   it("This should successfully transfer a name, the owner is transferring a non primary name", () => {
+    callGetLastTokenId(0);
     // Register a name with the 2 step flow in an unmanaged namespace
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    callGetLastTokenId(1);
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
@@ -464,19 +555,35 @@ describe("TRANSFER FUNCTION", () => {
     callFastClaimName(
       name2Buff,
       namespaceBuff,
-      zonefileBuff,
+      zonefile2Buff,
       address1,
       address1,
       2,
       false
     );
+    callGetBnsInfo(name2Buff, namespaceBuff, {
+      "registered-at": 10,
+      "imported-at": null,
+      "revoked-at": false,
+      "zonefile-hash": zonefile2Buff,
+      "hashed-salted-fqn-preorder": null,
+      "preordered-by": null,
+      "renewal-height": 5010,
+      "stx-burn": 10,
+      owner: address1,
+    });
+    callGetOwner(2, address1);
+    callGetBnsFromId(2, name2Buff, namespaceBuff);
+    callGetIdFromBns(name2Buff, namespaceBuff, 2);
+    callGetLastTokenId(2);
+    // Here even though address1 has 2 names, it should stay with id 1 as primary name
     callGetPrimaryName(address1, 1);
     callGetPrimaryName(address3, null);
+    // Mine a block to be able to execute transfer of a fast claimed name
     simnet.mineEmptyBlock();
-
     // Transfer to address3
     callTransferName(2, address1, address3, address1, true, false);
-    // Check state after first transfer
+    // Check state after transfer, id 2 should map to address3
     callGetOwner(2, address3);
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 10,
@@ -489,7 +596,7 @@ describe("TRANSFER FUNCTION", () => {
       "stx-burn": 10,
       owner: address3,
     });
-    // Check Primary Names after first transfer
+    // Check Primary Names after transfer, address 1 should still have id1 and address 3 now has id2
     callGetPrimaryName(address1, 1);
     callGetPrimaryName(address3, 2);
   });
@@ -544,10 +651,28 @@ describe("TRANSFER FUNCTION", () => {
       "stx-burn": 10,
       owner: address1,
     });
+    // Check Primary Names
+    callGetPrimaryName(address1, 1);
+    callGetOwner(1, address1);
     // Launch
     callLaunchNamespace(namespaceBuff, address1, true, false);
-
-    // Check the initial state
+    callGetNamespaceProperties(namespaceBuff, {
+      "namespace-import": address1,
+      "revealed-at": 4,
+      "launched-at": 6,
+      lifetime: 5000,
+      "can-update-price-function": true,
+      "price-function": {
+        buckets: new Array(16).fill(1),
+        base: 1,
+        coeff: 1,
+        "nonalpha-discount": 1,
+        "no-vowel-discount": 1,
+      },
+      "manager-transferable": false,
+      "manager-frozen": true,
+    });
+    // Check the state after launch, it show still say registered-at null, the renewal height should be updated to when the namespace was launched + the lifetime of the namespace
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
