@@ -7429,222 +7429,326 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
   });
 });
 
-// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// describe("NAME-REVOKE FUNCTION", () => {
-//   it("This should successfully revoke a name in an unmanaged namespace", () => {
-//     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-//     callRevokeName(namespaceBuff, name1Buff, address1, true, false);
-//   });
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+describe("NAME-REVOKE FUNCTION", () => {
+  it("This should successfully revoke a name in an unmanaged namespace", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 8,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 5008,
+      owner: address1,
+      "stx-burn": 200000000,
+    });
+    callRevokeName(namespaceBuff, name1Buff, address1, true, false);
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 8,
+      "imported-at": null,
+      "revoked-at": true,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "zonefile-hash": null,
+      "renewal-height": 5008,
+      owner: address1,
+      "stx-burn": 200000000,
+    });
+  });
 
-//   it("This should successfully revoke a name in a managed namespace", () => {
-//     successfullyTwoStepRegisterANameInAManagedNamespace();
-//     callRevokeName(namespaceBuff, name1Buff, managerAddress, true, false);
-//   });
+  it("This should successfully revoke a name in a managed namespace", () => {
+    successfullyTwoStepRegisterANameInAManagedNamespace();
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 0,
+      owner: address1,
+      "stx-burn": 0,
+    });
+    callRevokeName(namespaceBuff, name1Buff, managerAddress, true, false);
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 7,
+      "imported-at": null,
+      "revoked-at": true,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "zonefile-hash": null,
+      "renewal-height": 0,
+      owner: address1,
+      "stx-burn": 0,
+    });
+  });
 
-//   it("This should fail to revoke a name in a namespace that does not exist", () => {
-//     callRevokeName(
-//       namespaceBuff,
-//       name1Buff,
-//       managerAddress,
-//       ERR_NAMESPACE_NOT_FOUND,
-//       true
-//     );
-//   });
+  it("This should fail to revoke a name in a namespace that does not exist", () => {
+    callRevokeName(
+      namespaceBuff,
+      name1Buff,
+      managerAddress,
+      ERR_NAMESPACE_NOT_FOUND,
+      true
+    );
+  });
 
-//   it("This should fail to revoke a name in a managed namespace but the contract-caller is not the manager", () => {
-//     successfullyTwoStepRegisterANameInAManagedNamespace();
-//     callRevokeName(
-//       namespaceBuff,
-//       name1Buff,
-//       address1,
-//       ERR_NOT_AUTHORIZED,
-//       true
-//     );
-//   });
+  it("This should fail to revoke a name in a managed namespace but the contract-caller is not the manager", () => {
+    successfullyTwoStepRegisterANameInAManagedNamespace();
+    callRevokeName(
+      namespaceBuff,
+      name1Buff,
+      address1,
+      ERR_NOT_AUTHORIZED,
+      true
+    );
+  });
 
-//   it("This should fail to revoke a name in an unmanaged namespace but the tx-sender is not the import address", () => {
-//     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-//     callRevokeName(
-//       namespaceBuff,
-//       name1Buff,
-//       address3,
-//       ERR_NOT_AUTHORIZED,
-//       true
-//     );
-//   });
-// });
+  it("This should fail to revoke a name in an unmanaged namespace but the tx-sender is not the import address", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    callRevokeName(
+      namespaceBuff,
+      name1Buff,
+      address3,
+      ERR_NOT_AUTHORIZED,
+      true
+    );
+  });
+});
 
-// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// describe("NAME-RENEWAL FUNCTION", () => {
-//   it("This should successfully renew a name in an unmanaged namespace when the name is still within the lifetime", () => {
-//     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-//     callRenewName(namespaceBuff, name1Buff, null, address1, true, false);
-//   });
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+describe("NAME-RENEWAL FUNCTION", () => {
+  it("This should successfully renew a name in an unmanaged namespace when the name is still within the lifetime", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    callRenewName(namespaceBuff, name1Buff, null, address1, true, false);
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 8,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 10008,
+      owner: address1,
+      "stx-burn": 10,
+    });
+    callGetOwner(1, address1);
+    callGetPrimaryName(address1, 1);
+  });
 
-//   it("This should successfully renew a name in an unmanaged namespace when the name is within the grace period", () => {
-//     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-//     simnet.mineEmptyBlocks(6000);
-//     callRenewName(namespaceBuff, name1Buff, null, address1, true, false);
-//   });
+  it("This should successfully renew a name in an unmanaged namespace when the name is within the grace period", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    simnet.mineEmptyBlocks(6000);
+    callRenewName(namespaceBuff, name1Buff, null, address1, true, false);
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 8,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 11009,
+      owner: address1,
+      "stx-burn": 10,
+    });
+    callGetOwner(1, address1);
+    callGetPrimaryName(address1, 1);
+  });
 
-//   it("This should successfully renew a name in an unmanaged namespace when the name is not in the grace period by the owner", () => {
-//     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-//     simnet.mineEmptyBlocks(11000);
-//     callRenewName(namespaceBuff, name1Buff, null, address1, true, false);
-//   });
+  it("This should successfully renew a name in an unmanaged namespace when the name is not in the grace period by the owner", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    simnet.mineEmptyBlocks(11000);
+    callRenewName(namespaceBuff, name1Buff, null, address1, true, false);
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 8,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "zonefile-hash": zonefileBuff,
+      "renewal-height": 16009,
+      owner: address1,
+      "stx-burn": 10,
+    });
+    callGetOwner(1, address1);
+    callGetPrimaryName(address1, 1);
+  });
 
-//   it("This should successfully renew a name in an unmanaged namespace when the name is not in the grace period by a different address than the owner", () => {
-//     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-//     simnet.mineEmptyBlocks(11000);
-//     callRenewName(namespaceBuff, name1Buff, null, address3, true, false);
-//   });
+  it("This should successfully renew a name in an unmanaged namespace when the name is not in the grace period by a different address than the owner", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    simnet.mineEmptyBlocks(11000);
+    callRenewName(
+      namespaceBuff,
+      name1Buff,
+      zonefile2Buff,
+      address3,
+      true,
+      false
+    );
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": 8,
+      "imported-at": null,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": name1BuffSalt,
+      "preordered-by": address1,
+      "zonefile-hash": zonefile2Buff,
+      "renewal-height": 16009,
+      owner: address3,
+      "stx-burn": 10,
+    });
+    callGetOwner(1, address3);
+    callGetPrimaryName(address3, 1);
+    callGetPrimaryName(address1, null);
+  });
 
-//   it("This should fail to renew a name in an unmanaged namespace when the name does not exist", () => {
-//     callRenewName(namespaceBuff, name1Buff, null, address1, ERR_NO_NAME, true);
-//   });
+  it("This should fail to renew a name in an unmanaged namespace when the name does not exist", () => {
+    callRenewName(namespaceBuff, name1Buff, null, address1, ERR_NO_NAME, true);
+  });
 
-//   it("This should fail to renew a name in a managed namespace", () => {
-//     successfullyTwoStepRegisterANameInAManagedNamespace();
-//     callRenewName(
-//       namespaceBuff,
-//       name1Buff,
-//       null,
-//       address1,
-//       ERR_NAMESPACE_HAS_MANAGER,
-//       true
-//     );
-//   });
+  it("This should fail to renew a name in a managed namespace", () => {
+    successfullyTwoStepRegisterANameInAManagedNamespace();
+    callRenewName(
+      namespaceBuff,
+      name1Buff,
+      null,
+      address1,
+      ERR_NAMESPACE_HAS_MANAGER,
+      true
+    );
+  });
 
-//   it("This should fail to renew a name if the namespace is not launched", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       new Array(16).fill(1),
-//       1,
-//       1,
-//       5000,
-//       address1,
-//       managerAddress,
-//       false,
-//       true,
-//       false,
-//       address1,
-//       true,
-//       false
-//     );
-//     callImportName(
-//       namespaceBuff,
-//       name1Buff,
-//       zonefileBuff,
-//       address3,
-//       address1,
-//       true,
-//       false
-//     );
-//     callRenewName(
-//       namespaceBuff,
-//       name1Buff,
-//       null,
-//       address1,
-//       ERR_NAMESPACE_NOT_LAUNCHED,
-//       true
-//     );
-//   });
+  it("This should fail to renew a name if the namespace is not launched", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      new Array(16).fill(1),
+      1,
+      1,
+      5000,
+      address1,
+      managerAddress,
+      false,
+      true,
+      false,
+      address1,
+      true,
+      false
+    );
+    callImportName(
+      namespaceBuff,
+      name1Buff,
+      zonefileBuff,
+      address3,
+      address1,
+      true,
+      false
+    );
+    callRenewName(
+      namespaceBuff,
+      name1Buff,
+      null,
+      address1,
+      ERR_NAMESPACE_NOT_LAUNCHED,
+      true
+    );
+  });
 
-//   it("This should fail to renew a name if the namespace does not require renewals", () => {
-//     callPreorderAValidNamespace(
-//       namespaceBuffSalt,
-//       1000000000,
-//       address1,
-//       146,
-//       false
-//     );
-//     simnet.mineEmptyBlock();
-//     callRevealNamespace(
-//       namespaceBuff,
-//       saltBuff,
-//       1,
-//       1,
-//       new Array(16).fill(1),
-//       1,
-//       1,
-//       0,
-//       address1,
-//       null,
-//       true,
-//       false,
-//       true,
-//       address1,
-//       true,
-//       false
-//     );
-//     callLaunchNamespace(namespaceBuff, address1, true, false);
-//     callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
-//     simnet.mineEmptyBlock();
-//     callRegisterName(
-//       namespaceBuff,
-//       name1Buff,
-//       saltBuff,
-//       zonefileBuff,
-//       address1,
-//       1,
-//       false
-//     );
-//     callRenewName(
-//       namespaceBuff,
-//       name1Buff,
-//       null,
-//       address1,
-//       ERR_OPERATION_UNAUTHORIZED,
-//       true
-//     );
-//   });
+  it("This should fail to renew a name if the namespace does not require renewals", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      146,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      new Array(16).fill(1),
+      1,
+      1,
+      0,
+      address1,
+      null,
+      true,
+      false,
+      true,
+      address1,
+      true,
+      false
+    );
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    simnet.mineEmptyBlock();
+    callRegisterName(
+      namespaceBuff,
+      name1Buff,
+      saltBuff,
+      zonefileBuff,
+      address1,
+      1,
+      false
+    );
+    callRenewName(
+      namespaceBuff,
+      name1Buff,
+      null,
+      address1,
+      ERR_OPERATION_UNAUTHORIZED,
+      true
+    );
+  });
 
-//   it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current grace period", () => {
-//     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-//     simnet.mineEmptyBlocks(7500);
-//     callRenewName(
-//       namespaceBuff,
-//       name1Buff,
-//       null,
-//       address3,
-//       ERR_NOT_AUTHORIZED,
-//       true
-//     );
-//   });
+  it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current grace period", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    simnet.mineEmptyBlocks(7500);
+    callRenewName(
+      namespaceBuff,
+      name1Buff,
+      null,
+      address3,
+      ERR_NOT_AUTHORIZED,
+      true
+    );
+  });
 
-//   it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current lifetime", () => {
-//     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-//     callRenewName(
-//       namespaceBuff,
-//       name1Buff,
-//       null,
-//       address3,
-//       ERR_NOT_AUTHORIZED,
-//       true
-//     );
-//   });
+  it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current lifetime", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    callRenewName(
+      namespaceBuff,
+      name1Buff,
+      null,
+      address3,
+      ERR_NOT_AUTHORIZED,
+      true
+    );
+  });
 
-//   it("This should fail to renew a name if the name is revoked", () => {
-//     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-//     callRevokeName(namespaceBuff, name1Buff, address1, true, false);
-//     callRenewName(
-//       namespaceBuff,
-//       name1Buff,
-//       null,
-//       address1,
-//       ERR_NAME_REVOKED,
-//       true
-//     );
-//   });
-// });
+  it("This should fail to renew a name if the name is revoked", () => {
+    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+    callRevokeName(namespaceBuff, name1Buff, address1, true, false);
+    callRenewName(
+      namespaceBuff,
+      name1Buff,
+      null,
+      address1,
+      ERR_NAME_REVOKED,
+      true
+    );
+  });
+});

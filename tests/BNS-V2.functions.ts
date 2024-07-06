@@ -322,7 +322,7 @@ export const callRenewName = (
     [
       Cl.buffer(namespaceBuffer),
       Cl.buffer(nameBuffer),
-      zonefileHash !== null ? Cl.buffer(zonefileHash) : Cl.none(),
+      zonefileHash !== null ? Cl.some(Cl.buffer(zonefileHash)) : Cl.none(),
     ],
     callerAddress
   );

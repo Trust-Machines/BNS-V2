@@ -1269,6 +1269,8 @@
         )
         ;; Burn the specified amount of STX
         (try! (stx-burn? (try! (compute-name-price name (get price-function namespace-props))) contract-caller))
+        ;; update the new stx-burn to the one paid in renewal
+        (map-set name-properties { name: name, namespace: namespace } (merge (unwrap-panic (map-get? name-properties { name: name, namespace: namespace })) {stx-burn: (try! (compute-name-price name (get price-function namespace-props)))}))
         ;; Update the zonefile hash if provided
         (match zonefile-hash
             zonefile (try! (update-zonefile-hash namespace name zonefile))
@@ -1356,14 +1358,11 @@
                 (map-delete market name-index) 
                 true
             )
-            ;; Transfer ownership of the name to the new owner
-            (try! (purchase-transfer name-index owner tx-sender))
-            ;; Update the name properties with the new renewal height and owner
-            (ok 
-                (map-set name-properties {name: name, namespace: namespace}
+            (map-set name-properties {name: name, namespace: namespace}
                     (merge name-props {renewal-height: new-renewal-height})
-                )
             )
+            ;; Update the name properties with the new renewal height and owner
+            (ok (try! (purchase-transfer name-index owner tx-sender)))
 
         )
     )  
@@ -1552,6 +1551,7 @@
         )
         ;; Check owner and recipient is not the same
         (asserts! (not (is-eq owner recipient)) ERR-OPERATION-UNAUTHORIZED)
+        (asserts! (is-eq owner (get owner name-props)) ERR-NOT-AUTHORIZED)
         ;; Update primary name if needed for owner
         (update-primary-name-owner id owner)
         ;; Update primary name if needed for recipient
@@ -1560,7 +1560,6 @@
         ;; Maintains existing properties but sets the zonefile hash to none for a clean slate and updates the owner to the recipient.
         (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
         (map-set bns-name-owner id recipient)
-        (asserts! (is-eq owner (get owner name-props)) ERR-NOT-AUTHORIZED)
         ;; Executes the NFT transfer from the current owner to the recipient.
         (nft-transfer? BNS-V2 id owner recipient)
     )
