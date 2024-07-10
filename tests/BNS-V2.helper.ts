@@ -30,6 +30,7 @@ export const ERR_FAST_MINTED_BEFORE = 126;
 export const ERR_PREORDERED_BEFORE = 127;
 export const ERR_NAME_NOT_CLAIMABLE_YET = 128;
 export const ERR_IMPORTED_BEFORE = 129;
+export const ERR_LIFETIME_EQUAL_0 = 130;
 
 // Commission Trait Constants
 export const commTraitName = "gamma-bns-v2-commission-container";

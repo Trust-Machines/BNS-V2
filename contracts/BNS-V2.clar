@@ -62,6 +62,7 @@
 (define-constant ERR-PREORDERED-BEFORE (err u127))
 (define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u128))
 (define-constant ERR-IMPORTED-BEFORE (err u129))
+(define-constant ERR-LIFETIME-EQUAL-0 (err u130))
 
 ;; variables
 ;; (new) Counter to keep track of the last minted NFT ID, ensuring unique identifiers
@@ -145,9 +146,6 @@
     { created-at: uint, stx-burned: uint, claimed: bool}
 )
 
-;; Defines a map to keep track of the imported names by namespace, so when the namespace is launched we update the renewal time accordingly
-(define-map imported-names (buff 20) (list 1000 uint))
-
 ;; It maps a user's principal to the ID of their primary name.
 (define-map primary-name principal uint)
 
@@ -157,6 +155,28 @@
 (define-read-only (get-last-token-id)
     ;; Returns the current value of bns-index variable, which tracks the last token ID
     (ok (var-get bns-index))
+)
+
+(define-read-only (get-renewal-height (id uint))
+    (let 
+        (
+            (name-namespace (unwrap! (get-bns-from-id id) ERR-NO-NAME))
+            (namespace-props (unwrap! (map-get? namespaces (get namespace name-namespace)) ERR-NAMESPACE-NOT-FOUND))
+            (name-props (unwrap! (map-get? name-properties name-namespace) ERR-NO-NAME))
+            (renewal-height (get renewal-height name-props))
+            (namespace-lifetime (get lifetime namespace-props))
+        )
+        ;; Check if the namespace requires renewals
+        (asserts! (not (is-eq namespace-lifetime u0)) ERR-LIFETIME-EQUAL-0) 
+        ;; If the check passes then check the renewal-height of the name
+        (ok 
+            (if (is-eq renewal-height u0)
+                ;; If it is true then it means it was imported so return the namespace launch blockheight + lifetime
+                (+ (unwrap! (get launched-at namespace-props) ERR-NAMESPACE-NOT-LAUNCHED) namespace-lifetime) 
+                renewal-height
+            )
+        )
+    )
 )
 
 ;; @desc (new) SIP-09 compliant function to get token URI
@@ -257,7 +277,7 @@
             is-registered
             ;; If it was registered, check if registered-at is lower than current blockheight
             ;; This check works to make sure that if a name is fast-claimed they have to wait 1 block to transfer it
-            (asserts! (< is-registered block-height) ERR-OPERATION-UNAUTHORIZED)
+            (asserts! (< is-registered burn-block-height) ERR-OPERATION-UNAUTHORIZED)
             ;; If it is not registered then continue
             true 
         )
@@ -311,7 +331,7 @@
             is-registered
             ;; If it was registered, check if registered-at is lower than current blockheight
             ;; This check works to make sure that if a name is fast-claimed they have to wait 1 block to transfer it
-            (asserts! (< is-registered block-height) ERR-OPERATION-UNAUTHORIZED)
+            (asserts! (< is-registered burn-block-height) ERR-OPERATION-UNAUTHORIZED)
             ;; If it is not registered then continue
             true 
         )
@@ -364,7 +384,7 @@
             is-registered
             ;; If it was registered, check if registered-at is lower than current blockheight
             ;; Same as transfers, this check works to make sure that if a name is fast-claimed they have to wait 1 block to list it
-            (asserts! (< is-registered block-height) ERR-OPERATION-UNAUTHORIZED)
+            (asserts! (< is-registered burn-block-height) ERR-OPERATION-UNAUTHORIZED)
             ;; If it is not registered then continue
             true 
         )
@@ -551,12 +571,12 @@
         ;; Record the preorder details in the `namespace-preorders` map
         (map-set namespace-preorders
             { hashed-salted-namespace: hashed-salted-namespace, buyer: tx-sender }
-            { created-at: block-height, stx-burned: stx-to-burn }
+            { created-at: burn-block-height, stx-burned: stx-to-burn }
         )
         ;; Sets the map with just the hashed-salted-namespace as the key
         (map-set namespace-single-preorder hashed-salted-namespace true)
         ;; Return the block height at which the preorder claimability expires.
-        (ok (+ block-height PREORDER-CLAIMABILITY-TTL))
+        (ok (+ burn-block-height PREORDER-CLAIMABILITY-TTL))
     )
 )
 
@@ -626,9 +646,9 @@
         ;; Verify the burned amount during preorder meets or exceeds the namespace's registration price.
         (asserts! (>= (get stx-burned preorder) namespace-price) ERR-STX-BURNT-INSUFFICIENT)
         ;; Confirm the reveal action is performed within the allowed timeframe from the preorder.
-        (asserts! (< block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-PREORDER-CLAIMABILITY-EXPIRED)
+        (asserts! (< burn-block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-PREORDER-CLAIMABILITY-EXPIRED)
         ;; Ensure at least 1 block has passed after the preorder to avoid namespace sniping.
-        (asserts! (>= block-height (+ (get created-at preorder) u1)) ERR-OPERATION-UNAUTHORIZED)
+        (asserts! (>= burn-block-height (+ (get created-at preorder) u1)) ERR-OPERATION-UNAUTHORIZED)
         ;; Check if the namespace manager is assigned
         (match namespace-manager 
             namespace-m
@@ -639,7 +659,7 @@
                     manager-transferable: manager-transfers,
                     manager-frozen: manager-frozen,
                     namespace-import: namespace-import,
-                    revealed-at: block-height,
+                    revealed-at: burn-block-height,
                     launched-at: none,
                     lifetime: u0,
                     can-update-price-function: can-update-price,
@@ -653,7 +673,7 @@
                     manager-transferable: manager-transfers,
                     manager-frozen: manager-frozen,
                     namespace-import: namespace-import,
-                    revealed-at: block-height,
+                    revealed-at: burn-block-height,
                     launched-at: none,
                     lifetime: lifetime,
                     can-update-price-function: can-update-price,
@@ -673,19 +693,15 @@
         (
             ;; Retrieve the properties of the namespace to ensure it exists and to check its current state.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Fetch the list of imported names for the namespace
-            (imported-list-of-names (default-to (list) (map-get? imported-names namespace)))
         )
         ;; Ensure the transaction sender is the namespace's designated import principal.
         (asserts! (is-eq (get namespace-import namespace-props) tx-sender) ERR-OPERATION-UNAUTHORIZED)
         ;; Verify the namespace has not already been launched.
         (asserts! (is-none (get launched-at namespace-props)) ERR-NAMESPACE-ALREADY-LAUNCHED)
         ;; Confirm that the action is taken within the permissible time frame since the namespace was revealed.
-        (asserts! (< block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)
+        (asserts! (< burn-block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)
         ;; Update the `namespaces` map with the newly launched status.
-        (map-set namespaces namespace (merge namespace-props { launched-at: (some block-height) }))      
-        ;; Update all the imported names renewal height to start with the launched-at block height
-        (map update-renewal-height imported-list-of-names)
+        (map-set namespaces namespace (merge namespace-props { launched-at: (some burn-block-height) }))      
         ;; Emit an event to indicate the namespace is now ready and launched.
         (print { namespace: namespace, status: "ready", properties: (map-get? namespaces namespace) })
         ;; Confirm the successful launch of the namespace.
@@ -725,8 +741,6 @@
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
             ;; Fetch the latest index to mint
             (current-mint (+ (var-get bns-index) u1))
-            ;; Fetch the list of imported names for the namespace.
-            (imported-list-of-names (default-to (list) (map-get? imported-names namespace)))
             (price (if (is-none (get namespace-manager namespace-props))
                         (try! (compute-name-price name (get price-function namespace-props)))
                         u0
@@ -742,17 +756,16 @@
         ;; Check that the namespace has not been launched yet, as names can only be imported to namespaces that are revealed but not launched.
         (asserts! (is-none (get launched-at namespace-props)) ERR-NAMESPACE-ALREADY-LAUNCHED)
         ;; Confirm that the import is occurring within the allowed timeframe since the namespace was revealed.
-        (asserts! (< block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)
+        (asserts! (< burn-block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)
         ;; Set the name properties
         (map-set name-properties {name: name, namespace: namespace}
             {
                 registered-at: none,
-                imported-at: (some block-height),
+                imported-at: (some burn-block-height),
                 revoked-at: false,
                 zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: none,
                 preordered-by: none,
-                ;; Set to u0, this will be updated when the namespace is launched
                 renewal-height: u0,
                 stx-burn: price,
                 owner: beneficiary,
@@ -764,8 +777,6 @@
         (update-primary-name-recipient current-mint beneficiary)
         ;; Update the index of the minting
         (var-set bns-index current-mint)
-        ;; Update the imported names list for the namespace
-        (map-set imported-names namespace (unwrap! (as-max-len? (append imported-list-of-names current-mint) u1000) ERR-OVERFLOW))
         ;; Mint the name to the beneficiary
         (try! (nft-mint? BNS-V2 current-mint beneficiary))
         ;; Log the new name registration
@@ -920,7 +931,7 @@
             } 
             {
                
-                registered-at: (some (+ block-height u1)),
+                registered-at: (some (+ burn-block-height u1)),
                 imported-at: none,
                 revoked-at: false,
                 zonefile-hash: (some zonefile-hash),
@@ -929,7 +940,7 @@
                 ;; Updated this to actually start with the registered-at date/block, and also to be u0 if it is a managed namespace
                 renewal-height: (if (is-some current-namespace-manager)
                                     u0
-                                    (+ (get lifetime namespace-props) block-height u1)
+                                    (+ (get lifetime namespace-props) burn-block-height u1)
                                 ),
                 stx-burn: name-price,
                 owner: send-to,
@@ -972,12 +983,12 @@
         ;; Records the preorder in the 'name-preorders' map.
         (map-set name-preorders
             { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }
-            { created-at: block-height, stx-burned: stx-to-burn, claimed: false}
+            { created-at: burn-block-height, stx-burned: stx-to-burn, claimed: false}
         )
         ;; Sets the map with just the hashed-salted-fqn as the key
         (map-set name-single-preorder hashed-salted-fqn true)
         ;; Returns the block height at which the preorder's claimability period will expire.
-        (ok (+ block-height PREORDER-CLAIMABILITY-TTL))
+        (ok (+ burn-block-height PREORDER-CLAIMABILITY-TTL))
     )
 )
 
@@ -1007,11 +1018,11 @@
         ;; Verify that the preorder was made after the namespace was launched
         (asserts! (> (get created-at preorder) (unwrap! (get launched-at namespace-props) ERR-UNWRAP)) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Ensure the registration is happening within the allowed time window after preorder
-        (asserts! (< block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-PREORDER-CLAIMABILITY-EXPIRED)
+        (asserts! (< burn-block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-PREORDER-CLAIMABILITY-EXPIRED)
         ;; Make sure at least one block has passed since the preorder (prevents front-running)
-        (asserts! (> block-height (+ (get created-at preorder) u1)) ERR-NAME-NOT-CLAIMABLE-YET)
+        (asserts! (> burn-block-height (+ (get created-at preorder) u1)) ERR-NAME-NOT-CLAIMABLE-YET)
         ;; Verify that enough STX was burned during preorder to cover the name price
-        (asserts! (>= stx-burned (try! (compute-name-price name (get price-function namespace-props)))) ERR-STX-BURNT-INSUFFICIENT)
+        (asserts! (is-eq stx-burned (try! (compute-name-price name (get price-function namespace-props)))) ERR-STX-BURNT-INSUFFICIENT)
         ;; Verify that the name contains only valid characters.
         (asserts! (not (has-invalid-chars name)) ERR-CHARSET-INVALID)
         ;; Mark the preorder as claimed to prevent double-spending
@@ -1038,7 +1049,7 @@
             (claimer tx-sender)
         ) 
         ;; Check if the preorder-claimability-ttl has passed
-        (asserts! (> block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-OPERATION-UNAUTHORIZED)
+        (asserts! (> burn-block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-OPERATION-UNAUTHORIZED)
         ;; Asserts that the preorder has not been claimed
         (asserts! (not (get claimed preorder)) ERR-OPERATION-UNAUTHORIZED)
         ;; Transfers back the specified amount of stx from the BNS contract to the tx-sender
@@ -1064,12 +1075,12 @@
         ;; Records the preorder in the 'name-preorders' map. Buyer set to contract-caller
         (map-set name-preorders
             { hashed-salted-fqn: hashed-salted-fqn, buyer: contract-caller }
-            { created-at: block-height, stx-burned: u0, claimed: false }
+            { created-at: burn-block-height, stx-burned: u0, claimed: false }
         )
         ;; Sets the map with just the hashed-salted-fqn as the key
         (map-set name-single-preorder hashed-salted-fqn true)
         ;; Returns the block height at which the preorder's claimability period will expire.
-        (ok (+ block-height PREORDER-CLAIMABILITY-TTL))
+        (ok (+ burn-block-height PREORDER-CLAIMABILITY-TTL))
     )
 )
 
@@ -1104,14 +1115,14 @@
         ;; Validates that the preorder was made after the namespace was officially launched.
         (asserts! (> (get created-at preorder) (unwrap! (get launched-at namespace-props) ERR-UNWRAP)) ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH)
         ;; Verifies the registration is completed within the claimability period.
-        (asserts! (< block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-PREORDER-CLAIMABILITY-EXPIRED)
+        (asserts! (< burn-block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-PREORDER-CLAIMABILITY-EXPIRED)
         ;; Sets properties for the newly registered name.
         (map-set name-properties
             {
                 name: name, namespace: namespace
             } 
             {
-                registered-at: (some block-height),
+                registered-at: (some burn-block-height),
                 imported-at: none,
                 revoked-at: false,
                 zonefile-hash: (some zonefile-hash),
@@ -1172,7 +1183,7 @@
         ;; Check that the tx-sender or contract-caller is the owner
         (asserts! (or (is-eq tx-sender owner) (is-eq contract-caller owner)) ERR-NOT-AUTHORIZED)
         ;; Assert that the name is in valid time or grace period
-        (asserts! (<= block-height (+ renewal NAME-GRACE-PERIOD-DURATION)) ERR-OPERATION-UNAUTHORIZED)
+        (asserts! (<= burn-block-height (+ renewal NAME-GRACE-PERIOD-DURATION)) ERR-OPERATION-UNAUTHORIZED)
         ;; Update the zonefile hash
         (map-set name-properties {name: name, namespace: namespace}
             (merge
@@ -1242,20 +1253,20 @@
             ;; Get the lifetime of names in this namespace
             (lifetime (get lifetime namespace-props))
             ;; Get the current renewal height of the name
-            (renewal-height (get renewal-height name-props))
+            (renewal-height (try! (get-renewal-height name-index)))
             ;; Calculate the new renewal height based on current block height
-            (new-renewal-height (+ block-height lifetime))
+            (new-renewal-height (+ burn-block-height lifetime))
         )
         ;; Verify that the namespace has been launched
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Ensure the namespace doesn't have a manager
         (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
         ;; Check if renewals are required for this namespace
-        (asserts! (> lifetime u0) ERR-OPERATION-UNAUTHORIZED)
+        (asserts! (> lifetime u0) ERR-LIFETIME-EQUAL-0)
         ;; Verify that the name has not been revoked
         (asserts! (not (get revoked-at name-props)) ERR-NAME-REVOKED) 
         ;; Handle renewal based on whether it's within the grace period or not
-        (if (< block-height (+ renewal-height NAME-GRACE-PERIOD-DURATION))   
+        (if (< burn-block-height (+ renewal-height NAME-GRACE-PERIOD-DURATION))   
             (try! (handle-renewal-in-grace-period name namespace name-props owner lifetime new-renewal-height))
             (try! (handle-renewal-after-grace-period name namespace name-props owner name-index new-renewal-height))
         )
@@ -1303,8 +1314,8 @@
                 {
                     renewal-height: 
                         ;; If still within lifetime, extend from current renewal height; otherwise, use new renewal height
-                        (if (< block-height (get renewal-height name-props))
-                            (+ (get renewal-height name-props) lifetime)
+                        (if (< burn-block-height (unwrap-panic (get-renewal-height (unwrap-panic (get-id-from-bns name namespace)))))
+                            (+ (unwrap-panic (get-renewal-height (unwrap-panic (get-id-from-bns name namespace)))) lifetime)
                             new-renewal-height
                         )
                 }
@@ -1487,7 +1498,7 @@
             ;; If the namespace is launched, it's considered unavailable if it hasn't expired.
             false
             ;; Check if the namespace is expired by comparing the current block height to the reveal time plus the launchability TTL.
-            (> block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL))
+            (> burn-block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL))
         )
         ;; If the namespace doesn't exist in the map, it's considered available.
         true
@@ -1580,39 +1591,6 @@
     )
 )
 
-;; Function to update the renewal-height for all imported names within a namespace
-;; This is used in the namespace-launch function to ensure all names are updated immediately when the namespace is launched.
-(define-private (update-renewal-height (id uint)) 
-    (let 
-        (
-            ;; Retrieve the name and namespace associated with the given ID.
-            (name-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
-            ;; Retrieve the properties of the name within the namespace.
-            (name-props (unwrap! (map-get? name-properties name-namespace) ERR-NO-NAME))
-            ;; Retrieve the properties of the namespace.
-            (namespace-props (unwrap! (map-get? namespaces (get namespace name-namespace)) ERR-NAMESPACE-NOT-FOUND))
-        )
-        ;; Update the renewal-height field in the name-properties map.
-        ;; This is done by merging the existing name properties with the updated renewal-height.
-        ;; The renewal-height is set to the sum of the namespace's launched-at time and its lifetime.
-        (ok 
-            (map-set name-properties name-namespace 
-                (merge 
-                    name-props 
-                    {
-                        ;; Calculate the new renewal-height.
-                        ;; It is set to the namespace's launched-at time plus the namespace's lifetime.
-                        renewal-height: (if (is-some (get namespace-manager namespace-props)) 
-                                            u0
-                                            (+ (unwrap! (get launched-at namespace-props) ERR-UNWRAP) (get lifetime namespace-props))
-                                        )
-                    }
-                )
-            )
-        ) 
-    )
-)
-
 (define-private (handle-existing-name 
     (name-props 
         {
@@ -1650,22 +1628,8 @@
             (asserts! (> (unwrap-panic (get registered-at name-props)) tx-sender-preorder-height) ERR-FAST-MINTED-BEFORE)
         )
         ;; Update the name properties with the new preorder information since it is the best preorder
-        (map-set name-properties {name: name, namespace: namespace} (merge name-props {hashed-salted-fqn-preorder: (some hashed-salted-fqn), preordered-by: (some tx-sender), registered-at: (some block-height), renewal-height: (+ block-height renewal), stx-burn: stx-burned}))
-        ;; Check if the initial fast claim or peorder burnt less than what the current owner did
-        (if (< (get stx-burn name-props) stx-burned) 
-            ;; If the burn of fast claim or peordered name was less
-            ;; case, fast claim the name, and burn only 10 stx, then this preorder which will get the name burnt 20
-            (begin 
-                ;; Then transfer back that amount to the previous owner, we transfer back 10
-                (try! (as-contract (stx-transfer? (get stx-burn name-props) .BNS-V2 (get owner name-props))))
-                ;; And burn the rest, the other 10
-                (try! (as-contract (stx-burn? (- stx-burned (get stx-burn name-props)) .BNS-V2)))
-            )
-            ;; Case if the preorder burnt 50 and I only burn 20, then we can only transfer back 20 
-            ;; If it is lower then transfer back the amount of the current owners preorder since we can not refund a higher amount
-            (try! (as-contract (stx-transfer? stx-burned .BNS-V2 (get owner name-props))))
-        )
-        
+        (map-set name-properties {name: name, namespace: namespace} (merge name-props {hashed-salted-fqn-preorder: (some hashed-salted-fqn), preordered-by: (some tx-sender), registered-at: (some burn-block-height), renewal-height: (+ burn-block-height renewal), stx-burn: stx-burned}))
+        (try! (as-contract (stx-transfer? stx-burned .BNS-V2 (get owner name-props))))
         ;; Transfer ownership of the name to the new owner
         (try! (purchase-transfer name-index (get owner name-props) tx-sender))
         (try! (update-zonefile-hash namespace name zonefile-hash))
@@ -1682,13 +1646,13 @@
         (map-set name-properties
             {name: name, namespace: namespace} 
             {
-                registered-at: (some block-height),
+                registered-at: (some burn-block-height),
                 imported-at: none,
                 revoked-at: false,
                 zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: (some hashed-salted-fqn),
                 preordered-by: (some tx-sender),
-                renewal-height: (+ lifetime block-height),
+                renewal-height: (+ lifetime burn-block-height),
                 stx-burn: stx-burned,
                 owner: tx-sender,
             }
