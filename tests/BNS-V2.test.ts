@@ -30,6 +30,7 @@ import {
   ERR_PREORDERED_BEFORE,
   ERR_NAME_NOT_CLAIMABLE_YET,
   ERR_IMPORTED_BEFORE,
+  ERR_LIFETIME_EQUAL_0,
   commTraitName,
   commTraitAddress,
   commTraitNameWrong,
@@ -92,6 +93,7 @@ import {
   callGetBnsFromId,
   callGetIdFromBns,
   callGetLastTokenId,
+  callGetRenewalHeight,
 } from "./BNS-V2.functions";
 
 const simnet = await initSimnet();
@@ -140,6 +142,7 @@ describe("TRANSFER FUNCTION", () => {
       "stx-burn": 10,
       owner: address1,
     });
+    callGetRenewalHeight(1, 5007, false);
     // Make sure maps where created correctly, for tracking purposes
     callGetBnsFromId(1, name1Buff, namespaceBuff);
     callGetIdFromBns(name1Buff, namespaceBuff, 1);
@@ -164,6 +167,7 @@ describe("TRANSFER FUNCTION", () => {
       "stx-burn": 10,
       owner: address3,
     });
+    callGetRenewalHeight(1, 5007, false);
     // Make sure maps stay the same here
     callGetBnsFromId(1, name1Buff, namespaceBuff);
     callGetIdFromBns(name1Buff, namespaceBuff, 1);
@@ -651,6 +655,7 @@ describe("TRANSFER FUNCTION", () => {
       "stx-burn": 10,
       owner: address1,
     });
+    callGetRenewalHeight(1, ERR_NAMESPACE_NOT_LAUNCHED, true);
     // Check Primary Names
     callGetPrimaryName(address1, 1);
     callGetOwner(1, address1);
@@ -681,10 +686,11 @@ describe("TRANSFER FUNCTION", () => {
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5005,
+      "renewal-height": 0,
       "stx-burn": 10,
       owner: address1,
     });
+    callGetRenewalHeight(1, 5005, false);
     // Check Primary Names
     callGetPrimaryName(address1, 1);
     callGetPrimaryName(address3, null);
@@ -700,7 +706,7 @@ describe("TRANSFER FUNCTION", () => {
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5005,
+      "renewal-height": 0,
       "stx-burn": 10,
       owner: address3,
     });
@@ -2410,6 +2416,7 @@ describe("MNG-BURN FUNCTIONS", () => {
       "stx-burn": 0,
       owner: address1,
     });
+    callGetRenewalHeight(1, ERR_LIFETIME_EQUAL_0, true);
     callGetPrimaryName(address1, 1);
     callGetBnsFromId(1, name1Buff, namespaceBuff);
     callGetIdFromBns(name1Buff, namespaceBuff, 1);
@@ -3915,6 +3922,8 @@ describe("NAME-IMPORT FUNCTION", () => {
       true,
       false
     );
+
+    callGetRenewalHeight(1, ERR_NAMESPACE_NOT_LAUNCHED, true);
 
     // Check final state
     callGetBnsInfo(name1Buff, namespaceBuff, {
@@ -7655,6 +7664,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     });
     callGetOwner(1, address1);
     callGetPrimaryName(address1, 1);
+    callGetRenewalHeight(1, 10007, false);
   });
 
   it("This should successfully renew a name in an unmanaged namespace when the name is within the grace period", () => {
@@ -7674,6 +7684,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     });
     callGetOwner(1, address1);
     callGetPrimaryName(address1, 1);
+    callGetRenewalHeight(1, 11008, false);
   });
 
   it("This should successfully renew a name in an unmanaged namespace when the name is not in the grace period by the owner", () => {
@@ -7693,6 +7704,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     });
     callGetOwner(1, address1);
     callGetPrimaryName(address1, 1);
+    callGetRenewalHeight(1, 16008, false);
   });
 
   it("This should successfully renew a name in an unmanaged namespace when the name is not in the grace period by a different address than the owner", () => {
@@ -7720,6 +7732,93 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callGetOwner(1, address3);
     callGetPrimaryName(address3, 1);
     callGetPrimaryName(address1, null);
+    callGetRenewalHeight(1, 16008, false);
+  });
+
+  it("This should successfully renew an imported name in an unmanaged namespace when the name is not in the grace period by a different address than the owner", () => {
+    callPreorderAValidNamespace(
+      namespaceBuffSalt,
+      1000000000,
+      address1,
+      145,
+      false
+    );
+    simnet.mineEmptyBlock();
+    callRevealNamespace(
+      namespaceBuff,
+      saltBuff,
+      1,
+      1,
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      1,
+      1,
+      5000,
+      address1,
+      null,
+      true,
+      false,
+      true,
+      address1,
+      true,
+      false
+    );
+
+    // Check initial state
+    callGetBnsInfo(name1Buff, namespaceBuff, null);
+    callGetOwner(1, null);
+    callGetPrimaryName(address3, null);
+
+    callImportName(
+      namespaceBuff,
+      name1Buff,
+      zonefileBuff,
+      address3,
+      address1,
+      true,
+      false
+    );
+
+    callGetRenewalHeight(1, ERR_NAMESPACE_NOT_LAUNCHED, true);
+
+    // Check final state
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": null,
+      "imported-at": 4,
+      "revoked-at": false,
+      "zonefile-hash": zonefileBuff,
+      "hashed-salted-fqn-preorder": null,
+      "preordered-by": null,
+      "renewal-height": 0,
+      "stx-burn": 10,
+      owner: address3,
+    });
+    callGetOwner(1, address3);
+    callGetPrimaryName(address3, 1);
+    callLaunchNamespace(namespaceBuff, address1, true, false);
+    callGetRenewalHeight(1, 5005, false);
+    callRenewName(
+      namespaceBuff,
+      name1Buff,
+      zonefile2Buff,
+      address3,
+      true,
+      false
+    );
+    callGetRenewalHeight(1, 10005, false);
+    callGetBnsInfo(name1Buff, namespaceBuff, {
+      "registered-at": null,
+      "imported-at": 4,
+      "revoked-at": false,
+      "hashed-salted-fqn-preorder": null,
+      "preordered-by": null,
+      "zonefile-hash": zonefile2Buff,
+      "renewal-height": 10005,
+      owner: address3,
+      "stx-burn": 10,
+    });
+    callGetOwner(1, address3);
+    callGetPrimaryName(address3, 1);
+    callGetPrimaryName(address1, null);
   });
 
   it("This should fail to renew a name in an unmanaged namespace when the name does not exist", () => {
@@ -7733,7 +7832,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       name1Buff,
       null,
       address1,
-      ERR_NAMESPACE_HAS_MANAGER,
+      ERR_LIFETIME_EQUAL_0,
       true
     );
   });
@@ -7779,7 +7878,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       name1Buff,
       null,
       address1,
-      ERR_NAMESPACE_NOT_LAUNCHED,
+      ERR_LIFETIME_EQUAL_0,
       true
     );
   });
@@ -7828,7 +7927,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       name1Buff,
       null,
       address1,
-      ERR_OPERATION_UNAUTHORIZED,
+      ERR_LIFETIME_EQUAL_0,
       true
     );
   });

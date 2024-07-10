@@ -62,6 +62,7 @@
 (define-constant ERR-PREORDERED-BEFORE (err u127))
 (define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u128))
 (define-constant ERR-IMPORTED-BEFORE (err u129))
+(define-constant ERR-LIFETIME-EQUAL-0 (err u130))
 
 ;; variables
 ;; (new) Counter to keep track of the last minted NFT ID, ensuring unique identifiers
@@ -145,9 +146,6 @@
     { created-at: uint, stx-burned: uint, claimed: bool}
 )
 
-;; Defines a map to keep track of the imported names by namespace, so when the namespace is launched we update the renewal time accordingly
-(define-map imported-names (buff 20) (list 1000 uint))
-
 ;; It maps a user's principal to the ID of their primary name.
 (define-map primary-name principal uint)
 
@@ -157,6 +155,28 @@
 (define-read-only (get-last-token-id)
     ;; Returns the current value of bns-index variable, which tracks the last token ID
     (ok (var-get bns-index))
+)
+
+(define-read-only (get-renewal-height (id uint))
+    (let 
+        (
+            (name-namespace (unwrap! (get-bns-from-id id) ERR-NO-NAME))
+            (namespace-props (unwrap! (map-get? namespaces (get namespace name-namespace)) ERR-NAMESPACE-NOT-FOUND))
+            (name-props (unwrap! (map-get? name-properties name-namespace) ERR-NO-NAME))
+            (renewal-height (get renewal-height name-props))
+            (namespace-lifetime (get lifetime namespace-props))
+        )
+        ;; Check if the namespace requires renewals
+        (asserts! (not (is-eq namespace-lifetime u0)) ERR-LIFETIME-EQUAL-0) 
+        ;; If the check passes then check the renewal-height of the name
+        (ok 
+            (if (is-eq renewal-height u0)
+                ;; If it is true then it means it was imported so return the namespace launch blockheight + lifetime
+                (+ (unwrap! (get launched-at namespace-props) ERR-NAMESPACE-NOT-LAUNCHED) namespace-lifetime) 
+                renewal-height
+            )
+        )
+    )
 )
 
 ;; @desc (new) SIP-09 compliant function to get token URI
@@ -673,8 +693,6 @@
         (
             ;; Retrieve the properties of the namespace to ensure it exists and to check its current state.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            ;; Fetch the list of imported names for the namespace
-            (imported-list-of-names (default-to (list) (map-get? imported-names namespace)))
         )
         ;; Ensure the transaction sender is the namespace's designated import principal.
         (asserts! (is-eq (get namespace-import namespace-props) tx-sender) ERR-OPERATION-UNAUTHORIZED)
@@ -684,8 +702,6 @@
         (asserts! (< burn-block-height (+ (get revealed-at namespace-props) NAMESPACE-LAUNCHABILITY-TTL)) ERR-NAMESPACE-PREORDER-LAUNCHABILITY-EXPIRED)
         ;; Update the `namespaces` map with the newly launched status.
         (map-set namespaces namespace (merge namespace-props { launched-at: (some burn-block-height) }))      
-        ;; Update all the imported names renewal height to start with the launched-at block height
-        (map update-renewal-height imported-list-of-names)
         ;; Emit an event to indicate the namespace is now ready and launched.
         (print { namespace: namespace, status: "ready", properties: (map-get? namespaces namespace) })
         ;; Confirm the successful launch of the namespace.
@@ -725,8 +741,6 @@
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
             ;; Fetch the latest index to mint
             (current-mint (+ (var-get bns-index) u1))
-            ;; Fetch the list of imported names for the namespace.
-            (imported-list-of-names (default-to (list) (map-get? imported-names namespace)))
             (price (if (is-none (get namespace-manager namespace-props))
                         (try! (compute-name-price name (get price-function namespace-props)))
                         u0
@@ -752,7 +766,6 @@
                 zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: none,
                 preordered-by: none,
-                ;; Set to u0, this will be updated when the namespace is launched
                 renewal-height: u0,
                 stx-burn: price,
                 owner: beneficiary,
@@ -764,8 +777,6 @@
         (update-primary-name-recipient current-mint beneficiary)
         ;; Update the index of the minting
         (var-set bns-index current-mint)
-        ;; Update the imported names list for the namespace
-        (map-set imported-names namespace (unwrap! (as-max-len? (append imported-list-of-names current-mint) u1000) ERR-OVERFLOW))
         ;; Mint the name to the beneficiary
         (try! (nft-mint? BNS-V2 current-mint beneficiary))
         ;; Log the new name registration
@@ -1242,7 +1253,7 @@
             ;; Get the lifetime of names in this namespace
             (lifetime (get lifetime namespace-props))
             ;; Get the current renewal height of the name
-            (renewal-height (get renewal-height name-props))
+            (renewal-height (try! (get-renewal-height name-index)))
             ;; Calculate the new renewal height based on current block height
             (new-renewal-height (+ burn-block-height lifetime))
         )
@@ -1251,7 +1262,7 @@
         ;; Ensure the namespace doesn't have a manager
         (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
         ;; Check if renewals are required for this namespace
-        (asserts! (> lifetime u0) ERR-OPERATION-UNAUTHORIZED)
+        (asserts! (> lifetime u0) ERR-LIFETIME-EQUAL-0)
         ;; Verify that the name has not been revoked
         (asserts! (not (get revoked-at name-props)) ERR-NAME-REVOKED) 
         ;; Handle renewal based on whether it's within the grace period or not
@@ -1303,8 +1314,8 @@
                 {
                     renewal-height: 
                         ;; If still within lifetime, extend from current renewal height; otherwise, use new renewal height
-                        (if (< burn-block-height (get renewal-height name-props))
-                            (+ (get renewal-height name-props) lifetime)
+                        (if (< burn-block-height (unwrap-panic (get-renewal-height (unwrap-panic (get-id-from-bns name namespace)))))
+                            (+ (unwrap-panic (get-renewal-height (unwrap-panic (get-id-from-bns name namespace)))) lifetime)
                             new-renewal-height
                         )
                 }
@@ -1577,39 +1588,6 @@
         true
         ;; If recipient doesn't have a primary name
         (map-set primary-name recipient id)
-    )
-)
-
-;; Function to update the renewal-height for all imported names within a namespace
-;; This is used in the namespace-launch function to ensure all names are updated immediately when the namespace is launched.
-(define-private (update-renewal-height (id uint)) 
-    (let 
-        (
-            ;; Retrieve the name and namespace associated with the given ID.
-            (name-namespace (unwrap! (map-get? index-to-name id) ERR-NO-NAME))
-            ;; Retrieve the properties of the name within the namespace.
-            (name-props (unwrap! (map-get? name-properties name-namespace) ERR-NO-NAME))
-            ;; Retrieve the properties of the namespace.
-            (namespace-props (unwrap! (map-get? namespaces (get namespace name-namespace)) ERR-NAMESPACE-NOT-FOUND))
-        )
-        ;; Update the renewal-height field in the name-properties map.
-        ;; This is done by merging the existing name properties with the updated renewal-height.
-        ;; The renewal-height is set to the sum of the namespace's launched-at time and its lifetime.
-        (ok 
-            (map-set name-properties name-namespace 
-                (merge 
-                    name-props 
-                    {
-                        ;; Calculate the new renewal-height.
-                        ;; It is set to the namespace's launched-at time plus the namespace's lifetime.
-                        renewal-height: (if (is-some (get namespace-manager namespace-props)) 
-                                            u0
-                                            (+ (unwrap! (get launched-at namespace-props) ERR-UNWRAP) (get lifetime namespace-props))
-                                        )
-                    }
-                )
-            )
-        ) 
     )
 )
 

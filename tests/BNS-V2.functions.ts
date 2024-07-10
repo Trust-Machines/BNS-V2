@@ -1227,3 +1227,21 @@ export const callGetPrimaryName = (
     expect(result.result).toBeNone();
   }
 };
+
+export const callGetRenewalHeight = (
+  id: number,
+  expectedResult: number,
+  isError: boolean
+) => {
+  const result = simnet.callReadOnlyFn(
+    "BNS-V2",
+    "get-renewal-height",
+    [Cl.uint(id)],
+    address1
+  );
+  if (!isError) {
+    expect(result.result).toBeOk(Cl.uint(expectedResult));
+  } else {
+    expect(result.result).toBeErr(Cl.uint(expectedResult));
+  }
+};
