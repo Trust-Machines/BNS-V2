@@ -725,7 +725,7 @@ export const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
     namespaceBuffSalt,
     1000000000,
     address1,
-    146,
+    145,
     false
   );
   // Mine an empty block happens on block 3, to allow one block to pass between preorder and reveal
@@ -752,7 +752,7 @@ export const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
   // Launch happens on block 5
   callLaunchNamespace(namespaceBuff, address1, true, false);
   // preorder happens on block 6
-  callPreorderName(name1BuffSalt, 10, address1, 150, false);
+  callPreorderName(name1BuffSalt, 10, address1, 149, false);
   // Mine the empty block to fulfill request of 1 block between preorder and register, block 7
   simnet.mineEmptyBlock();
   // Register happens on block 8
@@ -771,7 +771,7 @@ export const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace =
   () => {
     // Block 9
     // Preorder happens on block 10
-    callPreorderName(name2BuffSalt, 10, address1, 153, false);
+    callPreorderName(name2BuffSalt, 10, address1, 152, false);
     // Mine an empty block to allow one block between preorder and register, block 11
     simnet.mineEmptyBlock();
     // Register happens on the next block 12
@@ -793,7 +793,7 @@ export const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
     namespaceBuffSalt,
     1000000000,
     address1,
-    146,
+    145,
     false
   );
   // Mine an empty block to allow one block between preorder and reveal block 3
@@ -820,7 +820,7 @@ export const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
   // Launch the namespace block 5
   callLaunchNamespace(namespaceBuff, address1, true, false);
   // Preorder a name in the managed namespace block 6
-  callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
+  callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
   // Register the name in the managed namespace block 7
   callManagedRegisterNameWithAddress(
     namespaceBuff,
@@ -837,7 +837,7 @@ export const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
 export const successfullyTwoStepRegisterASecondNameInAManagedNamespace = () => {
   // Block 8
   // Preorder a second name in the managed namespace block 9
-  callManagedPreorderName(name2BuffSalt, managerAddress, 152, false);
+  callManagedPreorderName(name2BuffSalt, managerAddress, 151, false);
   // Register the second name in the managed namespace block 10
   callManagedRegisterNameWithAddress(
     namespaceBuff,
@@ -858,7 +858,7 @@ export const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
     namespaceBuffSalt,
     1000000000,
     address1,
-    146,
+    145,
     false
   );
   // Mine an empty block to allow one block between preorder and reveal block 3
@@ -917,7 +917,7 @@ export const successfullyFastClaimANameInAManagedNamespace = () => {
     namespaceBuffSalt,
     1000000000,
     address1,
-    146,
+    145,
     false
   );
   // Mine an empty block to allow one block between preorder and reveal block 3
