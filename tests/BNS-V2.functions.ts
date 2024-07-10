@@ -752,7 +752,7 @@ export const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
   // Launch happens on block 5
   callLaunchNamespace(namespaceBuff, address1, true, false);
   // preorder happens on block 6
-  callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+  callPreorderName(name1BuffSalt, 10, address1, 150, false);
   // Mine the empty block to fulfill request of 1 block between preorder and register, block 7
   simnet.mineEmptyBlock();
   // Register happens on block 8
@@ -771,7 +771,7 @@ export const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace =
   () => {
     // Block 9
     // Preorder happens on block 10
-    callPreorderName(name2BuffSalt, 200000000, address1, 153, false);
+    callPreorderName(name2BuffSalt, 10, address1, 153, false);
     // Mine an empty block to allow one block between preorder and register, block 11
     simnet.mineEmptyBlock();
     // Register happens on the next block 12

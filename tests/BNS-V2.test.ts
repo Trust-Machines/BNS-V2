@@ -137,7 +137,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     // Make sure maps where created correctly, for tracking purposes
@@ -161,7 +161,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address3,
     });
     // Make sure maps stay the same here
@@ -357,7 +357,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     // Check Primary Names
@@ -375,7 +375,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address3,
     });
     // Check Primary Names after first transfer, address 1 should be null
@@ -393,7 +393,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address2,
     });
     // Check Primary Names after second transfer
@@ -417,7 +417,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     // Check Primary Names
@@ -436,7 +436,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address3,
     });
     // Check Primary Names after first transfer
@@ -455,7 +455,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     // Check Primary Names after second transfer
@@ -478,7 +478,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     // Check Primary Names
@@ -523,7 +523,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address3,
     });
     // Check Primary Names after transfer, address 1 should be null, and address3 should stay with id 2 as primary name
@@ -546,7 +546,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     // Check Primary Names
@@ -923,7 +923,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
 
@@ -940,7 +940,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
 
@@ -957,7 +957,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
   });
@@ -975,7 +975,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     // Check Primary Names
@@ -1001,7 +1001,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     // Check Primary Names
@@ -1206,7 +1206,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     // Check Primary Names
@@ -1232,7 +1232,7 @@ describe("TRANSFER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     // Check Primary Names
@@ -2067,7 +2067,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     callGetPrimaryName(address3, null);
@@ -2092,7 +2092,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address3,
     });
     callGetPrimaryName(address3, 1);
@@ -2372,7 +2372,7 @@ describe("MNG-BURN FUNCTIONS", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     callGetPrimaryName(address1, 1);
@@ -2388,7 +2388,7 @@ describe("MNG-BURN FUNCTIONS", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
     callGetPrimaryName(address1, 1);
@@ -5443,7 +5443,7 @@ describe("NAME-PREORDER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
   });
 
   it("This should successfully preorder a name on a launched namespace with a manager even though this is not the intended use", () => {
@@ -5507,7 +5507,7 @@ describe("NAME-PREORDER FUNCTION", () => {
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
 
-    callPreorderName(name1Buff, 200000000, address1, ERR_HASH_MALFORMED, true);
+    callPreorderName(name1Buff, 10, address1, ERR_HASH_MALFORMED, true);
   });
 
   it("This should fail to preorder a name if stx to burn 0", () => {
@@ -5610,16 +5610,10 @@ describe("NAME-PREORDER FUNCTION", () => {
     callLaunchNamespace(namespaceBuff, address1, true, false);
 
     // First preorder
-    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
 
     // Attempt second preorder
-    callPreorderName(
-      name1BuffSalt,
-      200000000,
-      address1,
-      ERR_PREORDERED_BEFORE,
-      true
-    );
+    callPreorderName(name1BuffSalt, 10, address1, ERR_PREORDERED_BEFORE, true);
   });
 });
 
@@ -5694,7 +5688,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Tha hashed salted fqn
       name1BuffSalt,
       // The amount to burn
-      200000000,
+      10,
       // Who is calling the function
       address3,
       // The expected value of return, should be 6 + 144 ttl
@@ -5771,7 +5765,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // It has the renewal height which is the time it was registered + lifetime of the namespace, in this case 5000
       "renewal-height": 5008,
       // It has the amount of stx that was burnt to acquire the name
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       // It has the current owner of the name
       owner: address3,
     });
@@ -5805,7 +5799,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 200000000, address3, 150, false);
+    callPreorderName(name1BuffSalt, 10, address3, 150, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -5830,7 +5824,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address3,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address3,
     });
 
@@ -5861,7 +5855,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff2, address1, true, false);
-    callPreorderName(name1BuffSaltDiff, 200000000, address3, 157, false);
+    callPreorderName(name1BuffSaltDiff, 10, address3, 157, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff2,
@@ -5886,7 +5880,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSaltDiff,
       "preordered-by": address3,
       "renewal-height": 5015,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address3,
     });
   });
@@ -5925,9 +5919,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Block 5
     callLaunchNamespace(namespaceBuff, address1, true, false);
     // Block 6
-    callPreorderName(name1BuffSalt, 200000000, address3, 150, false);
+    callPreorderName(name1BuffSalt, 10, address3, 150, false);
     // Block 7
-    callPreorderName(name1BuffDifferentSalt, 200000000, address2, 151, false);
+    callPreorderName(name1BuffDifferentSalt, 10, address2, 151, false);
     // Block 8
     callRegisterName(
       namespaceBuff,
@@ -5951,7 +5945,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address3,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address3,
     });
   });
@@ -5985,9 +5979,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
     // Address 1 preorderes first
-    callPreorderName(name1BuffDifferentSalt, 200000000, address1, 150, false);
+    callPreorderName(name1BuffDifferentSalt, 10, address1, 150, false);
     // Address 3 preorders second, with a different salt
-    callPreorderName(name1BuffSalt, 200000000, address3, 151, false);
+    callPreorderName(name1BuffSalt, 10, address3, 151, false);
     simnet.mineEmptyBlock();
     // Address 3 registers first and gets the name
     callRegisterName(
@@ -6014,7 +6008,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // The address of the preorder
       "preordered-by": address3,
       "renewal-height": 5009,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address3,
     });
     // Address registers the same name
@@ -6049,7 +6043,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       "preordered-by": address1,
       // Updated renewal date, to start with the rightful owner
       "renewal-height": 5010,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
   });
@@ -6083,7 +6077,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
     // Address 1 preorderes
-    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     // Address 3 fast claims
     callFastClaimName(
       name1Buff,
@@ -6145,7 +6139,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Updated renewal date, to start with the rightful owner
       "renewal-height": 5008,
       // Updated to the amount burnt to register the name
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
   });
@@ -6178,7 +6172,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -6202,10 +6196,10 @@ describe("NAME-REGISTER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
-    callPreorderName(name2BuffSalt, 200000000, address1, 153, false);
+    callPreorderName(name2BuffSalt, 10, address1, 153, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -6229,7 +6223,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name2BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5011,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
       owner: address1,
     });
   });
@@ -6274,7 +6268,7 @@ describe("NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if no namespace", () => {
-    callPreorderName(name1BuffSalt, 200000000, address1, 146, false);
+    callPreorderName(name1BuffSalt, 10, address1, 146, false);
     callRegisterName(
       namespaceBuff,
       name1Buff,
@@ -6314,7 +6308,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     callRegisterName(
       namespaceBuff,
       name1Buff,
@@ -6354,7 +6348,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -6404,8 +6398,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffDifferentSalt, 200000000, address3, 150, false);
-    callPreorderName(name1BuffSalt, 200000000, address1, 151, false);
+    callPreorderName(name1BuffDifferentSalt, 10, address3, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 151, false);
     callRegisterName(
       namespaceBuff,
       name1Buff,
@@ -6463,7 +6457,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       1,
       false
     );
-    callPreorderName(name1BuffSalt, 200000000, address1, 151, false);
+    callPreorderName(name1BuffSalt, 10, address1, 151, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -6504,7 +6498,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlocks(150);
     callRegisterName(
       namespaceBuff,
@@ -6589,7 +6583,7 @@ describe("CLAIM-PREORDER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
     simnet.mineEmptyBlocks(144);
     callClaimPreorder(name1BuffSalt, address1, true, false);
@@ -6623,7 +6617,7 @@ describe("CLAIM-PREORDER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -7567,7 +7561,7 @@ describe("NAME-REVOKE FUNCTION", () => {
       "zonefile-hash": zonefileBuff,
       "renewal-height": 5008,
       owner: address1,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
     });
     callRevokeName(namespaceBuff, name1Buff, address1, true, false);
     callGetBnsInfo(name1Buff, namespaceBuff, {
@@ -7579,7 +7573,7 @@ describe("NAME-REVOKE FUNCTION", () => {
       "zonefile-hash": null,
       "renewal-height": 5008,
       owner: address1,
-      "stx-burn": 200000000,
+      "stx-burn": 10,
     });
   });
 
@@ -7818,7 +7812,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 200000000, address1, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
