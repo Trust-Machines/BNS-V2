@@ -208,6 +208,19 @@
     )
 )
 
+;; Read-only function `get-name-price` calculates the registration price for a name based on the price buckets of the namespace
+;; @params:
+    ;; namespace (buff 20): The namespace for which the price is being calculated.
+    ;; name (buff 48): The name for which the price is being calculated.
+(define-read-only (get-name-price (namespace (buff 20)) (name (buff 48)))
+    (let 
+        (
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+        )
+        (ok (compute-name-price name (get price-function namespace-props)))
+    )
+)
+
 ;; Read-only function `can-namespace-be-registered` checks if a namespace is available for registration.
 ;; @params:
     ;; namespace (buff 20): The namespace being checked for availability.
