@@ -4,6 +4,7 @@ import { it } from "vitest";
 import { GetLastTokenId } from "./state/GetLastTokenId.ts";
 import { GetOwnerNone } from "./state/GetOwnerNone.ts";
 import { GetBnsFromIdNone } from "./state/GetBnsFromIdNone.ts";
+import { GetPrimaryNameNone } from "./state/GetPrimaryNameNone.ts";
 
 it("executes BNS-V2 state interactions", async () => {
   const excludedAccounts = ["faucet", "deployer"];
@@ -17,6 +18,7 @@ it("executes BNS-V2 state interactions", async () => {
     GetLastTokenId(filteredAccounts),
     GetOwnerNone(filteredAccounts),
     GetBnsFromIdNone(filteredAccounts),
+    GetPrimaryNameNone(filteredAccounts),
   ];
 
   const model = {
