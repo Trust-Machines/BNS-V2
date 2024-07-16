@@ -6,6 +6,7 @@ import { GetOwnerNone } from "./state/GetOwnerNone.ts";
 import { GetBnsFromIdNone } from "./state/GetBnsFromIdNone.ts";
 import { GetPrimaryNameNone } from "./state/GetPrimaryNameNone.ts";
 import { GetNamespacePropertiesErr } from "./state/GetNamespacePropertiesErr.ts";
+import { GetNamespacePrice } from "./state/GetNamespacePrice.ts";
 
 it("executes BNS-V2 state interactions", async () => {
   const excludedAccounts = ["faucet", "deployer"];
@@ -21,6 +22,7 @@ it("executes BNS-V2 state interactions", async () => {
     GetBnsFromIdNone(filteredAccounts),
     GetPrimaryNameNone(filteredAccounts),
     GetNamespacePropertiesErr(filteredAccounts),
+    GetNamespacePrice(filteredAccounts),
   ];
 
   const model = {
