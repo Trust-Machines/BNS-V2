@@ -2,6 +2,7 @@ import fc from "fast-check";
 import { it } from "vitest";
 
 import { GetLastTokenId } from "./state/GetLastTokenId.ts";
+import { GetOwnerNone } from "./state/GetOwnerNone.ts";
 
 it("executes BNS-V2 state interactions", async () => {
   const excludedAccounts = ["faucet", "deployer"];
@@ -13,10 +14,12 @@ it("executes BNS-V2 state interactions", async () => {
 
   const invariants = [
     GetLastTokenId(filteredAccounts),
+    GetOwnerNone(filteredAccounts),
   ];
 
   const model = {
     lastTokenId: 0,
+    owners: new Map(),
   };
 
   fc.assert(
