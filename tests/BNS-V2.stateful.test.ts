@@ -8,6 +8,7 @@ import { GetPrimaryNameNone } from "./state/GetPrimaryNameNone.ts";
 import { GetNamespacePropertiesErr } from "./state/GetNamespacePropertiesErr.ts";
 import { GetNamespacePrice } from "./state/GetNamespacePrice.ts";
 import { CanNamespaceBeRegisteredTrue } from "./state/CanNamespaceBeRegistered.ts";
+import { NamespacePreorder } from "./state/NamespacePreorder.ts";
 
 it("executes BNS-V2 state interactions", async () => {
   const excludedAccounts = ["faucet", "deployer"];
@@ -25,6 +26,7 @@ it("executes BNS-V2 state interactions", async () => {
     GetNamespacePropertiesErr(filteredAccounts),
     GetNamespacePrice(filteredAccounts),
     CanNamespaceBeRegisteredTrue(filteredAccounts),
+    NamespacePreorder(filteredAccounts),
   ];
 
   const model = {
@@ -33,6 +35,8 @@ it("executes BNS-V2 state interactions", async () => {
     owners: new Map(),
     indexToName: new Map(),
     namespaces: new Map(),
+    namespaceSinglePreorder: new Map(),
+    namespacePreorders: new Map(),
   };
 
   fc.assert(
