@@ -1,4 +1,5 @@
 export type Model = {
+  burnBlockHeight: number;
   lastTokenId: number;
   owners: Map<number, string>;
   indexToName: Map<number, Name>;

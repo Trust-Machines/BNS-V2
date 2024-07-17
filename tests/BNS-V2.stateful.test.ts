@@ -7,6 +7,7 @@ import { GetBnsFromIdNone } from "./state/GetBnsFromIdNone.ts";
 import { GetPrimaryNameNone } from "./state/GetPrimaryNameNone.ts";
 import { GetNamespacePropertiesErr } from "./state/GetNamespacePropertiesErr.ts";
 import { GetNamespacePrice } from "./state/GetNamespacePrice.ts";
+import { CanNamespaceBeRegisteredTrue } from "./state/CanNamespaceBeRegistered.ts";
 
 it("executes BNS-V2 state interactions", async () => {
   const excludedAccounts = ["faucet", "deployer"];
@@ -23,9 +24,11 @@ it("executes BNS-V2 state interactions", async () => {
     GetPrimaryNameNone(filteredAccounts),
     GetNamespacePropertiesErr(filteredAccounts),
     GetNamespacePrice(filteredAccounts),
+    CanNamespaceBeRegisteredTrue(filteredAccounts),
   ];
 
   const model = {
+    burnBlockHeight: 0,
     lastTokenId: 0,
     owners: new Map(),
     indexToName: new Map(),
