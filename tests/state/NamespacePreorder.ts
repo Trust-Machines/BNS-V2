@@ -21,10 +21,10 @@ export const NamespacePreorder = (accounts: Map<string, string>) =>
     })
     .map((r) => ({
       check: (model: Readonly<Model>) =>
-        !(model.namespaceSinglePreorder.has({
+        !(model.namespaceSinglePreorder.has(JSON.stringify({
           salt: r.salt,
           namespace: r.namespace,
-        })) && r.ustxToBurn > 0,
+        }))) && r.ustxToBurn > 0,
       run: (model: Model, real: Simnet) => {
         const [wallet, address] = r.sender;
         const saltBuff = encoder.encode(r.salt);
@@ -59,20 +59,27 @@ export const NamespacePreorder = (accounts: Map<string, string>) =>
         );
 
         model.burnBlockHeight = burnBlockHeightAfter;
+        const namespaceSinglePreorder = model.namespaceSinglePreorder;
+        const namespacePreorders = model.namespacePreorders;
+        namespaceSinglePreorder.set(
+          JSON.stringify({
+            salt: r.salt,
+            namespace: r.namespace,
+          }),
+          true,
+        );
 
-        model.namespaceSinglePreorder.set({
-          salt: r.salt,
-          namespace: r.namespace,
-        }, true);
-
-        model.namespacePreorders.set({
-          salt: r.salt,
-          namespace: r.namespace,
-          buyer: address,
-        }, {
-          createdAt: model.burnBlockHeight,
-          ustxBurned: r.ustxToBurn,
-        });
+        namespacePreorders.set(
+          JSON.stringify({
+            salt: r.salt,
+            namespace: r.namespace,
+            buyer: address,
+          }),
+          {
+            createdAt: model.burnBlockHeight,
+            ustxBurned: r.ustxToBurn,
+          },
+        );
 
         prettyConsoleLog(
           "Ӿ tx-sender",

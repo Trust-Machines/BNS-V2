@@ -9,6 +9,7 @@ import { GetNamespacePropertiesErr } from "./state/GetNamespacePropertiesErr.ts"
 import { GetNamespacePrice } from "./state/GetNamespacePrice.ts";
 import { CanNamespaceBeRegisteredTrue } from "./state/CanNamespaceBeRegistered.ts";
 import { NamespacePreorder } from "./state/NamespacePreorder.ts";
+import { NamespaceReveal } from "./state/NamespaceReveal.ts";
 
 it("executes BNS-V2 state interactions", async () => {
   const excludedAccounts = ["faucet", "deployer"];
@@ -17,17 +18,6 @@ it("executes BNS-V2 state interactions", async () => {
       !excludedAccounts.includes(key)
     ),
   );
-
-  const invariants = [
-    GetLastTokenId(filteredAccounts),
-    GetOwnerNone(filteredAccounts),
-    GetBnsFromIdNone(filteredAccounts),
-    GetPrimaryNameNone(filteredAccounts),
-    GetNamespacePropertiesErr(filteredAccounts),
-    GetNamespacePrice(filteredAccounts),
-    CanNamespaceBeRegisteredTrue(filteredAccounts),
-    NamespacePreorder(filteredAccounts),
-  ];
 
   const model = {
     burnBlockHeight: 0,
@@ -39,14 +29,26 @@ it("executes BNS-V2 state interactions", async () => {
     namespacePreorders: new Map(),
   };
 
+  const invariants = [
+    GetLastTokenId(filteredAccounts),
+    GetOwnerNone(filteredAccounts),
+    GetBnsFromIdNone(filteredAccounts),
+    GetPrimaryNameNone(filteredAccounts),
+    GetNamespacePropertiesErr(filteredAccounts),
+    GetNamespacePrice(filteredAccounts),
+    CanNamespaceBeRegisteredTrue(filteredAccounts),
+    NamespacePreorder(filteredAccounts),
+    NamespaceReveal(filteredAccounts, model),
+  ];
+
   fc.assert(
     fc.property(
       fc.commands(invariants, { size: "+1" }),
       (cmds) => {
-        const state = () => ({ model: model, real: simnet });
+        const state = () => ({ model, real: simnet });
         fc.modelRun(state, cmds);
       },
     ),
-    { numRuns: 1, verbose: fc.VerbosityLevel.VeryVerbose },
+    { numRuns: 10000, verbose: fc.VerbosityLevel.VeryVerbose },
   );
 });

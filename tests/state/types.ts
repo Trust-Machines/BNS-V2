@@ -4,8 +4,8 @@ export type Model = {
   owners: Map<number, string>;
   indexToName: Map<number, Name>;
   namespaces: Map<string, NamespaceProperties>;
-  namespaceSinglePreorder: Map<SaltNamespaceKey, boolean | undefined>;
-  namespacePreorders: Map<SaltNamespaceBuyerKey, Preorder>;
+  namespaceSinglePreorder: Map<string, boolean | undefined>;
+  namespacePreorders: Map<string, Preorder>;
 };
 
 export type Name = {
@@ -13,12 +13,7 @@ export type Name = {
   namespace: string;
 };
 
-type SaltNamespaceKey = {
-  salt: string;
-  namespace: string;
-};
-
-type SaltNamespaceBuyerKey = {
+export type SaltNamespaceBuyerKey = {
   salt: string;
   namespace: string;
   buyer: string;
@@ -41,7 +36,7 @@ type NamespaceProperties = {
   priceFunction: PriceFunction;
 };
 
-type PriceFunction = {
+export type PriceFunction = {
   buckets: number[];
   base: number;
   coeff: number;
