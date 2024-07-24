@@ -5,6 +5,9 @@ import { expect } from "vitest";
 import { Cl, ClarityValue, cvToValue } from "@stacks/transactions";
 import { encoder, prettyConsoleLog } from "../BNS-V2.helper";
 
+const NAMESPACE_LAUNCHABILITY_TTL = 52595;
+const PREORDER_CLAIMABILITY_TTL = 144;
+
 const isValidNamespace = (namespace: string) => {
   const regex = /^[a-z_-]+$/;
   return regex.test(namespace);
@@ -19,10 +22,18 @@ const findKeyByValue = (map: Map<string, string>, searchValue: string) => {
   return undefined;
 };
 
-export const NamespaceReveal = (
-  accounts: Map<string, string>,
-  model: Model,
-) =>
+const namespacePriceTiers = [
+  640_000_000_000,
+  64_000_000_000,
+  64_000_000_000,
+  6_400_000_000,
+  6_400_000_000,
+  6_400_000_000,
+  6_400_000_000,
+  640_000_000,
+];
+
+export const NamespaceReveal = (accounts: Map<string, string>, model: Model) =>
   fc
     .record({
       sender: fc.constantFrom(...accounts),
@@ -68,28 +79,50 @@ export const NamespaceReveal = (
         }),
       ];
 
-      return fc.record({
-        namespaceSaltBuyerTuple: fc.constantFrom(...keysArrayOrFallback),
-      }).map((namespaceSaltBuyerTuple) => ({
-        ...r,
-        ...namespaceSaltBuyerTuple,
-      }));
-    }).map((r) => ({
+      return fc
+        .record({
+          namespaceSaltBuyerTupleStringified: fc.constantFrom(
+            ...keysArrayOrFallback,
+          ),
+        })
+        .map((namespaceSaltBuyerTuple) => ({
+          ...r,
+          ...namespaceSaltBuyerTuple,
+        }));
+    })
+    .map((r) => ({
       check: (model: Readonly<Model>) => {
         const namespaceSaltBuyerTuple = JSON.parse(
-          r.namespaceSaltBuyerTuple,
+          r.namespaceSaltBuyerTupleStringified,
         ) as SaltNamespaceBuyerKey;
 
         if (
           namespaceSaltBuyerTuple.namespace === undefined ||
           namespaceSaltBuyerTuple.salt === undefined ||
           namespaceSaltBuyerTuple.buyer === undefined
-        ) return false;
+        ) {
+          return false;
+        }
+
+        const namespaceValue = model.namespaces.get(
+          namespaceSaltBuyerTuple.namespace,
+        );
+
+        const namespacePreorderValue = model.namespacePreorders.get(
+          r.namespaceSaltBuyerTupleStringified,
+        );
 
         const namespaceSaltKey = JSON.stringify({
           salt: namespaceSaltBuyerTuple.salt,
           namespace: namespaceSaltBuyerTuple.namespace,
         });
+
+        const tierIndex = Math.min(
+          namespaceSaltBuyerTuple.namespace.length - 1,
+          7,
+        );
+
+        const expectedPrice = namespacePriceTiers[tierIndex];
 
         return (
           model.namespaceSinglePreorder.size > 0 &&
@@ -99,20 +132,30 @@ export const NamespaceReveal = (
           model.namespaceSinglePreorder.has(namespaceSaltKey) &&
           model.namespaceSinglePreorder.get(namespaceSaltKey) === true &&
           isValidNamespace(namespaceSaltBuyerTuple.namespace) &&
-          !model.namespacePreorders.has(namespaceSaltKey)
+          model.namespacePreorders.has(r.namespaceSaltBuyerTupleStringified) &&
+          (!namespaceValue ||
+            (!namespaceValue?.launchedAt &&
+              (model.burnBlockHeight + 1 >
+                (namespaceValue?.revealedAt || 0) +
+                  NAMESPACE_LAUNCHABILITY_TTL))) &&
+          namespacePreorderValue?.createdAt !== undefined &&
+          (model.burnBlockHeight + 1 <=
+            (namespacePreorderValue?.createdAt ||
+              0 + PREORDER_CLAIMABILITY_TTL)) &&
+          expectedPrice <=
+            (model.namespacePreorders.get(r.namespaceSaltBuyerTupleStringified)
+              ?.ustxBurned || 0)
         );
       },
       run: (model: Model, real: Simnet) => {
         const namespaceSaltBuyerTuple = JSON.parse(
-          r.namespaceSaltBuyerTuple,
+          r.namespaceSaltBuyerTupleStringified,
         ) as SaltNamespaceBuyerKey;
         const senderAddress = namespaceSaltBuyerTuple.buyer as string;
         const senderWallet = findKeyByValue(accounts, senderAddress);
         const [, namespaceImportAddress] = r.namespaceImport;
         const saltBuff = encoder.encode(namespaceSaltBuyerTuple.salt);
-        const namespaceBuff = encoder.encode(
-          namespaceSaltBuyerTuple.namespace,
-        );
+        const namespaceBuff = encoder.encode(namespaceSaltBuyerTuple.namespace);
         const namespaceManager = r.namespaceManager
           ? r.namespaceManager[1]
           : undefined;
@@ -221,7 +264,7 @@ export const NamespaceReveal = (
       },
       toString: () => {
         const namespaceSaltBuyerTuple = JSON.parse(
-          r.namespaceSaltBuyerTuple,
+          r.namespaceSaltBuyerTupleStringified,
         ) as SaltNamespaceBuyerKey;
         const senderAddress = namespaceSaltBuyerTuple.buyer as string;
         const senderWallet = findKeyByValue(accounts, senderAddress);

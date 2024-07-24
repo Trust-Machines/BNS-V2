@@ -7,9 +7,7 @@ import { encoder, prettyConsoleLog } from "../BNS-V2.helper";
 
 const NAMESPACE_LAUNCHABILITY_TTL = 52595;
 
-export const CanNamespaceBeRegisteredTrue = (
-  accounts: Map<string, string>,
-) =>
+export const CanNamespaceBeRegisteredTrue = (accounts: Map<string, string>) =>
   fc
     .record({
       sender: fc.constantFrom(...accounts),
@@ -20,14 +18,16 @@ export const CanNamespaceBeRegisteredTrue = (
         const namespace = model.namespaces.get(r.namespace);
 
         if (
-          !namespace || namespace.launchedAt === undefined ||
-          namespace.revealedAt === undefined
+          !namespace ||
+          (!namespace.launchedAt &&
+            model.burnBlockHeight + 1 >
+              (namespace?.revealedAt || 0) + NAMESPACE_LAUNCHABILITY_TTL) ||
+          !namespace.revealedAt
         ) {
           return true;
         }
 
-        return model.burnBlockHeight >
-          namespace.revealedAt + NAMESPACE_LAUNCHABILITY_TTL;
+        return false;
       },
       run: (_model: Model, real: Simnet) => {
         const [wallet, address] = r.sender;
