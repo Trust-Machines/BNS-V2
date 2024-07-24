@@ -3,6 +3,7 @@ export type Model = {
   lastTokenId: number;
   owners: Map<number, string>;
   indexToName: Map<number, Name>;
+  nameToIndex: Map<string, number>;
   namespaces: Map<string, NamespaceProperties>;
   namespaceSinglePreorder: Map<string, boolean | undefined>;
   namespacePreorders: Map<string, Preorder>;
