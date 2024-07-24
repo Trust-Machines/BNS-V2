@@ -10,14 +10,12 @@ import { GetNamespacePrice } from "./state/GetNamespacePrice.ts";
 import { CanNamespaceBeRegisteredTrue } from "./state/CanNamespaceBeRegistered.ts";
 import { NamespacePreorder } from "./state/NamespacePreorder.ts";
 import { NamespaceReveal } from "./state/NamespaceReveal.ts";
-import { getIdFromBnsNone } from "./state/GetIdFromBnsNone.ts";
+import { GetBnsInfoNone } from "./state/GetBnsInfoNone.ts";
 
 it("executes BNS-V2 state interactions", async () => {
   const excludedAccounts = ["faucet", "deployer"];
   const filteredAccounts = new Map(
-    [...simnet.getAccounts()].filter(([key]) =>
-      !excludedAccounts.includes(key)
-    ),
+    [...simnet.getAccounts()].filter(([key]) => !excludedAccounts.includes(key))
   );
 
   const model = {
@@ -26,7 +24,9 @@ it("executes BNS-V2 state interactions", async () => {
     owners: new Map(),
     indexToName: new Map(),
     nameToIndex: new Map(),
+    nameProperties: new Map(),
     namespaces: new Map(),
+    namespaceProperties: new Map(),
     namespaceSinglePreorder: new Map(),
     namespacePreorders: new Map(),
   };
@@ -38,7 +38,7 @@ it("executes BNS-V2 state interactions", async () => {
     GetPrimaryNameNone(filteredAccounts),
     GetNamespacePropertiesErr(filteredAccounts),
     GetNamespacePrice(filteredAccounts),
-    getIdFromBnsNone(filteredAccounts),
+    GetBnsInfoNone(filteredAccounts),
     CanNamespaceBeRegisteredTrue(filteredAccounts),
     NamespacePreorder(filteredAccounts),
     NamespaceReveal(filteredAccounts, model),
@@ -49,6 +49,6 @@ it("executes BNS-V2 state interactions", async () => {
       const state = () => ({ model, real: simnet });
       fc.modelRun(state, cmds);
     }),
-    { numRuns: 10000, verbose: fc.VerbosityLevel.VeryVerbose },
+    { numRuns: 10000, verbose: fc.VerbosityLevel.VeryVerbose }
   );
 });

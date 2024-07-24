@@ -4,6 +4,7 @@ export type Model = {
   owners: Map<number, string>;
   indexToName: Map<number, Name>;
   nameToIndex: Map<string, number>;
+  nameProperties: Map<string, NameProperties>;
   namespaces: Map<string, NamespaceProperties>;
   namespaceSinglePreorder: Map<string, boolean | undefined>;
   namespacePreorders: Map<string, Preorder>;
@@ -43,4 +44,16 @@ export type PriceFunction = {
   coeff: number;
   nonalphaDiscount: number;
   noVowelDiscount: number;
+};
+
+type NameProperties = {
+  registeredAt: number | undefined;
+  importedAt: number | undefined;
+  revokedAt: boolean;
+  zonefileHash: Buffer | undefined;
+  hashedSaltedFqnPreorder: Buffer | undefined;
+  preorderedBy: string | undefined;
+  renewalHeight: number;
+  ustxBurn: number;
+  owner: string;
 };
