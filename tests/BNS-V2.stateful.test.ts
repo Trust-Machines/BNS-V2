@@ -10,6 +10,7 @@ import { GetNamespacePrice } from "./state/GetNamespacePrice.ts";
 import { CanNamespaceBeRegisteredTrue } from "./state/CanNamespaceBeRegistered.ts";
 import { NamespacePreorder } from "./state/NamespacePreorder.ts";
 import { NamespaceReveal } from "./state/NamespaceReveal.ts";
+import { GetTokenUri } from "./state/GetTokenUri.ts";
 
 it("executes BNS-V2 state interactions", async () => {
   const excludedAccounts = ["faucet", "deployer"];
@@ -36,19 +37,17 @@ it("executes BNS-V2 state interactions", async () => {
     GetPrimaryNameNone(filteredAccounts),
     GetNamespacePropertiesErr(filteredAccounts),
     GetNamespacePrice(filteredAccounts),
+    GetTokenUri(filteredAccounts),
     CanNamespaceBeRegisteredTrue(filteredAccounts),
     NamespacePreorder(filteredAccounts),
     NamespaceReveal(filteredAccounts, model),
   ];
 
   fc.assert(
-    fc.property(
-      fc.commands(invariants, { size: "+1" }),
-      (cmds) => {
-        const state = () => ({ model, real: simnet });
-        fc.modelRun(state, cmds);
-      },
-    ),
+    fc.property(fc.commands(invariants, { size: "+1" }), (cmds) => {
+      const state = () => ({ model, real: simnet });
+      fc.modelRun(state, cmds);
+    }),
     { numRuns: 10000, verbose: fc.VerbosityLevel.VeryVerbose },
   );
 });
