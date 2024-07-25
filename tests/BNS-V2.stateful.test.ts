@@ -11,11 +11,14 @@ import { CanNamespaceBeRegisteredTrue } from "./state/CanNamespaceBeRegistered.t
 import { NamespacePreorder } from "./state/NamespacePreorder.ts";
 import { NamespaceReveal } from "./state/NamespaceReveal.ts";
 import { GetBnsInfoNone } from "./state/GetBnsInfoNone.ts";
+import { MngNamePreorder } from "./state/MngNamePreorder.ts";
 
 it("executes BNS-V2 state interactions", async () => {
   const excludedAccounts = ["faucet", "deployer"];
   const filteredAccounts = new Map(
-    [...simnet.getAccounts()].filter(([key]) => !excludedAccounts.includes(key))
+    [...simnet.getAccounts()].filter(([key]) =>
+      !excludedAccounts.includes(key)
+    ),
   );
 
   const model = {
@@ -28,7 +31,9 @@ it("executes BNS-V2 state interactions", async () => {
     namespaces: new Map(),
     namespaceProperties: new Map(),
     namespaceSinglePreorder: new Map(),
+    nameSinglePreorder: new Map(),
     namespacePreorders: new Map(),
+    namePreorders: new Map(),
   };
 
   const invariants = [
@@ -41,6 +46,7 @@ it("executes BNS-V2 state interactions", async () => {
     GetBnsInfoNone(filteredAccounts),
     CanNamespaceBeRegisteredTrue(filteredAccounts),
     NamespacePreorder(filteredAccounts),
+    MngNamePreorder(filteredAccounts),
     NamespaceReveal(filteredAccounts, model),
   ];
 

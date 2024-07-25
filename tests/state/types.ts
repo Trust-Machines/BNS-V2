@@ -7,7 +7,9 @@ export type Model = {
   nameProperties: Map<string, NameProperties>;
   namespaces: Map<string, NamespaceProperties>;
   namespaceSinglePreorder: Map<string, boolean | undefined>;
+  nameSinglePreorder: Map<string, boolean | undefined>;
   namespacePreorders: Map<string, Preorder>;
+  namePreorders: Map<string, NamePreorder>;
 };
 
 export type Name = {
@@ -24,6 +26,12 @@ export type SaltNamespaceBuyerKey = {
 type Preorder = {
   createdAt: number;
   ustxBurned: number;
+};
+
+type NamePreorder = {
+  createdAt: number;
+  ustxBurned: number;
+  claimed: boolean;
 };
 
 type NamespaceProperties = {
