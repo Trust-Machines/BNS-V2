@@ -17,7 +17,7 @@ export const GetLastTokenId = (accounts: Map<string, string>) =>
       run: (model: Model, real: Simnet) => {
         const [wallet, address] = r.sender;
         const { result } = real.callReadOnlyFn(
-          "BNS-V2",
+          "ST27PT00YS01KBAEEETAH45C1H46C3FMJR31SN2S3.TESTNET-BNS-V2",
           "get-last-token-id",
           [],
           address,

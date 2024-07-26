@@ -39,7 +39,7 @@ export const MngNamePreorder = (accounts: Map<string, string>) =>
 
         // Act
         const { result: namespacePreorderResponse } = real.callPublicFn(
-          "BNS-V2",
+          "ST27PT00YS01KBAEEETAH45C1H46C3FMJR31SN2S3.TESTNET-BNS-V2",
           "mng-name-preorder",
           [
             // hashed-salted-fqn (buff 20)

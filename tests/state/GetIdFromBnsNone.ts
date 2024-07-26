@@ -25,7 +25,7 @@ export const getIdFromBnsNone = (accounts: Map<string, string>) =>
 
         // Act
         const { result: getIdFromBnsResponse } = real.callReadOnlyFn(
-          "BNS-V2",
+          "ST27PT00YS01KBAEEETAH45C1H46C3FMJR31SN2S3.TESTNET-BNS-V2",
           "get-bns-info",
           [
             // (name (buff 48))

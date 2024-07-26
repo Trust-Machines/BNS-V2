@@ -21,7 +21,7 @@ export const GetPrimaryNameNone = (accounts: Map<string, string>) =>
         const [ownerWallet, ownerAddress] = r.owner;
         // Act
         const { result: primaryNameOptional } = real.callReadOnlyFn(
-          "BNS-V2",
+          "ST27PT00YS01KBAEEETAH45C1H46C3FMJR31SN2S3.TESTNET-BNS-V2",
           "get-primary-name",
           [Cl.principal(ownerAddress)],
           address,
