@@ -72,6 +72,7 @@ export const MngNamePreorder = (accounts: Map<string, string>) =>
         namePreorders.set(
           JSON.stringify({
             salt: r.salt,
+            name: r.name,
             namespace: r.namespace,
             buyer: address,
           }),
