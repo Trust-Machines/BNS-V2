@@ -46,15 +46,18 @@ it("executes BNS-V2 state interactions", async () => {
     GetBnsInfoNone(filteredAccounts),
     CanNamespaceBeRegisteredTrue(filteredAccounts),
     NamespacePreorder(filteredAccounts),
-    MngNamePreorder(filteredAccounts),
+    { arbitrary: MngNamePreorder(filteredAccounts), weight: 3 },
     NamespaceReveal(filteredAccounts, model),
   ];
 
   fc.assert(
-    fc.property(fc.commands(invariants, { size: "+1" }), (cmds) => {
-      const state = () => ({ model, real: simnet });
-      fc.modelRun(state, cmds);
-    }),
-    { numRuns: 10000, verbose: fc.VerbosityLevel.VeryVerbose }
+    fc.property(
+      fc.array(fc.oneof(...invariants), { size: "+1" }),
+      (cmds) => {
+        const state = () => ({ model, real: simnet });
+        fc.modelRun(state, cmds);
+      },
+    ),
+    { numRuns: 10000, verbose: fc.VerbosityLevel.VeryVerbose },
   );
 });
