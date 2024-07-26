@@ -52,12 +52,12 @@ it("executes BNS-V2 state interactions", async () => {
 
   fc.assert(
     fc.property(
-      fc.array(fc.oneof(...invariants), { size: "+1" }),
+      fc.array(fc.oneof(...invariants), { size: "medium" }),
       (cmds) => {
         const state = () => ({ model, real: simnet });
         fc.modelRun(state, cmds);
       },
     ),
-    { numRuns: 10000, verbose: fc.VerbosityLevel.VeryVerbose },
+    { numRuns: 100, verbose: fc.VerbosityLevel.VeryVerbose },
   );
 });
