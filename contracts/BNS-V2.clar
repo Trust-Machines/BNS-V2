@@ -261,9 +261,9 @@
     (map-get? name-to-index {name: name, namespace: namespace})
 )
 
-;; (new) Defines a read-only function to fetch the unique ID of a BNS name given its name and the namespace it belongs to.
+;; (new) Defines a read-only function to fetch the BNS name and the namespace given a unique ID.
 (define-read-only (get-bns-from-id (id uint)) 
-    ;; Attempts to retrieve the ID from the 'name-to-index' map using the provided name and namespace as the key.
+    ;; Attempts to retrieve the name and namespace from the 'index-to-name' map using the provided id as the key.
     (map-get? index-to-name id)
 )
 
@@ -1286,7 +1286,7 @@
             (match namespace-manager 
                 manager 
                 (is-eq contract-caller manager)
-                (is-eq tx-sender (get namespace-import namespace-props))
+                (or (is-eq tx-sender (get namespace-import namespace-props)) (is-eq contract-caller (get namespace-import namespace-props)))
             ) 
             ERR-NOT-AUTHORIZED
         )
@@ -1320,16 +1320,16 @@
         )
         ;; Check if migration is complete
         (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
-        ;; Ensure the caller is authorized to revoke the name.
+        ;; Ensure the caller is authorized to unrevoke the name.
         (asserts! 
             (match namespace-manager 
                 manager 
                 (is-eq contract-caller manager)
-                (is-eq tx-sender (get namespace-import namespace-props))
+                (or (is-eq tx-sender (get namespace-import namespace-props)) (is-eq contract-caller (get namespace-import namespace-props)))
             ) 
             ERR-NOT-AUTHORIZED
         )
-        ;; Mark the name as revoked.
+        ;; Mark the name as unrevoked.
         (map-set name-properties {name: name, namespace: namespace}
             (merge 
                 name-props
@@ -1338,7 +1338,7 @@
                 } 
             )
         )
-        ;; Return a success response indicating the name has been successfully revoked.
+        ;; Return a success response indicating the name has been successfully unrevoked.
         (ok true)
     )
 )
@@ -1885,7 +1885,7 @@
 (define-public (flip-migration-complete)
     (ok 
         (begin 
-            (asserts! (is-eq tx-sender deployer) ERR-NOT-AUTHORIZED) 
+            (asserts! (or (is-eq tx-sender deployer) (is-eq contract-caller deployer)) ERR-NOT-AUTHORIZED) 
             (var-set migration-complete true)
         )
     )
