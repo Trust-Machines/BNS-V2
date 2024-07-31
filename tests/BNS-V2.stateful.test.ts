@@ -12,6 +12,7 @@ import { NamespacePreorder } from "./state/NamespacePreorder.ts";
 import { NamespaceReveal } from "./state/NamespaceReveal.ts";
 import { GetBnsInfoNone } from "./state/GetBnsInfoNone.ts";
 import { MngNamePreorder } from "./state/MngNamePreorder.ts";
+import { NamespaceLaunch } from "./state/NamespaceLaunch.ts";
 
 it("executes BNS-V2 state interactions", async () => {
   const excludedAccounts = ["faucet", "deployer"];
@@ -46,8 +47,9 @@ it("executes BNS-V2 state interactions", async () => {
     GetBnsInfoNone(filteredAccounts),
     CanNamespaceBeRegisteredTrue(filteredAccounts),
     NamespacePreorder(filteredAccounts),
-    { arbitrary: MngNamePreorder(filteredAccounts), weight: 3 },
-    NamespaceReveal(filteredAccounts, model),
+    NamespaceLaunch(filteredAccounts, model),
+    { arbitrary: MngNamePreorder(filteredAccounts, model), weight: 2 },
+    { arbitrary: NamespaceReveal(filteredAccounts, model), weight: 3 },
   ];
 
   fc.assert(
