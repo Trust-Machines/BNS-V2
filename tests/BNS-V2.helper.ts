@@ -144,5 +144,5 @@ export const prettyConsoleLog = (...items: (string | undefined)[]) => {
       : (index < 2 ? "".padEnd(halfColumns) : "".padEnd(columnWidth))
   );
 
-  console.log(prettyPrint.join(""));
+  process.stdout.write(`${prettyPrint.join("")}\n`);
 };
