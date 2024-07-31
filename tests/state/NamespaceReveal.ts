@@ -140,8 +140,7 @@ export const NamespaceReveal = (accounts: Map<string, string>, model: Model) =>
                   NAMESPACE_LAUNCHABILITY_TTL))) &&
           namespacePreorderValue?.createdAt !== undefined &&
           (model.burnBlockHeight + 1 <=
-            (namespacePreorderValue?.createdAt ||
-              0 + PREORDER_CLAIMABILITY_TTL)) &&
+            (namespacePreorderValue?.createdAt! + PREORDER_CLAIMABILITY_TTL)) &&
           expectedPrice <=
             (model.namespacePreorders.get(r.namespaceSaltBuyerTupleStringified)
               ?.ustxBurned || 0)
@@ -258,7 +257,7 @@ export const NamespaceReveal = (accounts: Map<string, string>, model: Model) =>
           "namespace-reveal",
           `namespace: "${namespaceSaltBuyerTuple.namespace}"`,
           `salt: "${namespaceSaltBuyerTuple.salt}"`,
-          `buyer: "${namespaceSaltBuyerTuple.buyer}"`,
+          `buyer: "${senderWallet}"`,
           `result: (ok true)`,
         );
       },
