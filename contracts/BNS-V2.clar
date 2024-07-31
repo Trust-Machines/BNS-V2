@@ -1882,3 +1882,11 @@
     )
 )
 
+(define-public (flip-migration-complete)
+    (ok 
+        (begin 
+            (asserts! (is-eq tx-sender deployer) ERR-NOT-AUTHORIZED) 
+            (var-set migration-complete true)
+        )
+    )
+)
