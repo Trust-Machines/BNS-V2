@@ -2481,51 +2481,6 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
     });
   });
 
-  it("This should successfully transfer the manager to none", () => {
-    successfullyTwoStepRegisterANameInAManagedNamespace();
-
-    // Check initial state
-    callGetNamespaceProperties(namespaceBuff, {
-      "namespace-manager": managerAddress,
-      "manager-transferable": true,
-      "manager-frozen": false,
-      "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
-      lifetime: 0,
-      "can-update-price-function": false,
-      "price-function": {
-        buckets: new Array(16).fill(1),
-        base: 1,
-        coeff: 1,
-        "nonalpha-discount": 1,
-        "no-vowel-discount": 1,
-      },
-    });
-
-    // Transfer manager to none
-    callManagerTransfer(null, namespaceBuff, managerAddress, true, false);
-
-    // Check final state
-    callGetNamespaceProperties(namespaceBuff, {
-      "namespace-manager": null,
-      "manager-transferable": true,
-      "manager-frozen": false,
-      "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
-      lifetime: 0,
-      "can-update-price-function": false,
-      "price-function": {
-        buckets: new Array(16).fill(1),
-        base: 1,
-        coeff: 1,
-        "nonalpha-discount": 1,
-        "no-vowel-discount": 1,
-      },
-    });
-  });
-
   it("This should successfully transfer the manager multiple times in succession", () => {
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
@@ -7329,7 +7284,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       zonefile2Buff,
-      address1,
+      managerAddress,
       true,
       false
     );
@@ -7477,7 +7432,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     });
   });
 
-  it("This should fail to update the zonefile hash of a name in a managed namespace when the contract-caller is not the owner", () => {
+  it("This should fail to update the zonefile hash of a name in a managed namespace when the contract-caller is the owner", () => {
     successfullyFastClaimANameInAManagedNamespace();
 
     // Check initial state
@@ -7497,7 +7452,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       zonefile2Buff,
-      managerAddress,
+      address1,
       ERR_NOT_AUTHORIZED,
       true
     );

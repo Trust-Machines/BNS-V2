@@ -363,6 +363,31 @@ export const callRevokeName = (
   }
 };
 
+export const callUnrevokeName = (
+  namespaceBuffer: Uint8Array,
+  nameBuffer: Uint8Array,
+  callerAddress: string,
+  expectedReturnValue: boolean | number,
+  isError: boolean
+) => {
+  const revokeNameResult = simnet.callPublicFn(
+    "BNS-V2",
+    "name-unrevoke",
+    [Cl.buffer(namespaceBuffer), Cl.buffer(nameBuffer)],
+    callerAddress
+  );
+
+  if (isError) {
+    expect(revokeNameResult.result).toBeErr(
+      Cl.uint(expectedReturnValue as number)
+    );
+  } else {
+    expect(revokeNameResult.result).toBeOk(
+      Cl.bool(expectedReturnValue as boolean)
+    );
+  }
+};
+
 export const callImportName = (
   namespaceBuffer: Uint8Array,
   nameBuffer: Uint8Array,
@@ -409,7 +434,7 @@ export const callUpdateZonefileHash = (
     [
       Cl.buffer(namespaceBuffer),
       Cl.buffer(nameBuffer),
-      Cl.buffer(zonefileBuffer),
+      Cl.some(Cl.buffer(zonefileBuffer)),
     ],
     callerAddress
   );
@@ -534,19 +559,28 @@ export const callFreezeManager = (
 };
 
 export const callManagerTransfer = (
-  newManagerAddress: string | null,
+  newManagerAddress: string | null | { contractPrincipal: [string, string] },
   namespaceBuff: Uint8Array,
   callerAddress: string,
   expectedReturnValue: boolean | number,
   isError: boolean
 ) => {
+  let managerArg;
+  if (newManagerAddress === null) {
+    managerArg = Cl.none();
+  } else if (typeof newManagerAddress === "string") {
+    managerArg = Cl.principal(newManagerAddress);
+  } else {
+    managerArg = Cl.contractPrincipal(
+      newManagerAddress.contractPrincipal[0],
+      newManagerAddress.contractPrincipal[1]
+    );
+  }
+
   const transferNamespace = simnet.callPublicFn(
     "BNS-V2",
     "mng-manager-transfer",
-    [
-      newManagerAddress ? Cl.some(Cl.principal(newManagerAddress)) : Cl.none(),
-      Cl.buffer(namespaceBuff),
-    ],
+    [managerArg, Cl.buffer(namespaceBuff)],
     callerAddress
   );
 
