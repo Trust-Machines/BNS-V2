@@ -541,7 +541,7 @@
 ;; @desc (new) Transfers the management role of a specific namespace to a new principal.
 ;; @param new-manager: Principal of the new manager.
 ;; @param namespace: Buffer of the namespace.
-(define-public (mng-manager-transfer (new-manager principal) (namespace (buff 20)))
+(define-public (mng-manager-transfer (new-manager (optional principal)) (namespace (buff 20)))
     (let 
         (
             ;; Retrieve namespace properties and current manager.
@@ -558,7 +558,7 @@
             (map-set namespaces namespace 
                 (merge 
                     namespace-props 
-                    {namespace-manager: (some new-manager)}
+                    {namespace-manager: new-manager}
                 )
             )
         )
@@ -1225,7 +1225,7 @@
 ;; @param: namespace (buff 20): The namespace of the name whose zone file hash is being updated.
 ;; @param: name (buff 48): The name whose zone file hash is being updated.
 ;; @param: zonefile-hash (buff 20): The new zone file hash to be associated with the name.
-(define-public (update-zonefile-hash (namespace (buff 20)) (name (buff 48)) (zonefile-hash (optional (buff 20))))
+(define-public (update-zonefile-hash (namespace (buff 20)) (name (buff 48)) (zonefile-hash (buff 20)))
     (let 
         (
             ;; Get index from name and namespace
@@ -1241,7 +1241,7 @@
         ;; Check if migration is complete
         (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Assert we are actually updating the zonefile
-        (asserts! (not (is-eq zonefile-hash current-zone-file)) ERR-OPERATION-UNAUTHORIZED)
+        (asserts! (not (is-eq (some zonefile-hash) current-zone-file)) ERR-OPERATION-UNAUTHORIZED)
         ;; Asserts the name has not been revoked.
         (asserts! (not revoked) ERR-NAME-REVOKED)
         ;; Zonefile updates should happen throught the namespace manager contract
@@ -1259,7 +1259,7 @@
         (map-set name-properties {name: name, namespace: namespace}
             (merge
                 name-props
-                {zonefile-hash: zonefile-hash}
+                {zonefile-hash: (some zonefile-hash)}
             )
         )
         ;; Confirm successful completion of the zone file hash update.
@@ -1301,44 +1301,6 @@
             )
         )
         ;; Return a success response indicating the name has been successfully revoked.
-        (ok true)
-    )
-)
-
-;; New
-;; @desc Public function `name-unrevoke` for making a name resolvable.
-;; @param: namespace (buff 20): The namespace of the name to be unrevoked.
-;; @param: name (buff 48): The actual name to be unrevoked.
-(define-public (name-unrevoke (namespace (buff 20)) (name (buff 48)))
-    (let 
-        (
-            ;; Retrieve the properties of the namespace to ensure it exists and is valid for registration.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            (namespace-manager (get namespace-manager namespace-props))
-            ;; retreive the name props
-            (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-NO-NAME))
-        )
-        ;; Check if migration is complete
-        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
-        ;; Ensure the caller is authorized to unrevoke the name.
-        (asserts! 
-            (match namespace-manager 
-                manager 
-                (is-eq contract-caller manager)
-                (or (is-eq tx-sender (get namespace-import namespace-props)) (is-eq contract-caller (get namespace-import namespace-props)))
-            ) 
-            ERR-NOT-AUTHORIZED
-        )
-        ;; Mark the name as unrevoked.
-        (map-set name-properties {name: name, namespace: namespace}
-            (merge 
-                name-props
-                {
-                    revoked-at: false,
-                } 
-            )
-        )
-        ;; Return a success response indicating the name has been successfully unrevoked.
         (ok true)
     )
 )
@@ -1389,7 +1351,7 @@
         (map-set name-properties { name: name, namespace: namespace } (merge (unwrap-panic (map-get? name-properties { name: name, namespace: namespace })) {stx-burn: (try! (compute-name-price name (get price-function namespace-props)))}))
         ;; Update the zonefile hash if provided
         (match zonefile-hash
-            zonefile (try! (update-zonefile-hash namespace name (some zonefile)))
+            zonefile (try! (update-zonefile-hash namespace name zonefile))
             false
         )
         ;; Return success
@@ -1745,7 +1707,7 @@
         (try! (as-contract (stx-transfer? stx-burned .BNS-V2 (get owner name-props))))
         ;; Transfer ownership of the name to the new owner
         (try! (purchase-transfer name-index (get owner name-props) tx-sender))
-        (try! (update-zonefile-hash namespace name (some zonefile-hash)))
+        (try! (update-zonefile-hash namespace name zonefile-hash))
         ;; Log the name transfer event
         (print {topic: "new-name", owner: tx-sender, name: {name: name, namespace: namespace}, id: name-index})
         ;; Return the name index
