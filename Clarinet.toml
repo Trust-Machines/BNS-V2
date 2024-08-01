@@ -20,6 +20,11 @@ path = 'contracts/gamma-bns-v2-commission-container.clar'
 clarity_version = 2
 epoch = 2.4
 
+[contracts.migration-airdrop]
+path = 'contracts/migration-airdrop.clar'
+clarity_version = 2
+epoch = 2.5
+
 [contracts.sip-09]
 path = 'contracts/sip-09.clar'
 clarity_version = 2
