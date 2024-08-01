@@ -436,7 +436,7 @@ export const callUpdateZonefileHash = (
     [
       Cl.buffer(namespaceBuffer),
       Cl.buffer(nameBuffer),
-      Cl.some(Cl.buffer(zonefileBuffer)),
+      Cl.buffer(zonefileBuffer),
     ],
     callerAddress
   );
@@ -571,11 +571,13 @@ export const callManagerTransfer = (
   if (newManagerAddress === null) {
     managerArg = Cl.none();
   } else if (typeof newManagerAddress === "string") {
-    managerArg = Cl.principal(newManagerAddress);
+    managerArg = Cl.some(Cl.principal(newManagerAddress));
   } else {
-    managerArg = Cl.contractPrincipal(
-      newManagerAddress.contractPrincipal[0],
-      newManagerAddress.contractPrincipal[1]
+    managerArg = Cl.some(
+      Cl.contractPrincipal(
+        newManagerAddress.contractPrincipal[0],
+        newManagerAddress.contractPrincipal[1]
+      )
     );
   }
 
