@@ -94,6 +94,7 @@ import {
   callGetIdFromBns,
   callGetLastTokenId,
   callGetRenewalHeight,
+  callFlipSwitch,
 } from "./BNS-V2.functions";
 
 const simnet = await initSimnet();
@@ -107,6 +108,7 @@ const managerAddress = accounts.get("wallet_2")!;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("TRANSFER FUNCTION", () => {
   it("This should successfully transfer a 2 step registered name in an unmanaged namespace", () => {
+    callFlipSwitch();
     // Get last token id before the first mint should be 0
     callGetLastTokenId(0);
     // Register a name with the 2 step flow in an unmanaged namespace
@@ -114,8 +116,8 @@ describe("TRANSFER FUNCTION", () => {
     // Check the state of the namespace, only an import address since it is unmanaged
     callGetNamespaceProperties(namespaceBuff, {
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -129,20 +131,20 @@ describe("TRANSFER FUNCTION", () => {
       "manager-frozen": true,
     });
     // Check state, it should all map to address 1
-    // Check the information of the name, this should be a standard creation, for unmanaged namespaces it should always show registered at 8 and renewal height at 5007, because the namespace is lifetime 5000
+    // Check the information of the name, this should be a standard creation, for unmanaged namespaces it should always show registered at 8 and renewal height at 5008, because the namespace is lifetime 5000
     // when two step registering it should also show the hashed-salted-fqn-preorder, and the preordered by
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
-    callGetRenewalHeight(1, 5007, false);
+    callGetRenewalHeight(1, 5008, false);
     // Make sure maps where created correctly, for tracking purposes
     callGetBnsFromId(1, name1Buff, namespaceBuff);
     callGetIdFromBns(name1Buff, namespaceBuff, 1);
@@ -157,17 +159,17 @@ describe("TRANSFER FUNCTION", () => {
     // Check the information of the name, now should map to address3
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address3,
     });
-    callGetRenewalHeight(1, 5007, false);
+    callGetRenewalHeight(1, 5008, false);
     // Make sure maps stay the same here
     callGetBnsFromId(1, name1Buff, namespaceBuff);
     callGetIdFromBns(name1Buff, namespaceBuff, 1);
@@ -179,14 +181,15 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer a 2 step registered name in a managed namespace where manager transfers are turned off, and tx-sender is the owner of the name", () => {
+    callFlipSwitch();
     // Register a name with the 2 step flow in a managed namespace
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Check the state of the namespace,
     callGetNamespaceProperties(namespaceBuff, {
       "namespace-manager": managerAddress,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -205,8 +208,8 @@ describe("TRANSFER FUNCTION", () => {
     callGetNamespaceProperties(namespaceBuff, {
       "namespace-manager": managerAddress,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -226,7 +229,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetOwner(1, address1);
     // This returns registered-at 7 because in managed namespaces we do not have a 1 block blocker for preordering and registering, no renewal height, because managers should set their own conditions for renewal, no stx-burn is executed so 0
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -244,7 +247,7 @@ describe("TRANSFER FUNCTION", () => {
     // Check the final state, everything should map to address 3
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
@@ -262,6 +265,7 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer a fast claimed name in an unmanaged namespace, when allowing one block before transfering, and tx-sender is the owner", () => {
+    callFlipSwitch();
     // Fast claim a name in an unmanaged namespace
     successfullyFastClaimANameInAnUnmanagedNamespace();
     // Mine an empty block to allow transfer
@@ -270,13 +274,13 @@ describe("TRANSFER FUNCTION", () => {
     callGetOwner(1, address1);
     // This shows stx-burn 10 because the name only cost 10, because we could determine the value of the name from the beginning, no hashed-salted-fqn-preorder and no preordered by, because no preorder to mint this name
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       "stx-burn": 10,
       owner: address1,
     });
@@ -290,13 +294,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check the final state should now be mapped to address 3
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       "stx-burn": 10,
       owner: address3,
     });
@@ -306,6 +310,7 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer a fast claimed name, when one block has passed in a managed namespace that has manager transfers turned off, and tx-sender is the owner", () => {
+    callFlipSwitch();
     // Fast claim a name in a managed namespace
     successfullyFastClaimANameInAManagedNamespace();
     // Mine an empty block to allow transfer
@@ -315,7 +320,7 @@ describe("TRANSFER FUNCTION", () => {
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -333,7 +338,7 @@ describe("TRANSFER FUNCTION", () => {
     // Check the final state
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
@@ -349,18 +354,19 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer a name that was previously transferred", () => {
+    callFlipSwitch();
     // Register a name with the 2 step flow in an unmanaged namespace
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Check the initial state everything should map to address 1
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -372,13 +378,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check state after first transfer everything should map to address3
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address3,
     });
@@ -390,13 +396,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check state after second transfer, everything should map to address2 now
     callGetOwner(1, address2);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address2,
     });
@@ -409,18 +415,19 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer a name back to its original owner", () => {
+    callFlipSwitch();
     // Register a name with the 2 step flow in an unmanaged namespace
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Check the initial state, mapped to address 1
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -433,13 +440,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check state after first transfer everything mapped to address3
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address3,
     });
@@ -452,13 +459,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check state after second transfer, everything should be mapped to address1 again
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -468,6 +475,7 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer a name to an address that already has a primary name, and should not change the primary name of the recipient", () => {
+    callFlipSwitch();
     callGetLastTokenId(0);
     // Register a name with the 2 step flow in an unmanaged namespace
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
@@ -475,13 +483,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -498,13 +506,13 @@ describe("TRANSFER FUNCTION", () => {
       false
     );
     callGetBnsInfo(name2Buff, namespaceBuff, {
-      "registered-at": 9,
+      "registered-at": 10,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5009,
+      "renewal-height": 5010,
       "stx-burn": 10,
       owner: address3,
     });
@@ -520,13 +528,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check state after transfer, now id 1 should map to address3
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address3,
     });
@@ -536,6 +544,7 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer a name, the owner is transferring a non primary name", () => {
+    callFlipSwitch();
     callGetLastTokenId(0);
     // Register a name with the 2 step flow in an unmanaged namespace
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
@@ -543,13 +552,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -566,13 +575,13 @@ describe("TRANSFER FUNCTION", () => {
       false
     );
     callGetBnsInfo(name2Buff, namespaceBuff, {
-      "registered-at": 9,
+      "registered-at": 10,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5009,
+      "renewal-height": 5010,
       "stx-burn": 10,
       owner: address1,
     });
@@ -590,13 +599,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check state after transfer, id 2 should map to address3
     callGetOwner(2, address3);
     callGetBnsInfo(name2Buff, namespaceBuff, {
-      "registered-at": 9,
+      "registered-at": 10,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5009,
+      "renewal-height": 5010,
       "stx-burn": 10,
       owner: address3,
     });
@@ -606,12 +615,13 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer a name that was imported", () => {
+    callFlipSwitch();
     // Import a name
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -646,7 +656,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
@@ -663,8 +673,8 @@ describe("TRANSFER FUNCTION", () => {
     callLaunchNamespace(namespaceBuff, address1, true, false);
     callGetNamespaceProperties(namespaceBuff, {
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 5,
+      "revealed-at": 4,
+      "launched-at": 6,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -681,7 +691,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
@@ -690,7 +700,7 @@ describe("TRANSFER FUNCTION", () => {
       "stx-burn": 10,
       owner: address1,
     });
-    callGetRenewalHeight(1, 5005, false);
+    callGetRenewalHeight(1, 5006, false);
     // Check Primary Names
     callGetPrimaryName(address1, 1);
     callGetPrimaryName(address3, null);
@@ -701,7 +711,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
@@ -716,6 +726,7 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a name that doesn't exist", () => {
+    callFlipSwitch();
     // Check the initial state
     callGetOwner(1, null);
     callGetBnsInfo(name1Buff, namespaceBuff, null);
@@ -727,18 +738,19 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a fast claimed name in an unmanaged namespace when trying to transfer before the block time has passed", () => {
+    callFlipSwitch();
     // Fast claim a name in an unmanaged namespace
     successfullyFastClaimANameInAnUnmanagedNamespace();
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       "stx-burn": 10,
       owner: address1,
     });
@@ -758,13 +770,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check that the state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       "stx-burn": 10,
       owner: address1,
     });
@@ -774,12 +786,13 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a fast claimed name in an managed namespace, that has manager transfers turned off when trying to transfer before the block time has passed", () => {
+    callFlipSwitch();
     // Fast claim a name in an unmanaged namespace
     successfullyFastClaimANameInAManagedNamespace();
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -805,7 +818,7 @@ describe("TRANSFER FUNCTION", () => {
     // Check that the state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -821,12 +834,13 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should block transfers from imported names when the namespace has not been launched", () => {
+    callFlipSwitch();
     // Import a name without launching the namespace
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -863,7 +877,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
@@ -875,7 +889,7 @@ describe("TRANSFER FUNCTION", () => {
     // Check namespace properties to confirm it's not launched
     callGetNamespaceProperties(namespaceBuff, {
       "namespace-import": address1,
-      "revealed-at": 3,
+      "revealed-at": 4,
       "launched-at": null,
       lifetime: 5000,
       "can-update-price-function": true,
@@ -904,7 +918,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
@@ -916,19 +930,20 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should block transfers of revoked names", () => {
+    callFlipSwitch();
     // Register a name
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -939,13 +954,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check the state after revocation
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": true,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -956,31 +971,32 @@ describe("TRANSFER FUNCTION", () => {
     // Check that the state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": true,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
   });
 
   it("This should fail to transfer when owner and recipient are the same", () => {
+    callFlipSwitch();
     // Register a name with the 2 step flow in an unmanaged namespace
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -1000,13 +1016,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check that the state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -1016,6 +1032,7 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a name in a managed namespace when manager transfers are on, even if the contract-caller is the manager", () => {
+    callFlipSwitch();
     // Fast claim a name in a managed namespace
     successfullyFastClaimANameInAManagedNamespace();
     // Mine an empty block to allow transfer
@@ -1023,7 +1040,7 @@ describe("TRANSFER FUNCTION", () => {
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1049,7 +1066,7 @@ describe("TRANSFER FUNCTION", () => {
     // Check that the state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1065,6 +1082,7 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a name in a managed namespace when manager transfers are on even if the tx-sender is the owner", () => {
+    callFlipSwitch();
     // Fast claim a name in a managed namespace
     successfullyFastClaimANameInAManagedNamespace();
     // Mine an empty block to allow transfer
@@ -1072,7 +1090,7 @@ describe("TRANSFER FUNCTION", () => {
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1091,7 +1109,7 @@ describe("TRANSFER FUNCTION", () => {
     // Check that the state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1107,6 +1125,7 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a name in a managed namespace when the contract-caller is the namespace manager but manager transfers are off", () => {
+    callFlipSwitch();
     // Fast claim a name in a managed namespace
     successfullyFastClaimANameInAManagedNamespace();
     // Mine an empty block to allow transfer
@@ -1116,7 +1135,7 @@ describe("TRANSFER FUNCTION", () => {
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1142,7 +1161,7 @@ describe("TRANSFER FUNCTION", () => {
     // Check that the state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1158,6 +1177,7 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a name in an unmanaged namespace when the tx-sender is not the owner", () => {
+    callFlipSwitch();
     // Fast claim a name in an unmanaged namespace
     successfullyFastClaimANameInAnUnmanagedNamespace();
     // Mine an empty block to allow transfer
@@ -1165,13 +1185,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       "stx-burn": 10,
       owner: address1,
     });
@@ -1184,13 +1204,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check that the state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       "stx-burn": 10,
       owner: address1,
     });
@@ -1200,18 +1220,19 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer when the provided owner doesn't match the current NFT owner", () => {
+    callFlipSwitch();
     // Register a name with the 2 step flow in an unmanaged namespace
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -1231,13 +1252,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check that the state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -1247,6 +1268,7 @@ describe("TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a name in an unmanaged namespace when the name is listed in a market", () => {
+    callFlipSwitch();
     // Fast claim a name in an unmanaged namespace
     successfullyFastClaimANameInAnUnmanagedNamespace();
     // Mine an empty block to allow transfer
@@ -1264,13 +1286,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       "stx-burn": 10,
       owner: address1,
     });
@@ -1283,13 +1305,13 @@ describe("TRANSFER FUNCTION", () => {
     // Check that the state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       "stx-burn": 10,
       owner: address1,
     });
@@ -1302,11 +1324,12 @@ describe("TRANSFER FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("MNG-TRANSFER FUNCTION", () => {
   it("This should successfully transfer a 2 step registered name in a managed namespace that does allow manager transfers when contract-caller is manager", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Check initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1324,7 +1347,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     // Check final state
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
@@ -1339,12 +1362,13 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer a fast claimed name in a managed namespace that does allow manager transfers and contract-caller is manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
     // Check initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1362,7 +1386,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     // Check final state
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
@@ -1377,12 +1401,13 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer an imported name in a managed namespace", () => {
+    callFlipSwitch();
     // Import a name
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -1419,7 +1444,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
@@ -1437,7 +1462,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
@@ -1451,11 +1476,12 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer a name multiple times", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1476,7 +1502,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     // Check state after first transfer
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
@@ -1496,7 +1522,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     // Check state after second transfer
     callGetOwner(1, address2);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
@@ -1512,6 +1538,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer a name back to its original owner", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // First transfer
@@ -1520,7 +1547,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     // Check state after first transfer
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
@@ -1539,7 +1566,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     // Check state after second transfer
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
@@ -1554,12 +1581,14 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a name that doesn't exist", () => {
+    callFlipSwitch();
     callMngTransfer(1, address1, address3, managerAddress, ERR_NO_NAME, true);
     callGetOwner(1, null);
     callGetBnsInfo(name1Buff, namespaceBuff, null);
   });
 
   it("This should fail to transfer a fast claimed name in a managed namespace when trying to transfer before the block time has passed", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     callMngTransfer(
       1,
@@ -1572,7 +1601,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     // Check state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1585,12 +1614,13 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a name in a namespace that hasn't been launched", () => {
+    callFlipSwitch();
     // Setup a namespace without launching it
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -1626,7 +1656,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
@@ -1650,7 +1680,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
@@ -1662,6 +1692,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a revoked name", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callRevokeName(namespaceBuff, name1Buff, managerAddress, true, false);
     callMngTransfer(
@@ -1675,7 +1706,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     // Check state hasn't changed (except for revocation)
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": true,
       "zonefile-hash": null,
@@ -1688,6 +1719,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer when owner and recipient are the same", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callMngTransfer(
       1,
@@ -1700,7 +1732,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     // Check state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1713,6 +1745,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a name in a managed namespace when manager transfers are off even if the contract-caller is the manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
     callTurnOffManagerTransfers(namespaceBuff, managerAddress, true, false);
@@ -1727,7 +1760,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     // Check state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1740,12 +1773,13 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a 2 step registered name in a managed namespace even if the tx-sender is the owner", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callMngTransfer(1, address1, address3, address1, ERR_NOT_AUTHORIZED, true);
     // Check state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1758,13 +1792,14 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a fast claimed name in a managed namespace even if the block time has passed and tx-sender is owner", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     simnet.mineEmptyBlock();
     callMngTransfer(1, address1, address3, address1, ERR_NOT_AUTHORIZED, true);
     // Check state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1777,6 +1812,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer when the provided owner doesn't match the current NFT owner", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callMngTransfer(
       1,
@@ -1789,7 +1825,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     // Check state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1802,6 +1838,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to transfer a name in a managed namespace when the name is listed in a market", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
     callListInUstx(
@@ -1817,7 +1854,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     // Check state hasn't changed
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -1833,6 +1870,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("LIST-IN-USTX-FUNCTION", () => {
   it("This should successfully list a 2 step registered name in an unmanaged namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     callListInUstx(
       1,
@@ -1846,6 +1884,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should successfully list a 2 step registered name in a managed namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callListInUstx(
       1,
@@ -1859,6 +1898,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should successfully list a fast claimed name in an unmanaged namespace", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlock();
     callListInUstx(
@@ -1873,6 +1913,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should successfully list a fast claimed name in a managed namespace", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
     callListInUstx(
@@ -1887,6 +1928,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should fail to list a name that doesn't exist", () => {
+    callFlipSwitch();
     callListInUstx(
       1,
       200000,
@@ -1899,6 +1941,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should fail to list a name in an unmanaged namespace when it was fast claimed but the lock time has not passed", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
     callListInUstx(
       1,
@@ -1912,6 +1955,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should fail to list a name in a managed namespace when it was fast claimed but the lock time has not passed", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     callListInUstx(
       1,
@@ -1925,6 +1969,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should fail to list a name in an unmanaged namespace when the tx-sender is not the owner", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlock();
     callListInUstx(
@@ -1939,6 +1984,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should fail to list a name in an unmanaged namespace when the contract-caller is not the manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
     callListInUstx(
@@ -1956,6 +2002,7 @@ describe("LIST-IN-USTX-FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("UNLIST-IN-USTX-FUNCTION", () => {
   it("This should successfully unlist a 2 step registered name without a manager", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     callListInUstx(
       1,
@@ -1970,6 +2017,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should successfully unlist a 2 step registered name with a manager", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callListInUstx(
       1,
@@ -1984,6 +2032,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should successfully unlist a fast claimed name without a manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlock();
     callListInUstx(
@@ -1999,6 +2048,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should successfully unlist a fast claimed name with a manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
     callListInUstx(
@@ -2014,22 +2064,26 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should fail to unlist a name that doesn't exist", () => {
+    callFlipSwitch();
     callUnlistInUstx(1, address1, ERR_NO_NAME, true);
   });
 
   it("This should fail to unlist a name without a manager, when the name is not listed", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlock();
     callUnlistInUstx(1, address1, ERR_NOT_LISTED, true);
   });
 
   it("This should fail to unlist a name with a manager, when the name is not listed", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
     callUnlistInUstx(1, managerAddress, ERR_NOT_LISTED, true);
   });
 
   it("This should fail to unlist a name without a manager, when tx-sender is not the owner", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlock();
     callListInUstx(
@@ -2045,6 +2099,7 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
   });
 
   it("This should fail to unlist a name with a manager, when contract-caller is not the manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
     callListInUstx(
@@ -2063,16 +2118,17 @@ describe("UNLIST-IN-USTX-FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("BUY-IN-USTX-FUNCTION", () => {
   it("This should successfully buy a 2 step registered name without a manager", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -2091,13 +2147,13 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callBuyInUstx(1, commTraitAddress, commTraitName, address3, null, false);
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address3,
     });
@@ -2106,6 +2162,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
   });
 
   it("This should successfully buy a 2 step registered name with a manager", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callListInUstx(
       1,
@@ -2119,7 +2176,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callBuyInUstx(1, commTraitAddress, commTraitName, address3, null, false);
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
@@ -2134,6 +2191,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
   });
 
   it("This should successfully buy a fast claimed name without a manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlock();
     callListInUstx(
@@ -2148,13 +2206,13 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callBuyInUstx(1, commTraitAddress, commTraitName, address3, null, false);
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       "stx-burn": 10,
       owner: address3,
     });
@@ -2163,6 +2221,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
   });
 
   it("This should successfully buy a fast claimed name with a manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
     callListInUstx(
@@ -2177,7 +2236,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callBuyInUstx(1, commTraitAddress, commTraitName, address3, null, false);
     callGetOwner(1, address3);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": null,
@@ -2192,6 +2251,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
   });
 
   it("This should fail to buy a name that doesn't exist", () => {
+    callFlipSwitch();
     callBuyInUstx(
       1,
       commTraitAddressWrong,
@@ -2203,6 +2263,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
   });
 
   it("This should fail to buy a name without a manager, if it is not listed", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlock();
     callBuyInUstx(
@@ -2216,6 +2277,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
   });
 
   it("This should fail to buy a name with a manager, if it is not listed", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
     callBuyInUstx(
@@ -2229,6 +2291,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
   });
 
   it("This should fail to buy a name wrong commission trait", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     simnet.mineEmptyBlock();
     callListInUstx(
@@ -2254,6 +2317,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("SET-PRIMARY-NAME FUNCTION", () => {
   it("This should successfully change the primary name of an address in an unmanaged namespace, when tx-sender is owner", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     callGetPrimaryName(address1, 1);
     successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace();
@@ -2263,6 +2327,7 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
   });
 
   it("This should successfully change the primary name of an address in a managed namespace, when tx-sender is owner", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callGetPrimaryName(address1, 1);
     successfullyTwoStepRegisterASecondNameInAManagedNamespace();
@@ -2272,11 +2337,13 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
   });
 
   it("This should fail to change the primary name of an address, if the name doesn't exist", () => {
+    callFlipSwitch();
     callSetPrimaryName(2, address1, ERR_NO_NAME, true);
     callGetPrimaryName(address1, null);
   });
 
   it("This should fail to change the primary name of an address, if the tx-sender is not the owner of the name", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     callGetPrimaryName(address1, 1);
     callFastClaimName(
@@ -2299,11 +2366,12 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("MNG-BURN FUNCTIONS", () => {
   it("This should successfully burn a name by the manager from a managed namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     // Check initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -2327,6 +2395,7 @@ describe("MNG-BURN FUNCTIONS", () => {
   });
 
   it("This should still burn the name if it is listed when called by the manager address", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     callListInUstx(
@@ -2340,7 +2409,7 @@ describe("MNG-BURN FUNCTIONS", () => {
     );
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -2364,20 +2433,22 @@ describe("MNG-BURN FUNCTIONS", () => {
   });
 
   it("This should fail to burn a nonexistent name", () => {
+    callFlipSwitch();
     callMngBurn(1, managerAddress, ERR_NO_NAME, true);
   });
 
   it("This should fail in a namespace with no manager", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -2387,13 +2458,13 @@ describe("MNG-BURN FUNCTIONS", () => {
     callMngBurn(1, managerAddress, ERR_NO_NAMESPACE_MANAGER, true);
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -2403,10 +2474,11 @@ describe("MNG-BURN FUNCTIONS", () => {
   });
 
   it("This should fail by not allowing a different address than the manager address to burn an nft from a managed namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -2423,7 +2495,7 @@ describe("MNG-BURN FUNCTIONS", () => {
     callMngBurn(1, address1, ERR_NOT_AUTHORIZED, true);
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -2442,6 +2514,7 @@ describe("MNG-BURN FUNCTIONS", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
   it("This should successfully change the manager of a namespace if manager is not frozen", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     callGetNamespaceProperties(namespaceBuff, {
@@ -2449,8 +2522,8 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2467,8 +2540,8 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2482,6 +2555,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
   });
 
   it("This should successfully transfer the manager multiple times in succession", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // Check initial state
@@ -2490,8 +2564,8 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2512,8 +2586,8 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2534,8 +2608,8 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2549,6 +2623,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
   });
 
   it("This should verify that the new manager can perform manager-specific operations after the transfer", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // Check initial state
@@ -2557,8 +2632,8 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2579,8 +2654,8 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2601,8 +2676,8 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2616,7 +2691,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
 
     // Verify that the new manager can perform another manager-specific operation (mng-burn)
     // First, register a name in the namespace
-    callManagedPreorderName(name2BuffSalt, address2, 153, false);
+    callManagedPreorderName(name2BuffSalt, address2, 154, false);
     callManagedRegisterNameWithAddress(
       namespaceBuff,
       name2Buff,
@@ -2631,7 +2706,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
     // Check the name exists
     callGetOwner(2, address3);
     callGetBnsInfo(name2Buff, namespaceBuff, {
-      "registered-at": 10,
+      "registered-at": 11,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -2651,6 +2726,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to change the manager of a namespace that doesn't exist", () => {
+    callFlipSwitch();
     callManagerTransfer(
       address1,
       namespaceBuff,
@@ -2661,13 +2737,14 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to change the manager of an unmanaged namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     callGetNamespaceProperties(namespaceBuff, {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -2689,8 +2766,8 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -2704,14 +2781,15 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to change the manager of a namespace if the manager is not the contract-caller", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callGetNamespaceProperties(namespaceBuff, {
       "namespace-manager": managerAddress,
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2734,8 +2812,8 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2749,14 +2827,15 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
   });
 
   it("This should fail to change the manager of a namespace if the manager is the contract-caller but the manager is frozen", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callGetNamespaceProperties(namespaceBuff, {
       "namespace-manager": managerAddress,
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2773,8 +2852,8 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2797,8 +2876,8 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2815,6 +2894,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("FREEZE-MANAGER FUNCTION", () => {
   it("This should successfully freeze the manager", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // Check initial state
@@ -2823,8 +2903,8 @@ describe("FREEZE-MANAGER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2844,8 +2924,8 @@ describe("FREEZE-MANAGER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2859,6 +2939,7 @@ describe("FREEZE-MANAGER FUNCTION", () => {
   });
 
   it("This should fail to freeze the manager of a namespace that doesn't exist", () => {
+    callFlipSwitch();
     callFreezeManager(
       namespaceBuff,
       managerAddress,
@@ -2868,6 +2949,7 @@ describe("FREEZE-MANAGER FUNCTION", () => {
   });
 
   it("This should fail to freeze the manager of an unmanaged namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
     // Check initial state
@@ -2876,8 +2958,8 @@ describe("FREEZE-MANAGER FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -2902,8 +2984,8 @@ describe("FREEZE-MANAGER FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -2917,6 +2999,7 @@ describe("FREEZE-MANAGER FUNCTION", () => {
   });
 
   it("This should fail to freeze the manager of a namespace if the manager is not the contract-caller", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // Check initial state
@@ -2925,8 +3008,8 @@ describe("FREEZE-MANAGER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2946,8 +3029,8 @@ describe("FREEZE-MANAGER FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -2964,16 +3047,18 @@ describe("FREEZE-MANAGER FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAMESPACE-PREORDER FUNCTION", () => {
   it("This should successfully preorder a Namespace", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
   });
 
   it("This should fail to preorder a Namespace if hash malformed", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuff,
       1000000000,
@@ -2984,11 +3069,12 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
   });
 
   it("This should fail to preorder a Namespace if preordered before", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
 
@@ -3002,6 +3088,7 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
   });
 
   it("This should fail to preorder a Namespace if no stx burnt", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       0,
@@ -3015,11 +3102,12 @@ describe("NAMESPACE-PREORDER FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAMESPACE-REVEAL FUNCTION", () => {
   it("This should successfully reveal a Namespace without a manager", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -3049,7 +3137,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
+      "revealed-at": 4,
       "launched-at": null,
       lifetime: 5000,
       "can-update-price-function": true,
@@ -3064,11 +3152,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
   });
 
   it("This should successfully reveal a Namespace with a manager", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -3098,7 +3187,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
+      "revealed-at": 4,
       "launched-at": null,
       lifetime: 0,
       "can-update-price-function": false,
@@ -3113,6 +3202,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
   });
 
   it("This should fail if no namespace preorder", () => {
+    callFlipSwitch();
     simnet.mineEmptyBlock();
 
     callRevealNamespace(
@@ -3136,11 +3226,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
   });
 
   it("This should fail if the namespace contains invalid characters", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       invalidNamespaceBuffSalt,
       1000000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -3166,11 +3257,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
   });
 
   it("This should fail if the namespace already exists", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -3200,7 +3292,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
+      "revealed-at": 4,
       "launched-at": null,
       lifetime: 5000,
       "can-update-price-function": true,
@@ -3238,7 +3330,7 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
+      "revealed-at": 4,
       "launched-at": null,
       lifetime: 5000,
       "can-update-price-function": true,
@@ -3253,7 +3345,8 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
   });
 
   it("This should fail if burned stx is not enough for the price", () => {
-    callPreorderAValidNamespace(namespaceBuffSalt, 10, address1, 145, false);
+    callFlipSwitch();
+    callPreorderAValidNamespace(namespaceBuffSalt, 10, address1, 146, false);
     simnet.mineEmptyBlock();
 
     // Check initial state
@@ -3279,14 +3372,15 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
   });
 
   it("This should fail if TTL has passed to reveal a namespace", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
-    simnet.mineEmptyBlocks(148);
+    simnet.mineEmptyBlocks(149);
     simnet.mineEmptyBlock();
 
     callRevealNamespace(
@@ -3313,11 +3407,12 @@ describe("NAMESPACE-REVEAL FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAMESPACE-LAUNCH FUNCTION", () => {
   it("This should successfully launch a Namespace without a manager", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -3346,7 +3441,7 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
+      "revealed-at": 4,
       "launched-at": null,
       lifetime: 5000,
       "can-update-price-function": true,
@@ -3367,8 +3462,8 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -3382,11 +3477,12 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
   });
 
   it("This should successfully launch a Namespace with a manager", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -3415,7 +3511,7 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
+      "revealed-at": 4,
       "launched-at": null,
       lifetime: 0,
       "can-update-price-function": false,
@@ -3436,8 +3532,8 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -3451,15 +3547,17 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
   });
 
   it("This should fail to launch a Namespace that doesn't exist", () => {
+    callFlipSwitch();
     callLaunchNamespace(namespaceBuff, address1, ERR_NAMESPACE_NOT_FOUND, true);
   });
 
   it("This should fail to launch a Namespace when called by a different address than the import address assigned in the namespace-reveal", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -3488,7 +3586,7 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
+      "revealed-at": 4,
       "launched-at": null,
       lifetime: 5000,
       "can-update-price-function": true,
@@ -3514,7 +3612,7 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
+      "revealed-at": 4,
       "launched-at": null,
       lifetime: 5000,
       "can-update-price-function": true,
@@ -3529,11 +3627,12 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
   });
 
   it("This should fail to launch a Namespace that has already been launched", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -3563,8 +3662,8 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -3589,8 +3688,8 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -3604,11 +3703,12 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
   });
 
   it("This should fail to launch a Namespace that TTL has already expired", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -3637,7 +3737,7 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
+      "revealed-at": 4,
       "launched-at": null,
       lifetime: 5000,
       "can-update-price-function": true,
@@ -3664,7 +3764,7 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
+      "revealed-at": 4,
       "launched-at": null,
       lifetime: 5000,
       "can-update-price-function": true,
@@ -3682,6 +3782,7 @@ describe("NAMESPACE-LAUNCH FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("TURN-OFF-MANAGER-TRANSFERS FUNCTIONS", () => {
   it("This should successfully turn off manager-transfers when called by the manager from a managed namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // Check initial state
@@ -3690,8 +3791,8 @@ describe("TURN-OFF-MANAGER-TRANSFERS FUNCTIONS", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -3711,8 +3812,8 @@ describe("TURN-OFF-MANAGER-TRANSFERS FUNCTIONS", () => {
       "manager-transferable": false, // This should now be false
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -3726,6 +3827,7 @@ describe("TURN-OFF-MANAGER-TRANSFERS FUNCTIONS", () => {
   });
 
   it("This should fail to turn off transfers of a non-existent namespace", () => {
+    callFlipSwitch();
     callTurnOffManagerTransfers(
       namespaceBuff,
       address1,
@@ -3735,6 +3837,7 @@ describe("TURN-OFF-MANAGER-TRANSFERS FUNCTIONS", () => {
   });
 
   it("This should fail to turn off manager transfers from an unmanaged namespace", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
     // Check initial state
@@ -3743,8 +3846,8 @@ describe("TURN-OFF-MANAGER-TRANSFERS FUNCTIONS", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -3769,8 +3872,8 @@ describe("TURN-OFF-MANAGER-TRANSFERS FUNCTIONS", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -3784,6 +3887,7 @@ describe("TURN-OFF-MANAGER-TRANSFERS FUNCTIONS", () => {
   });
 
   it("This should fail to turn off manager transfers from a managed namespace if contract-caller is not manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
 
     // Check initial state
@@ -3792,8 +3896,8 @@ describe("TURN-OFF-MANAGER-TRANSFERS FUNCTIONS", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -3818,8 +3922,8 @@ describe("TURN-OFF-MANAGER-TRANSFERS FUNCTIONS", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -3836,11 +3940,12 @@ describe("TURN-OFF-MANAGER-TRANSFERS FUNCTIONS", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAME-IMPORT FUNCTION", () => {
   it("This should successfully import a name", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -3883,7 +3988,7 @@ describe("NAME-IMPORT FUNCTION", () => {
     // Check final state
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
@@ -3897,11 +4002,12 @@ describe("NAME-IMPORT FUNCTION", () => {
   });
 
   it("This should successfully import multiple names", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -3949,7 +4055,7 @@ describe("NAME-IMPORT FUNCTION", () => {
     // Check final state
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
@@ -3960,7 +4066,7 @@ describe("NAME-IMPORT FUNCTION", () => {
     });
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 5,
+      "imported-at": 6,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
@@ -3975,6 +4081,7 @@ describe("NAME-IMPORT FUNCTION", () => {
   });
 
   it("This should fail to import a name if no namespace", () => {
+    callFlipSwitch();
     callImportName(
       namespaceBuff,
       name1Buff,
@@ -3987,11 +4094,12 @@ describe("NAME-IMPORT FUNCTION", () => {
   });
 
   it("This should fail to import the same name twice", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -4039,7 +4147,7 @@ describe("NAME-IMPORT FUNCTION", () => {
     // Check final state
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
@@ -4053,11 +4161,12 @@ describe("NAME-IMPORT FUNCTION", () => {
   });
 
   it("This should fail to import a name, if the name has invalid characters", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -4098,11 +4207,12 @@ describe("NAME-IMPORT FUNCTION", () => {
   });
 
   it("This should fail to import a name if the tx-sender is not the import address", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -4143,11 +4253,12 @@ describe("NAME-IMPORT FUNCTION", () => {
   });
 
   it("This should fail to import a name in a launched namespace", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -4178,8 +4289,8 @@ describe("NAME-IMPORT FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -4206,11 +4317,12 @@ describe("NAME-IMPORT FUNCTION", () => {
   });
 
   it("This should fail to import a name if the namespace launchability TTL has passed", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -4255,6 +4367,7 @@ describe("NAME-IMPORT FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
   it("This should successfully update the price in a namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
     // Check initial state
@@ -4263,8 +4376,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -4294,8 +4407,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -4309,6 +4422,7 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
   });
 
   it("This should successfully update the price multiple times", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
     // First update
@@ -4330,8 +4444,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -4362,8 +4476,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -4376,11 +4490,12 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
     });
   });
   it("This should successfully update the price in a managed namespace when called by the manager", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -4410,8 +4525,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": true,
       "price-function": {
@@ -4441,8 +4556,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": true,
       "price-function": {
@@ -4456,6 +4571,7 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
   });
 
   it("This should fail to update the price in a namespace, that doesn't exist", () => {
+    callFlipSwitch();
     callNamespaceUpdatePrice(
       namespaceBuff,
       2,
@@ -4470,6 +4586,7 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
   });
 
   it("This should fail to update the price in a managed namespace when called by the import address", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // Check initial state
@@ -4478,8 +4595,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -4509,8 +4626,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -4524,6 +4641,7 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
   });
 
   it("This should fail to update the price in a namespace when called by an unauthorized address", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
     // Check initial state
@@ -4532,8 +4650,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -4563,8 +4681,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -4578,6 +4696,7 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
   });
 
   it("This should fail to update the price in a namespace that doesn't allow price namespace changes", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     callNamespaceFreezePrice(namespaceBuff, address1, true, false);
 
@@ -4587,8 +4706,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": false,
       "price-function": {
@@ -4618,8 +4737,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": false,
       "price-function": {
@@ -4633,6 +4752,7 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
   });
 
   it("This should fail to update the price in a managed namespace when called by an unauthorized address", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // Check initial state
@@ -4641,8 +4761,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -4672,8 +4792,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -4687,6 +4807,7 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
   });
 
   it("This should fail to update the price in a managed namespace that doesn't allow price namespace changes", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callNamespaceFreezePrice(namespaceBuff, managerAddress, true, false);
 
@@ -4696,8 +4817,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -4727,8 +4848,8 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -4745,6 +4866,7 @@ describe("NAMESPACE-UPDATE-PRICE FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
   it("This should successfully freeze the price function of an unmanaged namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
     // Check initial state
@@ -4753,8 +4875,8 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -4774,8 +4896,8 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": false,
       "price-function": {
@@ -4789,11 +4911,12 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
   });
 
   it("This should successfully freeze the price function of a managed namespace when called by the manager", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -4823,8 +4946,8 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": true,
       "price-function": {
@@ -4844,8 +4967,8 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -4859,11 +4982,12 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
   });
 
   it("This should fail to freeze the price function of a managed namespace when called by the import address", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -4893,8 +5017,8 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": true,
       "price-function": {
@@ -4919,8 +5043,8 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": true,
       "price-function": {
@@ -4934,6 +5058,7 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
   });
 
   it("This should fail to freeze the price function of a namespace that doesn't exist", () => {
+    callFlipSwitch();
     callNamespaceFreezePrice(
       namespaceBuff,
       address1,
@@ -4943,6 +5068,7 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
   });
 
   it("This should fail to freeze the price function of an unmanaged namespace if the tx-sender is not the import address", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
 
     // Check initial state
@@ -4951,8 +5077,8 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -4977,8 +5103,8 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
       "manager-transferable": false,
       "manager-frozen": true,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 5000,
       "can-update-price-function": true,
       "price-function": {
@@ -4992,6 +5118,7 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
   });
 
   it("This should fail to freeze the price function of a managed namespace if the tx-sender is neither the manager nor the import address", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // Check initial state
@@ -5000,8 +5127,8 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -5026,8 +5153,8 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
       "manager-transferable": true,
       "manager-frozen": false,
       "namespace-import": address1,
-      "revealed-at": 3,
-      "launched-at": 4,
+      "revealed-at": 4,
+      "launched-at": 5,
       lifetime: 0,
       "can-update-price-function": false,
       "price-function": {
@@ -5044,16 +5171,17 @@ describe("NAMESPACE-FREEZE-PRICE FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAME-CLAIM-FAST FUNCTION", () => {
   it("This should successfully fast mint a name on a launched namespace without a manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
     // Check final state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       "stx-burn": 10,
       owner: address1,
     });
@@ -5062,10 +5190,11 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
   });
 
   it("This should successfully fast mint a name on a launched namespace with a manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     // Check final state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -5080,6 +5209,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
   });
 
   it("This should successfully fast mint two names on a launched namespace without a manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
     callFastClaimName(
       name2Buff,
@@ -5093,24 +5223,24 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
 
     // Check final state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       "stx-burn": 10,
       owner: address1,
     });
     callGetBnsInfo(name2Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -5120,6 +5250,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
   });
 
   it("This should successfully fast mint two names on a launched namespace with a manager", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     callFastClaimName(
       name2Buff,
@@ -5133,7 +5264,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
 
     // Check final state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -5144,7 +5275,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
       owner: address1,
     });
     callGetBnsInfo(name2Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefile2Buff,
@@ -5160,6 +5291,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
   });
 
   it("This should fail to fast mint name on a namespace that doesn't exist", () => {
+    callFlipSwitch();
     callFastClaimName(
       name1Buff,
       namespaceBuff,
@@ -5174,6 +5306,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
   });
 
   it("This should fail to fast mint a name that is already claimed", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
     // Attempt to claim the same name again
     callFastClaimName(
@@ -5188,7 +5321,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
 
     // Check state hasn't changed
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -5202,11 +5335,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
   });
 
   it("This should fail to fast mint a name with invalid characters", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -5246,11 +5380,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
   });
 
   it("This should fail to fast mint a name on an unlaunched namespace", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -5289,11 +5424,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
   });
 
   it("This should fail to fast mint name on a launched namespace with a manager when the contract-caller is not the manager", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -5333,11 +5469,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
   });
 
   it("This should fail to fast mint a name on a launched namespace without a manager when the tx-sender is not the send-to address", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -5380,11 +5517,12 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAME-PREORDER FUNCTION", () => {
   it("This should successfully preorder a name on a launched namespace without a manager", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -5407,15 +5545,16 @@ describe("NAME-PREORDER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 10, address1, 149, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
   });
 
   it("This should successfully preorder a name on a launched namespace with a manager even though this is not the intended use", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -5439,15 +5578,16 @@ describe("NAME-PREORDER FUNCTION", () => {
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
 
-    callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
   });
 
   it("This should fail to preorder a name if hash is malformed", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -5475,11 +5615,12 @@ describe("NAME-PREORDER FUNCTION", () => {
   });
 
   it("This should fail to preorder a name if stx to burn 0", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -5513,11 +5654,12 @@ describe("NAME-PREORDER FUNCTION", () => {
   });
 
   it("This should fail to preorder a name if stx to burn not enough in balance of user", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -5545,11 +5687,12 @@ describe("NAME-PREORDER FUNCTION", () => {
   });
 
   it("This should fail to preorder a name that has been preordered before", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -5574,7 +5717,7 @@ describe("NAME-PREORDER FUNCTION", () => {
     callLaunchNamespace(namespaceBuff, address1, true, false);
 
     // First preorder
-    callPreorderName(name1BuffSalt, 10, address1, 149, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
 
     // Attempt second preorder
     callPreorderName(name1BuffSalt, 10, address1, ERR_PREORDERED_BEFORE, true);
@@ -5584,6 +5727,7 @@ describe("NAME-PREORDER FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAME-REGISTER FUNCTION", () => {
   it("This should succesfully register a name on an unmanaged namespace", () => {
+    callFlipSwitch();
     // Block 1
     // Block 2 preorder the namespace
     callPreorderAValidNamespace(
@@ -5594,7 +5738,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Who is calling the function
       address1,
       // The expected result, it should be 2 + 144 which is the TTL
-      145,
+      146,
       // It is not an error
       false
     );
@@ -5656,7 +5800,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Who is calling the function
       address3,
       // The expected value of return, should be 6 + 144 ttl
-      149,
+      150,
       // It is not an error
       false
     );
@@ -5715,7 +5859,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // All name info
     callGetBnsInfo(name1Buff, namespaceBuff, {
       // It was registered at block 8
-      "registered-at": 7,
+      "registered-at": 8,
       // It was not imported
       "imported-at": null,
       // Has not been revoked
@@ -5727,7 +5871,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // It has the buyer of the preorder
       "preordered-by": address3,
       // It has the renewal height which is the time it was registered + lifetime of the namespace, in this case 5000
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       // It has the amount of stx that was burnt to acquire the name
       "stx-burn": 10,
       // It has the current owner of the name
@@ -5736,11 +5880,12 @@ describe("NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should succesfully register the same name in two different unmanaged namespaces", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -5763,7 +5908,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 10, address3, 149, false);
+    callPreorderName(name1BuffSalt, 10, address3, 150, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -5781,13 +5926,13 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetPrimaryName(address3, 1);
     callGetLastTokenId(1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address3,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address3,
     });
@@ -5796,7 +5941,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       namespaceBuffSalt2,
       1000000000,
       address1,
-      152,
+      153,
       false
     );
     simnet.mineEmptyBlock();
@@ -5819,7 +5964,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff2, address1, true, false);
-    callPreorderName(name1BuffSaltDiff, 10, address3, 156, false);
+    callPreorderName(name1BuffSaltDiff, 10, address3, 157, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff2,
@@ -5837,26 +5982,27 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetPrimaryName(address3, 1);
     callGetLastTokenId(2);
     callGetBnsInfo(name1Buff, namespaceBuff2, {
-      "registered-at": 14,
+      "registered-at": 15,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": name1BuffSaltDiff,
       "preordered-by": address3,
-      "renewal-height": 5014,
+      "renewal-height": 5015,
       "stx-burn": 10,
       owner: address3,
     });
   });
 
   it("This should succesfully register a name on an unmanaged namespace even if someone preordered it after me", () => {
+    callFlipSwitch();
     // Block1
     // Block 2
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     // Block 3
@@ -5883,9 +6029,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Block 5
     callLaunchNamespace(namespaceBuff, address1, true, false);
     // Block 6
-    callPreorderName(name1BuffSalt, 10, address3, 149, false);
+    callPreorderName(name1BuffSalt, 10, address3, 150, false);
     // Block 7
-    callPreorderName(name1BuffDifferentSalt, 10, address2, 150, false);
+    callPreorderName(name1BuffDifferentSalt, 10, address2, 151, false);
     // Block 8
     callRegisterName(
       namespaceBuff,
@@ -5902,24 +6048,25 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetOwner(1, address3);
     callGetPrimaryName(address3, 1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address3,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address3,
     });
   });
 
   it("This should succesfully register a name on an unmanaged namespace even if someone preordered it after me and registered before me", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -5943,9 +6090,9 @@ describe("NAME-REGISTER FUNCTION", () => {
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
     // Address 1 preorderes first
-    callPreorderName(name1BuffDifferentSalt, 10, address1, 149, false);
+    callPreorderName(name1BuffDifferentSalt, 10, address1, 150, false);
     // Address 3 preorders second, with a different salt
-    callPreorderName(name1BuffSalt, 10, address3, 150, false);
+    callPreorderName(name1BuffSalt, 10, address3, 151, false);
     simnet.mineEmptyBlock();
     // Address 3 registers first and gets the name
     callRegisterName(
@@ -5963,7 +6110,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetOwner(1, address3);
     callGetPrimaryName(address3, 1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 8,
+      "registered-at": 9,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -5971,7 +6118,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       "hashed-salted-fqn-preorder": name1BuffSalt,
       // The address of the preorder
       "preordered-by": address3,
-      "renewal-height": 5008,
+      "renewal-height": 5009,
       "stx-burn": 10,
       owner: address3,
     });
@@ -5996,7 +6143,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetPrimaryName(address3, null);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       // Updated registered at date, to start with the rightful owner
-      "registered-at": 9,
+      "registered-at": 10,
       "imported-at": null,
       "revoked-at": false,
       // Updated to the zonefile of the new owner
@@ -6006,18 +6153,19 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Updated to the address that created the preorder
       "preordered-by": address1,
       // Updated renewal date, to start with the rightful owner
-      "renewal-height": 5009,
+      "renewal-height": 5010,
       "stx-burn": 10,
       owner: address1,
     });
   });
 
   it("This should succesfully register a name on an unmanaged namespace even if someone fastclaimed it after I made the preorder", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6041,7 +6189,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
     // Address 1 preorderes
-    callPreorderName(name1BuffSalt, 10, address1, 149, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     // Address 3 fast claims
     callFastClaimName(
       name1Buff,
@@ -6058,7 +6206,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetOwner(1, address3);
     callGetPrimaryName(address3, 1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -6066,7 +6214,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       "hashed-salted-fqn-preorder": null,
       // No preordered by since no preorder
       "preordered-by": null,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       // The amount address 3 burnt
       "stx-burn": 10,
       owner: address3,
@@ -6091,7 +6239,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetPrimaryName(address3, null);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       // Updated registered at date, to start with the rightful owner
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       // Updated to the zonefile of the new owner
@@ -6101,7 +6249,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Updated to the address that created the preorder
       "preordered-by": address1,
       // Updated renewal date, to start with the rightful owner
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       // Updated to the amount burnt to register the name
       "stx-burn": 10,
       owner: address1,
@@ -6109,11 +6257,12 @@ describe("NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should succesfully register 2 different names by the same address", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6136,7 +6285,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 10, address1, 149, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -6153,17 +6302,17 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetOwner(1, address1);
     callGetPrimaryName(address1, 1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
-    callPreorderName(name2BuffSalt, 10, address1, 152, false);
+    callPreorderName(name2BuffSalt, 10, address1, 153, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -6180,24 +6329,25 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetOwner(2, address1);
     callGetPrimaryName(address1, 1);
     callGetBnsInfo(name2Buff, namespaceBuff, {
-      "registered-at": 10,
+      "registered-at": 11,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name2BuffSalt,
       "preordered-by": address1,
-      "renewal-height": 5010,
+      "renewal-height": 5011,
       "stx-burn": 10,
       owner: address1,
     });
   });
 
   it("This should fail to register a name if no name-preorder", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6232,7 +6382,8 @@ describe("NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if no namespace", () => {
-    callPreorderName(name1BuffSalt, 10, address1, 145, false);
+    callFlipSwitch();
+    callPreorderName(name1BuffSalt, 10, address1, 146, false);
     callRegisterName(
       namespaceBuff,
       name1Buff,
@@ -6245,11 +6396,12 @@ describe("NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if the namespace has a manager", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6272,7 +6424,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 10, address1, 149, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     callRegisterName(
       namespaceBuff,
       name1Buff,
@@ -6285,11 +6437,12 @@ describe("NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if name already exists", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6312,7 +6465,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 10, address1, 149, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -6335,11 +6488,12 @@ describe("NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if name was preordered before my preorder and registered by the principal of the first preorder", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6362,8 +6516,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffDifferentSalt, 10, address3, 149, false);
-    callPreorderName(name1BuffSalt, 10, address1, 150, false);
+    callPreorderName(name1BuffDifferentSalt, 10, address3, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 151, false);
     callRegisterName(
       namespaceBuff,
       name1Buff,
@@ -6385,11 +6539,12 @@ describe("NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if name was fast claimed before my preorder", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6421,7 +6576,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       1,
       false
     );
-    callPreorderName(name1BuffSalt, 10, address1, 150, false);
+    callPreorderName(name1BuffSalt, 10, address1, 151, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -6435,11 +6590,12 @@ describe("NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if name was preordered before namespace launch", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6462,8 +6618,8 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 10, address1, 149, false);
-    simnet.mineEmptyBlocks(149);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
+    simnet.mineEmptyBlocks(150);
     callRegisterName(
       namespaceBuff,
       name1Buff,
@@ -6476,11 +6632,12 @@ describe("NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if burned STX was not enough, this should also act as a blocker to preorder a name with mng-name-preorder", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6503,7 +6660,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 1, address1, 149, false);
+    callPreorderName(name1BuffSalt, 1, address1, 150, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -6520,11 +6677,12 @@ describe("NAME-REGISTER FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("CLAIM-PREORDER FUNCTION", () => {
   it("This should succesfully claim the stx from a preorder that has not been claimed by the owner of the preorder", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6547,18 +6705,19 @@ describe("CLAIM-PREORDER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 10, address1, 149, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
     simnet.mineEmptyBlocks(144);
     callClaimPreorder(name1BuffSalt, address1, true, false);
   });
 
   it("This should fail to claim the stx from a preorder that has been claimed by the owner of the preorder", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6581,7 +6740,7 @@ describe("CLAIM-PREORDER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 10, address1, 149, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -6601,11 +6760,12 @@ describe("CLAIM-PREORDER FUNCTION", () => {
   });
 
   it("This should fail to claim the stx from a preorder that does not exist", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6635,11 +6795,12 @@ describe("CLAIM-PREORDER FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("MNG-NAME-PREORDER FUNCTION", () => {
   it("This should successfully preorder a name on a launched namespace without a manager even though it is not its intended use", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6662,15 +6823,16 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callManagedPreorderName(name1BuffSalt, address1, 149, false);
+    callManagedPreorderName(name1BuffSalt, address1, 150, false);
   });
 
   it("This should successfully preorder a name on a launched namespace with a manager", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6693,15 +6855,16 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
   });
 
   it("This should fail to preorder a name if hash is malformed", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6733,11 +6896,12 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
   });
 
   it("This should fail to preorder a name that was preordered before", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6760,7 +6924,7 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
     callManagedPreorderName(
       name1BuffSalt,
       managerAddress,
@@ -6773,11 +6937,12 @@ describe("MNG-NAME-PREORDER FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("MNG-NAME-REGISTER FUNCTION", () => {
   it("This should successfully register a name in a managed namespace", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6800,7 +6965,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
     callManagedRegisterNameWithAddress(
       namespaceBuff,
       name1Buff,
@@ -6817,7 +6982,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     callGetOwner(1, address1);
     callGetPrimaryName(address1, 1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -6830,11 +6995,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should succesfully register 2 different names in a managed namespace", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6857,7 +7023,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
     callManagedRegisterNameWithAddress(
       namespaceBuff,
       name1Buff,
@@ -6874,7 +7040,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     callGetOwner(1, address1);
     callGetPrimaryName(address1, 1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -6884,7 +7050,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       "stx-burn": 0,
       owner: address1,
     });
-    callManagedPreorderName(name2BuffSalt, managerAddress, 151, false);
+    callManagedPreorderName(name2BuffSalt, managerAddress, 152, false);
     callManagedRegisterNameWithAddress(
       namespaceBuff,
       name2Buff,
@@ -6901,7 +7067,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     callGetOwner(2, address1);
     callGetPrimaryName(address1, 1);
     callGetBnsInfo(name2Buff, namespaceBuff, {
-      "registered-at": 8,
+      "registered-at": 9,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
@@ -6914,7 +7080,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if no namespace", () => {
-    callManagedPreorderName(name1BuffSalt, managerAddress, 145, false);
+    callFlipSwitch();
+    callManagedPreorderName(name1BuffSalt, managerAddress, 146, false);
     callManagedRegisterNameWithAddress(
       namespaceBuff,
       name1Buff,
@@ -6928,11 +7095,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if the namespace has no manager", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -6955,7 +7123,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
     callManagedRegisterNameWithAddress(
       namespaceBuff,
       name1Buff,
@@ -6969,11 +7137,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if no name-preorder", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -7009,11 +7178,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name in a managed namespace if contract-caller not the manager", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -7036,7 +7206,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callManagedPreorderName(name1BuffSalt, address1, 149, false);
+    callManagedPreorderName(name1BuffSalt, address1, 150, false);
     callManagedRegisterNameWithAddress(
       namespaceBuff,
       name1Buff,
@@ -7050,11 +7220,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if name already exists", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -7077,7 +7248,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
     callManagedRegisterNameWithAddress(
       namespaceBuff,
       name1Buff,
@@ -7089,7 +7260,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       false
     );
     simnet.mineEmptyBlocks(144);
-    callManagedPreorderName(name1BuffDifferentSalt, managerAddress, 295, false);
+    callManagedPreorderName(name1BuffDifferentSalt, managerAddress, 296, false);
     callManagedRegisterNameWithAddress(
       namespaceBuff,
       name1Buff,
@@ -7103,11 +7274,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if name invalid", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -7130,7 +7302,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callManagedPreorderName(invalidNameBuffSalt, managerAddress, 149, false);
+    callManagedPreorderName(invalidNameBuffSalt, managerAddress, 150, false);
     callManagedRegisterNameWithAddress(
       namespaceBuff,
       invalidNameBuff,
@@ -7144,11 +7316,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if name was preordered before namespace launch", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -7170,7 +7343,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       true,
       false
     );
-    callManagedPreorderName(name1BuffSalt, managerAddress, 148, false);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
     callLaunchNamespace(namespaceBuff, address1, true, false);
     callManagedRegisterNameWithAddress(
       namespaceBuff,
@@ -7185,11 +7358,12 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
   });
 
   it("This should fail to register a name if TTL has passed", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -7212,8 +7386,8 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
-    simnet.mineEmptyBlocks(149);
+    callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
+    simnet.mineEmptyBlocks(150);
     callManagedRegisterNameWithAddress(
       namespaceBuff,
       name1Buff,
@@ -7230,15 +7404,16 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
   it("This should successfully update the zonefile hash of a name in an unmanaged namespace", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
     // Check initial state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       owner: address1,
       "stx-burn": 10,
     });
@@ -7254,22 +7429,23 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
 
     // Check updated state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "zonefile-hash": zonefile2Buff,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       owner: address1,
       "stx-burn": 10,
     });
   });
 
   it("This should successfully update the zonefile hash of a name in a managed namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // Check initial state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
@@ -7291,7 +7467,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
 
     // Check updated state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
@@ -7304,6 +7480,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
   });
 
   it("This should fail to update the zonefile hash of a nonexistent name", () => {
+    callFlipSwitch();
     callUpdateZonefileHash(
       namespaceBuff,
       name1Buff,
@@ -7315,11 +7492,12 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
   });
 
   it("This should fail to update the zonefile hash if the zonefile is the same", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
 
     // Check initial state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
@@ -7341,7 +7519,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
 
     // Check that the state hasn't changed
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
@@ -7354,18 +7532,19 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
   });
 
   it("This should fail to update the zonefile hash if the name is revoked", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
     callRevokeName(namespaceBuff, name1Buff, address1, true, false);
 
     // Check revoked state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": true,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       owner: address1,
       "stx-burn": 10,
     });
@@ -7381,30 +7560,31 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
 
     // Check that the state hasn't changed
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": true,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": null,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       owner: address1,
       "stx-burn": 10,
     });
   });
 
   it("This should fail to update the zonefile hash of a name in an unmanaged namespace when the tx-sender is not the owner", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
     // Check initial state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": zonefileBuff,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       owner: address1,
       "stx-burn": 10,
     });
@@ -7420,24 +7600,25 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
 
     // Check that the state hasn't changed
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": zonefileBuff,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       owner: address1,
       "stx-burn": 10,
     });
   });
 
   it("This should fail to update the zonefile hash of a name in a managed namespace when the contract-caller is the owner", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAManagedNamespace();
 
     // Check initial state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": null,
@@ -7459,7 +7640,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
 
     // Check that the state hasn't changed
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": null,
@@ -7472,17 +7653,18 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
   });
 
   it("This should fail to update the zonefile hash of a name if the name is not in a valid grace period", () => {
+    callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
 
     // Check initial state
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": zonefileBuff,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       owner: address1,
       "stx-burn": 10,
     });
@@ -7499,13 +7681,13 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
 
     // Check that the state hasn't changed
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": zonefileBuff,
-      "renewal-height": 5006,
+      "renewal-height": 5007,
       owner: address1,
       "stx-burn": 10,
     });
@@ -7515,36 +7697,38 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAME-REVOKE FUNCTION", () => {
   it("This should successfully revoke a name in an unmanaged namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefileBuff,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       owner: address1,
       "stx-burn": 10,
     });
     callRevokeName(namespaceBuff, name1Buff, address1, true, false);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": true,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": null,
-      "renewal-height": 5007,
+      "renewal-height": 5008,
       owner: address1,
       "stx-burn": 10,
     });
   });
 
   it("This should successfully revoke a name in a managed namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
@@ -7556,7 +7740,7 @@ describe("NAME-REVOKE FUNCTION", () => {
     });
     callRevokeName(namespaceBuff, name1Buff, managerAddress, true, false);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 6,
+      "registered-at": 7,
       "imported-at": null,
       "revoked-at": true,
       "hashed-salted-fqn-preorder": name1BuffSalt,
@@ -7569,6 +7753,7 @@ describe("NAME-REVOKE FUNCTION", () => {
   });
 
   it("This should fail to revoke a name in a namespace that does not exist", () => {
+    callFlipSwitch();
     callRevokeName(
       namespaceBuff,
       name1Buff,
@@ -7579,6 +7764,7 @@ describe("NAME-REVOKE FUNCTION", () => {
   });
 
   it("This should fail to revoke a name in a managed namespace but the contract-caller is not the manager", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callRevokeName(
       namespaceBuff,
@@ -7590,6 +7776,7 @@ describe("NAME-REVOKE FUNCTION", () => {
   });
 
   it("This should fail to revoke a name in an unmanaged namespace but the tx-sender is not the import address", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     callRevokeName(
       namespaceBuff,
@@ -7604,65 +7791,69 @@ describe("NAME-REVOKE FUNCTION", () => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAME-RENEWAL FUNCTION", () => {
   it("This should successfully renew a name in an unmanaged namespace when the name is still within the lifetime", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     callRenewName(namespaceBuff, name1Buff, null, address1, true, false);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefileBuff,
-      "renewal-height": 10007,
+      "renewal-height": 10008,
       owner: address1,
       "stx-burn": 10,
     });
     callGetOwner(1, address1);
     callGetPrimaryName(address1, 1);
-    callGetRenewalHeight(1, 10007, false);
+    callGetRenewalHeight(1, 10008, false);
   });
 
   it("This should successfully renew a name in an unmanaged namespace when the name is within the grace period", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlocks(6000);
     callRenewName(namespaceBuff, name1Buff, null, address1, true, false);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefileBuff,
-      "renewal-height": 11008,
+      "renewal-height": 11009,
       owner: address1,
       "stx-burn": 10,
     });
     callGetOwner(1, address1);
     callGetPrimaryName(address1, 1);
-    callGetRenewalHeight(1, 11008, false);
+    callGetRenewalHeight(1, 11009, false);
   });
 
   it("This should successfully renew a name in an unmanaged namespace when the name is not in the grace period by the owner", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlocks(11000);
     callRenewName(namespaceBuff, name1Buff, null, address1, true, false);
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefileBuff,
-      "renewal-height": 16008,
+      "renewal-height": 16009,
       owner: address1,
       "stx-burn": 10,
     });
     callGetOwner(1, address1);
     callGetPrimaryName(address1, 1);
-    callGetRenewalHeight(1, 16008, false);
+    callGetRenewalHeight(1, 16009, false);
   });
 
   it("This should successfully renew a name in an unmanaged namespace when the name is not in the grace period by a different address than the owner", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlocks(11000);
     callRenewName(
@@ -7674,28 +7865,29 @@ describe("NAME-RENEWAL FUNCTION", () => {
       false
     );
     callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
+      "registered-at": 8,
       "imported-at": null,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefile2Buff,
-      "renewal-height": 16008,
+      "renewal-height": 16009,
       owner: address3,
       "stx-burn": 10,
     });
     callGetOwner(1, address3);
     callGetPrimaryName(address3, 1);
     callGetPrimaryName(address1, null);
-    callGetRenewalHeight(1, 16008, false);
+    callGetRenewalHeight(1, 16009, false);
   });
 
   it("This should successfully renew an imported name in an unmanaged namespace when the name is not in the grace period by a different address than the owner", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -7738,7 +7930,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     // Check final state
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
@@ -7750,7 +7942,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callGetOwner(1, address3);
     callGetPrimaryName(address3, 1);
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callGetRenewalHeight(1, 5005, false);
+    callGetRenewalHeight(1, 5006, false);
     callRenewName(
       namespaceBuff,
       name1Buff,
@@ -7759,15 +7951,15 @@ describe("NAME-RENEWAL FUNCTION", () => {
       true,
       false
     );
-    callGetRenewalHeight(1, 10005, false);
+    callGetRenewalHeight(1, 10006, false);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
-      "imported-at": 4,
+      "imported-at": 5,
       "revoked-at": false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": zonefile2Buff,
-      "renewal-height": 10005,
+      "renewal-height": 10006,
       owner: address3,
       "stx-burn": 10,
     });
@@ -7777,10 +7969,12 @@ describe("NAME-RENEWAL FUNCTION", () => {
   });
 
   it("This should fail to renew a name in an unmanaged namespace when the name does not exist", () => {
+    callFlipSwitch();
     callRenewName(namespaceBuff, name1Buff, null, address1, ERR_NO_NAME, true);
   });
 
   it("This should fail to renew a name in a managed namespace", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAManagedNamespace();
     callRenewName(
       namespaceBuff,
@@ -7793,11 +7987,12 @@ describe("NAME-RENEWAL FUNCTION", () => {
   });
 
   it("This should fail to renew a name if the namespace is not launched", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -7839,11 +8034,12 @@ describe("NAME-RENEWAL FUNCTION", () => {
   });
 
   it("This should fail to renew a name if the namespace does not require renewals", () => {
+    callFlipSwitch();
     callPreorderAValidNamespace(
       namespaceBuffSalt,
       1000000000,
       address1,
-      145,
+      146,
       false
     );
     simnet.mineEmptyBlock();
@@ -7866,7 +8062,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callPreorderName(name1BuffSalt, 10, address1, 149, false);
+    callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
@@ -7888,6 +8084,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
   });
 
   it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current grace period", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlocks(7500);
     callRenewName(
@@ -7901,6 +8098,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
   });
 
   it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current lifetime", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     callRenewName(
       namespaceBuff,
@@ -7913,6 +8111,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
   });
 
   it("This should fail to renew a name if the name is revoked", () => {
+    callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     callRevokeName(namespaceBuff, name1Buff, address1, true, false);
     callRenewName(

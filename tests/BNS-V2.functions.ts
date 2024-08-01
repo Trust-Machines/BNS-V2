@@ -30,6 +30,8 @@ const managerAddress = accounts.get("wallet_2")!;
 // Assign wallet 3 to address2
 const address3 = accounts.get("wallet_3")!;
 
+const deployer = accounts.get("deployer")!;
+
 export const callPreorderAValidNamespace = (
   bufferParam: Uint8Array,
   uintParam: number,
@@ -759,7 +761,7 @@ export const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
     namespaceBuffSalt,
     1000000000,
     address1,
-    145,
+    146,
     false
   );
   // Mine an empty block happens on block 3, to allow one block to pass between preorder and reveal
@@ -786,7 +788,7 @@ export const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
   // Launch happens on block 5
   callLaunchNamespace(namespaceBuff, address1, true, false);
   // preorder happens on block 6
-  callPreorderName(name1BuffSalt, 10, address1, 149, false);
+  callPreorderName(name1BuffSalt, 10, address1, 150, false);
   // Mine the empty block to fulfill request of 1 block between preorder and register, block 7
   simnet.mineEmptyBlock();
   // Register happens on block 8
@@ -805,7 +807,7 @@ export const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace =
   () => {
     // Block 9
     // Preorder happens on block 10
-    callPreorderName(name2BuffSalt, 10, address1, 152, false);
+    callPreorderName(name2BuffSalt, 10, address1, 153, false);
     // Mine an empty block to allow one block between preorder and register, block 11
     simnet.mineEmptyBlock();
     // Register happens on the next block 12
@@ -827,7 +829,7 @@ export const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
     namespaceBuffSalt,
     1000000000,
     address1,
-    145,
+    146,
     false
   );
   // Mine an empty block to allow one block between preorder and reveal block 3
@@ -854,7 +856,7 @@ export const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
   // Launch the namespace block 5
   callLaunchNamespace(namespaceBuff, address1, true, false);
   // Preorder a name in the managed namespace block 6
-  callManagedPreorderName(name1BuffSalt, managerAddress, 149, false);
+  callManagedPreorderName(name1BuffSalt, managerAddress, 150, false);
   // Register the name in the managed namespace block 7
   callManagedRegisterNameWithAddress(
     namespaceBuff,
@@ -871,7 +873,7 @@ export const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
 export const successfullyTwoStepRegisterASecondNameInAManagedNamespace = () => {
   // Block 8
   // Preorder a second name in the managed namespace block 9
-  callManagedPreorderName(name2BuffSalt, managerAddress, 151, false);
+  callManagedPreorderName(name2BuffSalt, managerAddress, 152, false);
   // Register the second name in the managed namespace block 10
   callManagedRegisterNameWithAddress(
     namespaceBuff,
@@ -892,7 +894,7 @@ export const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
     namespaceBuffSalt,
     1000000000,
     address1,
-    145,
+    146,
     false
   );
   // Mine an empty block to allow one block between preorder and reveal block 3
@@ -951,7 +953,7 @@ export const successfullyFastClaimANameInAManagedNamespace = () => {
     namespaceBuffSalt,
     1000000000,
     address1,
-    145,
+    146,
     false
   );
   // Mine an empty block to allow one block between preorder and reveal block 3
@@ -1278,4 +1280,15 @@ export const callGetRenewalHeight = (
   } else {
     expect(result.result).toBeErr(Cl.uint(expectedResult));
   }
+};
+
+export const callFlipSwitch = () => {
+  const result = simnet.callPublicFn(
+    "BNS-V2",
+    "flip-migration-complete",
+    [],
+    deployer
+  );
+
+  expect(result.result).toBeOk(Cl.bool(true));
 };
