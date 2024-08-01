@@ -32,6 +32,9 @@
 ;; (new) Constant to store the token URI, allowing for metadata association with the NFT
 (define-constant token-uri "test")
 
+;; Only authorized caller to flip the switch
+(define-constant deployer tx-sender)
+
 ;; errors
 (define-constant ERR-UNWRAP (err u101))
 (define-constant ERR-NOT-AUTHORIZED (err u102))
@@ -63,8 +66,12 @@
 (define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u128))
 (define-constant ERR-IMPORTED-BEFORE (err u129))
 (define-constant ERR-LIFETIME-EQUAL-0 (err u130))
+(define-constant ERR-MIGRATION-IN-PROGRESS (err u131))
 
 ;; variables
+;; (new) Variable to see if migration is complete
+(define-data-var migration-complete bool false)
+
 ;; (new) Counter to keep track of the last minted NFT ID, ensuring unique identifiers
 (define-data-var bns-index uint u0)
 
@@ -254,9 +261,9 @@
     (map-get? name-to-index {name: name, namespace: namespace})
 )
 
-;; (new) Defines a read-only function to fetch the unique ID of a BNS name given its name and the namespace it belongs to.
+;; (new) Defines a read-only function to fetch the BNS name and the namespace given a unique ID.
 (define-read-only (get-bns-from-id (id uint)) 
-    ;; Attempts to retrieve the ID from the 'name-to-index' map using the provided name and namespace as the key.
+    ;; Attempts to retrieve the name and namespace from the 'index-to-name' map using the provided id as the key.
     (map-get? index-to-name id)
 )
 
@@ -294,6 +301,8 @@
             ;; If it is not registered then continue
             true 
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Check that the namespace is launched
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Check that the name is not revoked
@@ -348,6 +357,8 @@
             ;; If it is not registered then continue
             true 
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Check that the namespace is launched
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Check that the name is not revoked
@@ -409,7 +420,8 @@
             ;; If there isn't assert that the owner is the tx-sender
             (asserts! (is-eq (some tx-sender) (nft-get-owner? BNS-V2 id)) ERR-NOT-AUTHORIZED)
         )
-        
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Updates the market map with the new listing details
         (map-set market id listing)
         ;; Prints listing details
@@ -439,6 +451,8 @@
             ;; If there isn't assert that the owner is the tx-sender
             (asserts! (is-eq (some tx-sender) (nft-get-owner? BNS-V2 id)) ERR-NOT-AUTHORIZED)
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Deletes the listing from the market map
         (map-delete market id)
         ;; Prints unlisting details
@@ -457,6 +471,8 @@
             (listing (unwrap! (map-get? market id) ERR-NOT-LISTED))
             (price (get price listing))
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Verifies the commission details match the listing
         (asserts! (is-eq (contract-of comm-trait) (get commission listing)) ERR-WRONG-COMMISSION)
         ;; Transfers STX from buyer to seller
@@ -477,6 +493,8 @@
 ;; @param primary-name-id: ID of the name to be set as primary.
 (define-public (set-primary-name (primary-name-id uint))
     (begin 
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Verify the tx-sender is the owner of the name.
         (asserts! (is-eq (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NO-NAME) tx-sender) ERR-NOT-AUTHORIZED)
         ;; Update the tx-sender's primary name.
@@ -496,6 +514,8 @@
             ;; Get the owner of the name.
             (owner (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP)) 
         ) 
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the caller is the current namespace manager.
         (asserts! (is-eq contract-caller (unwrap! (get namespace-manager (unwrap! (map-get? namespaces (get namespace name-and-namespace)) ERR-NAMESPACE-NOT-FOUND)) ERR-NO-NAMESPACE-MANAGER)) ERR-NOT-AUTHORIZED)
         ;; Unlist the NFT if it is listed.
@@ -526,7 +546,9 @@
         (
             ;; Retrieve namespace properties and current manager.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-        ) 
+        )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS) 
         ;; Ensure the caller is the current namespace manager.
         (asserts! (is-eq contract-caller (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER)) ERR-NOT-AUTHORIZED)
         ;; Ensure manager can be changed
@@ -551,6 +573,8 @@
             ;; Retrieve namespace properties and current manager.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the caller is the current namespace manager.
         (asserts! (is-eq contract-caller (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER)) ERR-NOT-AUTHORIZED)
         ;; Update the namespace manager to the new manager.
@@ -572,7 +596,9 @@
 ;; @params: hashed-salted-namespace (buff 20): The hashed and salted namespace being preordered.
 ;; @params: stx-to-burn (uint): The amount of STX tokens to be burned as part of the preorder process.
 (define-public (namespace-preorder (hashed-salted-namespace (buff 20)) (stx-to-burn uint))
-    (begin 
+    (begin
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS) 
         ;; Validate that the hashed-salted-namespace is exactly 20 bytes long.
         (asserts! (is-eq (len hashed-salted-namespace) HASH160LEN) ERR-HASH-MALFORMED)
         ;; Check if the same hashed-salted-fqn has been used before
@@ -652,6 +678,8 @@
             ;; Calculate the namespace's registration price for validation.
             (namespace-price (try! (get-namespace-price namespace)))
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the namespace consists of valid characters only.
         (asserts! (not (has-invalid-chars namespace)) ERR-CHARSET-INVALID)
         ;; Check that the namespace is available for reveal.
@@ -707,6 +735,8 @@
             ;; Retrieve the properties of the namespace to ensure it exists and to check its current state.
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the transaction sender is the namespace's designated import principal.
         (asserts! (is-eq (get namespace-import namespace-props) tx-sender) ERR-OPERATION-UNAUTHORIZED)
         ;; Verify the namespace has not already been launched.
@@ -731,6 +761,8 @@
             (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
             (namespace-manager (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER))
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the function caller is the namespace manager.
         (asserts! (is-eq contract-caller namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Disable manager transfers.
@@ -760,6 +792,8 @@
                     )
             )
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the name is not already registered.
         (asserts! (is-none (map-get? name-properties {name: name, namespace: namespace})) ERR-NAME-NOT-AVAILABLE)
         ;; Verify that the name contains only valid characters.
@@ -858,7 +892,8 @@
             ;; Ensure that the transaction sender is the namespace's designated import principal.
             (asserts! (or (is-eq (get namespace-import namespace-props) tx-sender) (is-eq (get namespace-import namespace-props) contract-caller)) ERR-OPERATION-UNAUTHORIZED)
         )
-        
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Verify the namespace's price function can still be updated.
         (asserts! (get can-update-price-function namespace-props) ERR-OPERATION-UNAUTHORIZED)
         ;; Update the namespace's record in the `namespaces` map with the new price function.
@@ -883,6 +918,8 @@
             ;; Ensure that the transaction sender is the same as the namespace's designated import principal.
             (asserts! (or (is-eq (get namespace-import namespace-props) tx-sender) (is-eq (get namespace-import namespace-props) contract-caller)) ERR-OPERATION-UNAUTHORIZED)
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Update the namespace properties in the `namespaces` map, setting `can-update-price-function` to false.
         (map-set namespaces namespace 
             (merge namespace-props { can-update-price-function: false })
@@ -916,6 +953,8 @@
                         )
             )
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the name is not already registered.
         (asserts! (is-none name-props) ERR-NAME-NOT-AVAILABLE)
         ;; Verify that the name contains only valid characters.
@@ -984,7 +1023,9 @@
 ;; @param: hashed-salted-fqn (buff 20): The hashed and salted fully qualified name.
 ;; @param: stx-to-burn (uint): The amount of STX to burn for the preorder.
 (define-public (name-preorder (hashed-salted-fqn (buff 20)) (stx-to-burn uint))
-    (begin 
+    (begin
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS) 
         ;; Validate the length of the hashed-salted FQN.
         (asserts! (is-eq (len hashed-salted-fqn) HASH160LEN) ERR-HASH-MALFORMED)
         ;; Ensures that the amount of STX specified to burn is greater than zero.
@@ -1022,6 +1063,8 @@
             ;; Get the amount of burned STX
             (stx-burned (get stx-burned preorder))
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure that the namespace is launched
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Ensure the preorder hasn't been claimed before
@@ -1060,7 +1103,9 @@
             ;; Retrieves the preorder details.
             (preorder (unwrap! (map-get? name-preorders { hashed-salted-fqn: hashed-salted-fqn, buyer: tx-sender }) ERR-PREORDER-NOT-FOUND))
             (claimer tx-sender)
-        ) 
+        )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS) 
         ;; Check if the preorder-claimability-ttl has passed
         (asserts! (> burn-block-height (+ (get created-at preorder) PREORDER-CLAIMABILITY-TTL)) ERR-OPERATION-UNAUTHORIZED)
         ;; Asserts that the preorder has not been claimed
@@ -1081,6 +1126,8 @@
 ;; @param: hashed-salted-fqn (buff 20): The hashed and salted fully-qualified name (FQN) being preordered.
 (define-public (mng-name-preorder (hashed-salted-fqn (buff 20)))
     (begin
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Validates that the length of the hashed and salted FQN is exactly 20 bytes.
         (asserts! (is-eq (len hashed-salted-fqn) HASH160LEN) ERR-HASH-MALFORMED)
         ;; Check if the same hashed-salted-fqn has been used before
@@ -1117,6 +1164,8 @@
             ;; Calculates the ID for the new name to be minted.
             (id-to-be-minted (+ (var-get bns-index) u1))
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the preorder has not been claimed before
         (asserts! (not (get claimed preorder)) ERR-OPERATION-UNAUTHORIZED)
         ;; Ensure the name is not already registered
@@ -1189,12 +1238,21 @@
             (current-zone-file (get zonefile-hash name-props))
             (revoked (get revoked-at name-props))
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Assert we are actually updating the zonefile
         (asserts! (not (is-eq (some zonefile-hash) current-zone-file)) ERR-OPERATION-UNAUTHORIZED)
         ;; Asserts the name has not been revoked.
         (asserts! (not revoked) ERR-NAME-REVOKED)
-        ;; Check that the tx-sender or contract-caller is the owner
-        (asserts! (or (is-eq tx-sender owner) (is-eq contract-caller owner)) ERR-NOT-AUTHORIZED)
+        ;; Zonefile updates should happen throught the namespace manager contract
+        ;; Check if there is a namespace manager
+        (match (get namespace-manager (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            manager 
+            ;; If there is then check that the contract-caller is the manager
+            (asserts! (is-eq manager contract-caller) ERR-NOT-AUTHORIZED)
+            ;; If there isn't assert that the owner is the tx-sender
+            (asserts! (is-eq (some tx-sender) (nft-get-owner? BNS-V2 index-id)) ERR-NOT-AUTHORIZED)
+        )
         ;; Assert that the name is in valid time or grace period
         (asserts! (<= burn-block-height (+ renewal NAME-GRACE-PERIOD-DURATION)) ERR-OPERATION-UNAUTHORIZED)
         ;; Update the zonefile hash
@@ -1221,12 +1279,14 @@
             ;; retreive the name props
             (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-NO-NAME))
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the caller is authorized to revoke the name.
         (asserts! 
             (match namespace-manager 
                 manager 
                 (is-eq contract-caller manager)
-                (is-eq tx-sender (get namespace-import namespace-props))
+                (or (is-eq tx-sender (get namespace-import namespace-props)) (is-eq contract-caller (get namespace-import namespace-props)))
             ) 
             ERR-NOT-AUTHORIZED
         )
@@ -1270,6 +1330,8 @@
             ;; Calculate the new renewal height based on current block height
             (new-renewal-height (+ burn-block-height lifetime))
         )
+        ;; Check if migration is complete
+        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Verify that the namespace has been launched
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Ensure the namespace doesn't have a manager
@@ -1688,3 +1750,105 @@
     )
 )
 
+;; Migration Functions
+(define-public (namespace-airdrop 
+    (namespace (buff 20))
+    (pricing {base: uint, buckets: (list 16 uint), coeff: uint, no-vowel-discount: uint, nonalpha-discount: uint}) 
+    (lifetime uint) 
+    (namespace-import principal) 
+    (namespace-manager (optional principal)) 
+    (can-update-price bool) 
+    (manager-transfers bool) 
+    (manager-frozen bool)
+    (revealed-at uint)
+    (launched-at (optional uint))
+)
+    (begin
+        ;; Check if migration is complete
+        (asserts! (not (var-get migration-complete)) ERR-MIGRATION-IN-PROGRESS)
+        ;; Ensure the contract-caller is the airdrop contract.
+        (asserts! (is-eq .migration-airdrop contract-caller) ERR-OPERATION-UNAUTHORIZED)
+        ;; Ensure the namespace consists of valid characters only.
+        (asserts! (not (has-invalid-chars namespace)) ERR-CHARSET-INVALID)
+        ;; Check that the namespace is available for reveal.
+        (asserts! (unwrap! (can-namespace-be-registered namespace) ERR-NAMESPACE-ALREADY-EXISTS) ERR-NAMESPACE-ALREADY-EXISTS)
+        ;; Set all properties
+        (map-set namespaces namespace
+            {
+                namespace-manager: namespace-manager,
+                manager-transferable: manager-transfers,
+                manager-frozen: manager-frozen,
+                namespace-import: namespace-import,
+                revealed-at: revealed-at,
+                launched-at: launched-at,
+                lifetime: lifetime,
+                can-update-price-function: can-update-price,
+                price-function: pricing 
+            }
+        )
+        ;; Confirm successful airdrop of the namespace
+        (ok namespace)
+    )
+)
+
+(define-public (name-airdrop
+    (name (buff 48))
+    (namespace (buff 20))
+    (imported-at (optional uint)) 
+    (registered-at (optional uint)) 
+    (revoked-at bool) 
+    (zonefile-hash (optional (buff 20)))
+    (renewal-height uint)
+    (owner principal)
+)
+    (let
+        (
+            (mint-index (+ u1 (var-get bns-index)))
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            (pricing (get price-function namespace-props))
+            (name-price (try! (compute-name-price name pricing)))
+        )
+        ;; Check if migration is complete
+        (asserts! (not (var-get migration-complete)) ERR-MIGRATION-IN-PROGRESS)
+        ;; Ensure the contract-caller is the airdrop contract.
+        (asserts! (is-eq .migration-airdrop contract-caller) ERR-OPERATION-UNAUTHORIZED)
+        ;; Ensure the name does not exist
+        (asserts! (is-none (map-get? name-to-index {name: name, namespace: namespace})) ERR-NAME-NOT-AVAILABLE)
+        ;; Set all properties
+        (map-set name-to-index {name: name, namespace: namespace} mint-index)
+        (map-set index-to-name mint-index {name: name, namespace: namespace})
+        (map-set name-properties {name: name, namespace: namespace}
+            {
+                registered-at: registered-at,
+                imported-at: imported-at,
+                ;; set to true or false
+                revoked-at: revoked-at,
+                zonefile-hash: zonefile-hash,
+                ;; Set to none new property
+                hashed-salted-fqn-preorder: none,
+                ;; Set to none new property
+                preordered-by: none,
+                renewal-height: renewal-height,
+                stx-burn: name-price,
+                owner: owner,
+            }
+        )
+        ;; Update the index 
+        (var-set bns-index mint-index)
+        ;; Update the primary name of the recipient
+        (update-primary-name-recipient mint-index owner)
+        ;; Mint the Name to the owner
+        (try! (nft-mint? BNS-V2 mint-index owner))
+        ;; Confirm successful airdrop of the namespace
+        (ok mint-index)
+    )
+)
+
+(define-public (flip-migration-complete)
+    (ok 
+        (begin 
+            (asserts! (or (is-eq tx-sender deployer) (is-eq contract-caller deployer)) ERR-NOT-AUTHORIZED) 
+            (var-set migration-complete true)
+        )
+    )
+)
