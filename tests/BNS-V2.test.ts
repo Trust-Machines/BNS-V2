@@ -134,7 +134,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -159,7 +159,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -228,7 +228,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -246,7 +246,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -272,7 +272,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -292,7 +292,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -317,7 +317,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -335,7 +335,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -356,7 +356,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -374,7 +374,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -392,7 +392,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -416,7 +416,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -435,7 +435,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -454,7 +454,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -477,7 +477,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -500,7 +500,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 9,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -522,7 +522,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -545,7 +545,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -568,7 +568,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 9,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -592,7 +592,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 9,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -647,7 +647,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -682,7 +682,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -702,7 +702,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -734,7 +734,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -760,7 +760,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -781,7 +781,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -807,7 +807,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -864,7 +864,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -905,7 +905,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -924,7 +924,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -941,7 +941,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": true,
+      revoked: true,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -958,7 +958,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": true,
+      revoked: true,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -976,7 +976,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1002,7 +1002,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1025,7 +1025,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1051,7 +1051,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1074,7 +1074,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1093,7 +1093,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1118,7 +1118,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1144,7 +1144,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1167,7 +1167,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1186,7 +1186,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1207,7 +1207,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1233,7 +1233,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1266,7 +1266,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1285,7 +1285,7 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1308,7 +1308,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1326,7 +1326,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1346,7 +1346,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1364,7 +1364,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1420,7 +1420,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1438,7 +1438,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1457,7 +1457,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1478,7 +1478,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1498,7 +1498,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1522,7 +1522,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1541,7 +1541,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1574,7 +1574,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1627,7 +1627,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1651,7 +1651,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1677,7 +1677,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": true,
+      revoked: true,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1702,7 +1702,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1729,7 +1729,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -1747,7 +1747,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1766,7 +1766,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1791,7 +1791,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -1819,7 +1819,7 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -2068,7 +2068,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -2093,7 +2093,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -2121,7 +2121,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -2150,7 +2150,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -2179,7 +2179,7 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -2305,7 +2305,7 @@ describe("MNG-BURN FUNCTIONS", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -2342,7 +2342,7 @@ describe("MNG-BURN FUNCTIONS", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -2373,7 +2373,7 @@ describe("MNG-BURN FUNCTIONS", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -2389,7 +2389,7 @@ describe("MNG-BURN FUNCTIONS", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -2408,7 +2408,7 @@ describe("MNG-BURN FUNCTIONS", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -2425,7 +2425,7 @@ describe("MNG-BURN FUNCTIONS", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -2678,7 +2678,7 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 10,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name2BuffSalt,
       "preordered-by": address3,
@@ -3929,7 +3929,7 @@ describe("NAME-IMPORT FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -3995,7 +3995,7 @@ describe("NAME-IMPORT FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -4006,7 +4006,7 @@ describe("NAME-IMPORT FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -4085,7 +4085,7 @@ describe("NAME-IMPORT FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -5094,7 +5094,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -5112,7 +5112,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -5140,7 +5140,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -5151,7 +5151,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -5180,7 +5180,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -5191,7 +5191,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -5235,7 +5235,7 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -5764,7 +5764,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // It was not imported
       "imported-at": null,
       // Has not been revoked
-      "revoked-at": false,
+      revoked: false,
       // It has the provided zone file when registering
       "zonefile-hash": zonefileBuff,
       // It has the information from the preorder
@@ -5828,7 +5828,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address3,
@@ -5884,7 +5884,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff2, {
       "registered-at": 14,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": name1BuffSaltDiff,
       "preordered-by": address3,
@@ -5949,7 +5949,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address3,
@@ -6010,7 +6010,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       // The hash used for the preorder
       "hashed-salted-fqn-preorder": name1BuffSalt,
@@ -6043,7 +6043,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Updated registered at date, to start with the rightful owner
       "registered-at": 9,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       // Updated to the zonefile of the new owner
       "zonefile-hash": zonefile2Buff,
       // Updated to the hash used by the new owner
@@ -6105,7 +6105,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       // No hash since no preorder
       "hashed-salted-fqn-preorder": null,
@@ -6138,7 +6138,7 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Updated registered at date, to start with the rightful owner
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       // Updated to the zonefile of the new owner
       "zonefile-hash": zonefile2Buff,
       // Updated to the hash used by the new owner
@@ -6200,7 +6200,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -6227,7 +6227,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 10,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name2BuffSalt,
       "preordered-by": address1,
@@ -6864,7 +6864,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -6921,7 +6921,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
@@ -6948,7 +6948,7 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name2BuffSalt,
       "preordered-by": address1,
@@ -7281,7 +7281,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "renewal-height": 5006,
       owner: address1,
@@ -7301,7 +7301,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefile2Buff,
       "renewal-height": 5006,
       owner: address1,
@@ -7316,7 +7316,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefileBuff,
@@ -7338,7 +7338,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefile2Buff,
@@ -7366,7 +7366,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefileBuff,
@@ -7388,7 +7388,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefileBuff,
@@ -7406,7 +7406,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": true,
+      revoked: true,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": null,
@@ -7428,7 +7428,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": true,
+      revoked: true,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": null,
@@ -7445,7 +7445,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": zonefileBuff,
@@ -7467,7 +7467,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": zonefileBuff,
@@ -7484,7 +7484,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": zonefileBuff,
@@ -7506,7 +7506,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": zonefileBuff,
@@ -7523,7 +7523,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": zonefileBuff,
@@ -7546,7 +7546,7 @@ describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": zonefileBuff,
@@ -7564,7 +7564,7 @@ describe("NAME-REVOKE FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefileBuff,
@@ -7576,7 +7576,7 @@ describe("NAME-REVOKE FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": true,
+      revoked: true,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": null,
@@ -7591,7 +7591,7 @@ describe("NAME-REVOKE FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefileBuff,
@@ -7603,7 +7603,7 @@ describe("NAME-REVOKE FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 6,
       "imported-at": null,
-      "revoked-at": true,
+      revoked: true,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": null,
@@ -7654,7 +7654,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefileBuff,
@@ -7674,7 +7674,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefileBuff,
@@ -7694,7 +7694,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefileBuff,
@@ -7721,7 +7721,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "zonefile-hash": zonefile2Buff,
@@ -7784,7 +7784,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
@@ -7808,7 +7808,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 4,
-      "revoked-at": false,
+      revoked: false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "zonefile-hash": zonefile2Buff,
