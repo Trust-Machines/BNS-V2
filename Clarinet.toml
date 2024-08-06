@@ -4,7 +4,9 @@ description = ''
 authors = []
 telemetry = true
 cache_dir = './.cache'
-requirements = []
+
+[[project.requirements]]
+contract_id = 'ST27PT00YS01KBAEEETAH45C1H46C3FMJR31SN2S3.TESTNET-BNS-V2'
 [contracts.BNS-V2]
 path = 'contracts/BNS-V2.clar'
 clarity_version = 2
