@@ -95,6 +95,7 @@
         ;; Updated this to be a boolean, since we do not need know when it was revoked, only if it is revoked
         revoked: bool,
         zonefile-hash: (optional (buff 20)),
+        
         ;; The fqn used to make the earliest preorder at any given point
         hashed-salted-fqn-preorder: (optional (buff 20)),
         ;; Added this field in name-properties to know exactly who has the earliest preorder at any given point
@@ -131,7 +132,7 @@
 ;; Removed the claimed field as it is not necessary
 (define-map namespace-preorders
     { hashed-salted-namespace: (buff 20), buyer: principal }
-    { created-at: uint, stx-burned: uint }
+    { created-at: uint, stx-burned: uint, claimed: bool}
 )
 
 ;; Tracks preorders, to avoid attacks
@@ -584,7 +585,7 @@
         ;; Record the preorder details in the `namespace-preorders` map
         (map-set namespace-preorders
             { hashed-salted-namespace: hashed-salted-namespace, buyer: contract-caller }
-            { created-at: burn-block-height, stx-burned: stx-to-burn }
+            { created-at: burn-block-height, stx-burned: stx-to-burn, claimed: false }
         )
         ;; Sets the map with just the hashed-salted-namespace as the key
         (map-set namespace-single-preorder hashed-salted-namespace true)
@@ -652,6 +653,8 @@
             ;; Calculate the namespace's registration price for validation.
             (namespace-price (try! (get-namespace-price namespace)))
         )
+        ;; Ensure the preorder has not been claimed before
+        (asserts! (not (get claimed preorder)) ERR-NAMESPACE-ALREADY-EXISTS)
         ;; Ensure the namespace consists of valid characters only.
         (asserts! (not (has-invalid-chars namespace)) ERR-CHARSET-INVALID)
         ;; Check that the namespace is available for reveal.
@@ -693,7 +696,9 @@
                     price-function: price-function 
                 }
             )
-        )  
+        ) 
+        ;; Update the claimed value for the preorder
+        (map-set namespace-preorders { hashed-salted-namespace: hashed-salted-namespace, buyer: contract-caller } (merge preorder {claimed: true})) 
         ;; Confirm successful reveal of the namespace
         (ok true)
     )
