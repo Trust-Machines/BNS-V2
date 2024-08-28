@@ -135,10 +135,9 @@
 )
 
 ;; Records namespace preorder transactions with their creation times, and STX burned.
-;; Removed the claimed field as it is not necessary
 (define-map namespace-preorders
     { hashed-salted-namespace: (buff 20), buyer: principal }
-    { created-at: uint, stx-burned: uint }
+    { created-at: uint, stx-burned: uint, claimed: bool}
 )
 
 ;; Tracks preorders, to avoid attacks
@@ -155,7 +154,6 @@
 
 ;; It maps a user's principal to the ID of their primary name.
 (define-map primary-name principal uint)
-
 
 ;; read-only
 ;; @desc (new) SIP-09 compliant function to get the last minted token's ID
@@ -495,7 +493,6 @@
     (begin 
         ;; Check if migration is complete
         (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
-
         ;; Verify the contract-caller is the owner of the name.
         (asserts! (is-eq (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NO-NAME) contract-caller) ERR-NOT-AUTHORIZED)
         ;; Update the contract-caller's primary name.
@@ -611,7 +608,7 @@
         ;; Record the preorder details in the `namespace-preorders` map
         (map-set namespace-preorders
             { hashed-salted-namespace: hashed-salted-namespace, buyer: contract-caller }
-            { created-at: burn-block-height, stx-burned: stx-to-burn }
+            { created-at: burn-block-height, stx-burned: stx-to-burn, claimed: false }
         )
         ;; Sets the map with just the hashed-salted-namespace as the key
         (map-set namespace-single-preorder hashed-salted-namespace true)
@@ -663,7 +660,7 @@
     (let 
         (
             ;; Generate the hashed, salted namespace identifier to match with its preorder.
-            (hashed-salted-namespace (hash160 (concat namespace namespace-salt)))
+            (hashed-salted-namespace (hash160 (concat (concat namespace 0x2e) namespace-salt)))
             ;; Define the price function based on the provided parameters.
             (price-function  
                 {
@@ -674,11 +671,13 @@
                     no-vowel-discount: p-func-no-vowel-discount
                 }
             )
-            ;; Retrieve the preorder record to ensure it exists and is valid for the revealing namespace.
+            ;; Retrieve the preorder record to ensure it exists and is valid for the revealing namespace
             (preorder (unwrap! (map-get? namespace-preorders { hashed-salted-namespace: hashed-salted-namespace, buyer: contract-caller}) ERR-PREORDER-NOT-FOUND))
             ;; Calculate the namespace's registration price for validation.
             (namespace-price (try! (get-namespace-price namespace)))
         )
+        ;; Ensure the preorder has not been claimed before
+        (asserts! (not (get claimed preorder)) ERR-NAMESPACE-ALREADY-EXISTS)
         ;; Check if migration is complete
         (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the namespace consists of valid characters only.
@@ -722,7 +721,15 @@
                     price-function: price-function 
                 }
             )
-        )  
+        )
+        ;; Update the claimed value for the preorder
+        (map-set namespace-preorders { hashed-salted-namespace: hashed-salted-namespace, buyer: contract-caller } 
+            (merge preorder 
+                {
+                    claimed: true
+                }
+            )
+        )   
         ;; Confirm successful reveal of the namespace
         (ok true)
     )
@@ -1797,7 +1804,7 @@
     (namespace (buff 20))
     (imported-at (optional uint)) 
     (registered-at (optional uint)) 
-    (revoked-at bool) 
+    (revoked bool) 
     (zonefile-hash (optional (buff 20)))
     (renewal-height uint)
     (owner principal)
@@ -1823,7 +1830,7 @@
                 registered-at: registered-at,
                 imported-at: imported-at,
                 ;; set to true or false
-                revoked-at: revoked-at,
+                revoked: revoked,
                 zonefile-hash: zonefile-hash,
                 ;; Set to none new property
                 hashed-salted-fqn-preorder: none,
