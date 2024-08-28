@@ -73,5 +73,7 @@ The key differences between unmanaged and managed namespaces lie in their govern
 - **buy-in-ustx:** Purchase a listed name
 ## Contributing
 We welcome and encourage contributions to the BNS-V2 project! If you’re interested in contributing to the BNS-V2 contract before its deployment to mainnet, please open an issue to allow the team to review your proposed changes or additions.
+## License
 
+This project is licensed under the MIT License.
 
