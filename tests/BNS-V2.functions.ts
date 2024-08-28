@@ -1148,7 +1148,7 @@ export const callGetBnsInfo = (
   expectedInfo: {
     "registered-at"?: number | null;
     "imported-at"?: number | null;
-    "revoked-at": boolean;
+    revoked: boolean;
     "zonefile-hash"?: Uint8Array | null;
     "hashed-salted-fqn-preorder"?: Uint8Array | null;
     "preordered-by"?: string | null;
@@ -1179,7 +1179,7 @@ export const callGetBnsInfo = (
               ? Cl.some(Cl.uint(expectedInfo["imported-at"]))
               : Cl.none()
             : Cl.none(),
-        "revoked-at": Cl.bool(expectedInfo["revoked-at"]),
+        revoked: Cl.bool(expectedInfo["revoked"]),
         "zonefile-hash":
           expectedInfo["zonefile-hash"] !== undefined
             ? expectedInfo["zonefile-hash"] !== null

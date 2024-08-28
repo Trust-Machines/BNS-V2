@@ -100,7 +100,7 @@
         registered-at: (optional uint),
         imported-at: (optional uint),
         ;; Updated this to be a boolean, since we do not need know when it was revoked, only if it is revoked
-        revoked-at: bool,
+        revoked: bool,
         zonefile-hash: (optional (buff 20)),
         ;; The fqn used to make the earliest preorder at any given point
         hashed-salted-fqn-preorder: (optional (buff 20)),
@@ -306,7 +306,7 @@
         ;; Check that the namespace is launched
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Check that the name is not revoked
-        (asserts! (not (get revoked-at name-props)) ERR-NAME-REVOKED)
+        (asserts! (not (get revoked name-props)) ERR-NAME-REVOKED)
         ;; Check owner and recipient is not the same
         (asserts! (not (is-eq nft-current-owner recipient)) ERR-OPERATION-UNAUTHORIZED)
         ;; We only need to check if manager transfers are true or false, if true then they have to do transfers through the manager contract that calls into mng-transfer, if false then they can call into this function
@@ -362,7 +362,7 @@
         ;; Check that the namespace is launched
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
         ;; Check that the name is not revoked
-        (asserts! (not (get revoked-at name-props)) ERR-NAME-REVOKED)
+        (asserts! (not (get revoked name-props)) ERR-NAME-REVOKED)
         ;; Check owner and recipient is not the same
         (asserts! (not (is-eq nft-current-owner recipient)) ERR-OPERATION-UNAUTHORIZED)
         ;; We only need to check if manager transfers are true or false, if true then continue, if false then they can call into `transfer` function
@@ -495,6 +495,7 @@
     (begin 
         ;; Check if migration is complete
         (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
+
         ;; Verify the contract-caller is the owner of the name.
         (asserts! (is-eq (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NO-NAME) contract-caller) ERR-NOT-AUTHORIZED)
         ;; Update the contract-caller's primary name.
@@ -809,7 +810,7 @@
             {
                 registered-at: none,
                 imported-at: (some burn-block-height),
-                revoked-at: false,
+                revoked: false,
                 zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: none,
                 preordered-by: none,
@@ -985,7 +986,7 @@
                
                 registered-at: (some (+ burn-block-height u1)),
                 imported-at: none,
-                revoked-at: false,
+                revoked: false,
                 zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: none,
                 preordered-by: none,
@@ -1186,7 +1187,7 @@
             {
                 registered-at: (some burn-block-height),
                 imported-at: none,
-                revoked-at: false,
+                revoked: false,
                 zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: (some hashed-salted-fqn),
                 preordered-by: (some send-to),
@@ -1236,7 +1237,7 @@
             (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-NO-NAME))
             (renewal (get renewal-height name-props))
             (current-zone-file (get zonefile-hash name-props))
-            (revoked (get revoked-at name-props))
+            (revoked (get revoked name-props))
         )
         ;; Check if migration is complete
         (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
@@ -1295,7 +1296,7 @@
             (merge 
                 name-props
                 {
-                    revoked-at: true,
+                    revoked: true,
                     zonefile-hash: none,
                 } 
             )
@@ -1339,7 +1340,7 @@
         ;; Check if renewals are required for this namespace
         (asserts! (> lifetime u0) ERR-LIFETIME-EQUAL-0)
         ;; Verify that the name has not been revoked
-        (asserts! (not (get revoked-at name-props)) ERR-NAME-REVOKED) 
+        (asserts! (not (get revoked name-props)) ERR-NAME-REVOKED) 
         ;; Handle renewal based on whether it's within the grace period or not
         (if (< burn-block-height (+ renewal-height NAME-GRACE-PERIOD-DURATION))   
             (try! (handle-renewal-in-grace-period name namespace name-props owner lifetime new-renewal-height))
@@ -1367,7 +1368,7 @@
         {
             registered-at: (optional uint), 
             imported-at: (optional uint), 
-            revoked-at: bool, 
+            revoked: bool, 
             zonefile-hash: (optional (buff 20)), 
             hashed-salted-fqn-preorder: (optional (buff 20)), 
             preordered-by: (optional principal), 
@@ -1408,7 +1409,7 @@
         {
             registered-at: (optional uint), 
             imported-at: (optional uint), 
-            revoked-at: bool, 
+            revoked: bool, 
             zonefile-hash: (optional (buff 20)), 
             hashed-salted-fqn-preorder: (optional (buff 20)), 
             preordered-by: (optional principal), 
@@ -1671,7 +1672,7 @@
         {
             registered-at: (optional uint), 
             imported-at: (optional uint), 
-            revoked-at: bool, 
+            revoked: bool, 
             zonefile-hash: (optional (buff 20)), 
             hashed-salted-fqn-preorder: (optional (buff 20)), 
             preordered-by: (optional principal), 
@@ -1723,7 +1724,7 @@
             {
                 registered-at: (some burn-block-height),
                 imported-at: none,
-                revoked-at: false,
+                revoked: false,
                 zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: (some hashed-salted-fqn),
                 preordered-by: (some contract-caller),
