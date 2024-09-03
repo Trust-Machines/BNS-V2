@@ -56,17 +56,16 @@
 (define-constant ERR-NAME-NOT-AVAILABLE (err u118))
 (define-constant ERR-NAMESPACE-BLANK (err u119))
 (define-constant ERR-NAME-BLANK (err u120))
-(define-constant ERR-NAME-REVOKED (err u121))
-(define-constant ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH (err u122))
-(define-constant ERR-NAMESPACE-HAS-MANAGER (err u123))
-(define-constant ERR-OVERFLOW (err u124))
-(define-constant ERR-NO-NAMESPACE-MANAGER (err u125))
-(define-constant ERR-FAST-MINTED-BEFORE (err u126))
-(define-constant ERR-PREORDERED-BEFORE (err u127))
-(define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u128))
-(define-constant ERR-IMPORTED-BEFORE (err u129))
-(define-constant ERR-LIFETIME-EQUAL-0 (err u130))
-(define-constant ERR-MIGRATION-IN-PROGRESS (err u131))
+(define-constant ERR-NAME-PREORDERED-BEFORE-NAMESPACE-LAUNCH (err u121))
+(define-constant ERR-NAMESPACE-HAS-MANAGER (err u122))
+(define-constant ERR-OVERFLOW (err u123))
+(define-constant ERR-NO-NAMESPACE-MANAGER (err u124))
+(define-constant ERR-FAST-MINTED-BEFORE (err u125))
+(define-constant ERR-PREORDERED-BEFORE (err u126))
+(define-constant ERR-NAME-NOT-CLAIMABLE-YET (err u127))
+(define-constant ERR-IMPORTED-BEFORE (err u128))
+(define-constant ERR-LIFETIME-EQUAL-0 (err u129))
+(define-constant ERR-MIGRATION-IN-PROGRESS (err u130))
 
 ;; variables
 ;; (new) Variable to see if migration is complete
@@ -93,15 +92,12 @@
     uint
 )
 
-;; (updated) Contains detailed properties of names, including registration and importation times, revocation status, and zonefile hash.
+;; (updated) Contains detailed properties of names, including registration and importation times
 (define-map name-properties
     { name: (buff 48), namespace: (buff 20) }
     {
         registered-at: (optional uint),
         imported-at: (optional uint),
-        ;; Updated this to be a boolean, since we do not need know when it was revoked, only if it is revoked
-        revoked: bool,
-        zonefile-hash: (optional (buff 20)),
         ;; The fqn used to make the earliest preorder at any given point
         hashed-salted-fqn-preorder: (optional (buff 20)),
         ;; Added this field in name-properties to know exactly who has the earliest preorder at any given point
@@ -138,7 +134,7 @@
 ;; Removed the claimed field as it is not necessary
 (define-map namespace-preorders
     { hashed-salted-namespace: (buff 20), buyer: principal }
-    { created-at: uint, stx-burned: uint }
+    { created-at: uint, stx-burned: uint, claimed: bool}
 )
 
 ;; Tracks preorders, to avoid attacks
@@ -185,6 +181,28 @@
         )
     )
 )
+
+(define-read-only (can-resolve-name (namespace (buff 20)) (name (buff 48)))
+    (let 
+        (
+            (name-id (unwrap! (get-id-from-bns name namespace) ERR-NO-NAME))
+            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
+            (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-NO-NAME))
+            (renewal-height (get renewal-height name-props))
+            (namespace-lifetime (get lifetime namespace-props))
+        )
+        ;; Check if the name can resolve
+        (ok 
+            (if (is-eq u0 namespace-lifetime)
+                ;; If true it means that the name is in a managed namespace or the namespace does not require renewals
+                {renewal: u0, owner: (get owner name-props)}
+                ;; If false then calculate renewal-height
+                {renewal: (try! (get-renewal-height name-id)), owner: (get owner name-props)}
+            )
+        )
+    )
+)
+
 
 ;; @desc (new) SIP-09 compliant function to get token URI
 (define-read-only (get-token-uri (id uint))
@@ -305,8 +323,6 @@
         (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Check that the namespace is launched
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
-        ;; Check that the name is not revoked
-        (asserts! (not (get revoked name-props)) ERR-NAME-REVOKED)
         ;; Check owner and recipient is not the same
         (asserts! (not (is-eq nft-current-owner recipient)) ERR-OPERATION-UNAUTHORIZED)
         ;; We only need to check if manager transfers are true or false, if true then they have to do transfers through the manager contract that calls into mng-transfer, if false then they can call into this function
@@ -317,8 +333,8 @@
         (asserts! (is-eq owner nft-current-owner) ERR-NOT-AUTHORIZED)
         ;; Ensures the NFT is not currently listed in the market.
         (asserts! (is-none (map-get? market id)) ERR-LISTED)
-        ;; Update the name properties with the new owner and reset the zonefile hash.
-        (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
+        ;; Update the name properties with the new owner
+        (map-set name-properties name-and-namespace (merge name-props {owner: recipient}))
         ;; Update primary name if needed for owner
         (update-primary-name-owner id owner)
         ;; Update primary name if needed for recipient
@@ -361,8 +377,6 @@
         (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Check that the namespace is launched
         (asserts! (is-some (get launched-at namespace-props)) ERR-NAMESPACE-NOT-LAUNCHED)
-        ;; Check that the name is not revoked
-        (asserts! (not (get revoked name-props)) ERR-NAME-REVOKED)
         ;; Check owner and recipient is not the same
         (asserts! (not (is-eq nft-current-owner recipient)) ERR-OPERATION-UNAUTHORIZED)
         ;; We only need to check if manager transfers are true or false, if true then continue, if false then they can call into `transfer` function
@@ -377,8 +391,8 @@
         (update-primary-name-owner id owner)
         ;; Update primary name if needed for recipient
         (update-primary-name-recipient id recipient)
-        ;; Update the name properties with the new owner and reset the zonefile hash.
-        (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
+        ;; Update the name properties with the new owner
+        (map-set name-properties name-and-namespace (merge name-props {owner: recipient}))
         ;; Execute the NFT transfer.
         (nft-transfer? BNS-V2 id nft-current-owner recipient)
     )
@@ -587,7 +601,6 @@
                 )
             )
         )
-
     )
 )
 
@@ -611,7 +624,7 @@
         ;; Record the preorder details in the `namespace-preorders` map
         (map-set namespace-preorders
             { hashed-salted-namespace: hashed-salted-namespace, buyer: contract-caller }
-            { created-at: burn-block-height, stx-burned: stx-to-burn }
+            { created-at: burn-block-height, stx-burned: stx-to-burn, claimed: false }
         )
         ;; Sets the map with just the hashed-salted-namespace as the key
         (map-set namespace-single-preorder hashed-salted-namespace true)
@@ -663,7 +676,7 @@
     (let 
         (
             ;; Generate the hashed, salted namespace identifier to match with its preorder.
-            (hashed-salted-namespace (hash160 (concat namespace namespace-salt)))
+            (hashed-salted-namespace (hash160 (concat (concat namespace 0x2e) namespace-salt)))
             ;; Define the price function based on the provided parameters.
             (price-function  
                 {
@@ -774,13 +787,12 @@
 )
 
 ;; @desc Public function `name-import` allows the insertion of names into a namespace that has been revealed but not yet launched.
-;; This facilitates pre-populating the namespace with specific names, assigning owners and zone file hashes to them.
+;; This facilitates pre-populating the namespace with specific names, assigning owners.
 ;; @param: namespace (buff 20): The namespace into which the name is being imported.
 ;; @param: name (buff 48): The name being imported into the namespace.
 ;; @param: beneficiary (principal): The principal who will own the imported name.
-;; @param: zonefile-hash (buff 20): The hash of the zone file associated with the imported name.
 ;; @param: stx-burn (uint): The amount of STX tokens to be burned as part of the import process.
-(define-public (name-import (namespace (buff 20)) (name (buff 48)) (beneficiary principal) (zonefile-hash (buff 20)))
+(define-public (name-import (namespace (buff 20)) (name (buff 48)) (beneficiary principal))
     (let 
         (
             ;; Fetch properties of the specified namespace.
@@ -810,8 +822,6 @@
             {
                 registered-at: none,
                 imported-at: (some burn-block-height),
-                revoked: false,
-                zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: none,
                 preordered-by: none,
                 renewal-height: u0,
@@ -934,10 +944,9 @@
 ;; Warning: this *is* snipeable, for a slower but un-snipeable claim, use the pre-order & register functions
 ;; @param: name (buff 48): The name being claimed.
 ;; @param: namespace (buff 20): The namespace under which the name is being claimed.
-;; @param: zonefile-hash (buff 20): The hash of the zone file associated with the name.
 ;; @param: stx-burn (uint): The amount of STX to burn for the claim.
 ;; @param: send-to (principal): The principal to whom the name will be sent.
-(define-public (name-claim-fast (name (buff 48)) (namespace (buff 20)) (zonefile-hash (buff 20)) (send-to principal)) 
+(define-public (name-claim-fast (name (buff 48)) (namespace (buff 20)) (send-to principal)) 
     (let 
         (
             ;; Retrieve namespace properties.
@@ -983,15 +992,12 @@
                 name: name, namespace: namespace
             } 
             {
-               
                 registered-at: (some (+ burn-block-height u1)),
                 imported-at: none,
-                revoked: false,
-                zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: none,
                 preordered-by: none,
                 ;; Updated this to actually start with the registered-at date/block, and also to be u0 if it is a managed namespace
-                renewal-height: (if (is-some current-namespace-manager)
+                renewal-height: (if (is-eq (get lifetime namespace-props) u0)
                                     u0
                                     (+ (get lifetime namespace-props) burn-block-height u1)
                                 ),
@@ -1051,8 +1057,7 @@
 ;; @param: namespace (buff 20): The namespace to which the name belongs.
 ;; @param: name (buff 48): The name to be registered.
 ;; @param: salt (buff 20): The salt used during the preorder.
-;; @param: zonefile-hash (buff 20): The hash of the zone file.
-(define-public (name-register (namespace (buff 20)) (name (buff 48)) (salt (buff 20)) (zonefile-hash (buff 20)))
+(define-public (name-register (namespace (buff 20)) (name (buff 48)) (salt (buff 20)))
     (let 
         (
             ;; Generate a unique identifier for the name by hashing the fully-qualified name with salt
@@ -1088,9 +1093,9 @@
         (match (map-get? name-properties {name: name, namespace: namespace})
             name-props-exist
             ;; If the name exists 
-            (handle-existing-name name-props-exist hashed-salted-fqn (get created-at preorder) stx-burned name namespace zonefile-hash (get lifetime namespace-props))
+            (handle-existing-name name-props-exist hashed-salted-fqn (get created-at preorder) stx-burned name namespace (get lifetime namespace-props))
             ;; If the name does not exist
-            (register-new-name (+ (var-get bns-index) u1) hashed-salted-fqn zonefile-hash stx-burned name namespace (get lifetime namespace-props))    
+            (register-new-name (+ (var-get bns-index) u1) hashed-salted-fqn stx-burned name namespace (get lifetime namespace-props))    
         )
     )
 )
@@ -1150,9 +1155,8 @@
 ;; @param: namespace (buff 20): The namespace for the name.
 ;; @param: name (buff 48): The name being registered.
 ;; @param: salt (buff 20): The salt used in hashing.
-;; @param: zonefile-hash (buff 20): The hash of the zone file.
 ;; @param: send-to (principal): The principal to whom the name will be registered.
-(define-public (mng-name-register (namespace (buff 20)) (name (buff 48)) (salt (buff 20)) (zonefile-hash (buff 20)) (send-to principal))
+(define-public (mng-name-register (namespace (buff 20)) (name (buff 48)) (salt (buff 20)) (send-to principal))
     (let 
         (
             ;; Generates the hashed, salted fully-qualified name.
@@ -1187,8 +1191,6 @@
             {
                 registered-at: (some burn-block-height),
                 imported-at: none,
-                revoked: false,
-                zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: (some hashed-salted-fqn),
                 preordered-by: (some send-to),
                 ;; Updated this to be u0, so that renewals are handled through the namespace manager 
@@ -1221,97 +1223,11 @@
     )
 )
 
-;; @desc Public function `update-zonefile-hash` for changing the zone file hash associated with a name.
-;; This operation is typically used to update the zone file contents of a name, such as when deploying a new Gaia hub.
-;; @param: namespace (buff 20): The namespace of the name whose zone file hash is being updated.
-;; @param: name (buff 48): The name whose zone file hash is being updated.
-;; @param: zonefile-hash (buff 20): The new zone file hash to be associated with the name.
-(define-public (update-zonefile-hash (namespace (buff 20)) (name (buff 48)) (zonefile-hash (buff 20)))
-    (let 
-        (
-            ;; Get index from name and namespace
-            (index-id (unwrap! (get-id-from-bns name namespace) ERR-NO-NAME))
-            ;; Get the owner
-            (owner (unwrap! (nft-get-owner? BNS-V2 index-id) ERR-UNWRAP))
-            ;; Get name props
-            (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-NO-NAME))
-            (renewal (get renewal-height name-props))
-            (current-zone-file (get zonefile-hash name-props))
-            (revoked (get revoked name-props))
-        )
-        ;; Check if migration is complete
-        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
-        ;; Assert we are actually updating the zonefile
-        (asserts! (not (is-eq (some zonefile-hash) current-zone-file)) ERR-OPERATION-UNAUTHORIZED)
-        ;; Asserts the name has not been revoked.
-        (asserts! (not revoked) ERR-NAME-REVOKED)
-        ;; Zonefile updates should happen throught the namespace manager contract
-        ;; Check if there is a namespace manager
-        (match (get namespace-manager (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            manager 
-            ;; If there is then check that the contract-caller is the manager
-            (asserts! (is-eq manager contract-caller) ERR-NOT-AUTHORIZED)
-            ;; If there isn't assert that the owner is the contract-caller
-            (asserts! (is-eq (some contract-caller) (nft-get-owner? BNS-V2 index-id)) ERR-NOT-AUTHORIZED)
-        )
-        ;; Assert that the name is in valid time or grace period
-        (asserts! (<= burn-block-height (+ renewal NAME-GRACE-PERIOD-DURATION)) ERR-OPERATION-UNAUTHORIZED)
-        ;; Update the zonefile hash
-        (map-set name-properties {name: name, namespace: namespace}
-            (merge
-                name-props
-                {zonefile-hash: (some zonefile-hash)}
-            )
-        )
-        ;; Confirm successful completion of the zone file hash update.
-        (ok true)
-    )
-)
-
-;; @desc Public function `name-revoke` for making a name unresolvable.
-;; @param: namespace (buff 20): The namespace of the name to be revoked.
-;; @param: name (buff 48): The actual name to be revoked.
-(define-public (name-revoke (namespace (buff 20)) (name (buff 48)))
-    (let 
-        (
-            ;; Retrieve the properties of the namespace to ensure it exists and is valid for registration.
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            (namespace-manager (get namespace-manager namespace-props))
-            ;; retreive the name props
-            (name-props (unwrap! (map-get? name-properties {name: name, namespace: namespace}) ERR-NO-NAME))
-        )
-        ;; Check if migration is complete
-        (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
-        ;; Ensure the caller is authorized to revoke the name.
-        (asserts! 
-            (match namespace-manager 
-                manager 
-                (is-eq contract-caller manager)
-                (is-eq contract-caller (get namespace-import namespace-props))
-            ) 
-            ERR-NOT-AUTHORIZED
-        )
-        ;; Mark the name as revoked.
-        (map-set name-properties {name: name, namespace: namespace}
-            (merge 
-                name-props
-                {
-                    revoked: true,
-                    zonefile-hash: none,
-                } 
-            )
-        )
-        ;; Return a success response indicating the name has been successfully revoked.
-        (ok true)
-    )
-)
-
 ;; Public function `name-renewal` for renewing ownership of a name.
 ;; @param: namespace (buff 20): The namespace of the name to be renewed.
 ;; @param: name (buff 48): The actual name to be renewed.
 ;; @param: stx-to-burn (uint): The amount of STX tokens to be burned for renewal.
-;; @param: zonefile-hash (optional (buff 20)): The new zone file hash to be associated with the name.
-(define-public (name-renewal (namespace (buff 20)) (name (buff 48)) (zonefile-hash (optional (buff 20))))
+(define-public (name-renewal (namespace (buff 20)) (name (buff 48)))
     (let 
         (
             ;; Get the unique identifier for this name
@@ -1339,8 +1255,6 @@
         (asserts! (is-none namespace-manager) ERR-NAMESPACE-HAS-MANAGER)
         ;; Check if renewals are required for this namespace
         (asserts! (> lifetime u0) ERR-LIFETIME-EQUAL-0)
-        ;; Verify that the name has not been revoked
-        (asserts! (not (get revoked name-props)) ERR-NAME-REVOKED) 
         ;; Handle renewal based on whether it's within the grace period or not
         (if (< burn-block-height (+ renewal-height NAME-GRACE-PERIOD-DURATION))   
             (try! (handle-renewal-in-grace-period name namespace name-props owner lifetime new-renewal-height))
@@ -1350,11 +1264,6 @@
         (try! (stx-burn? (try! (compute-name-price name (get price-function namespace-props))) contract-caller))
         ;; update the new stx-burn to the one paid in renewal
         (map-set name-properties { name: name, namespace: namespace } (merge (unwrap-panic (map-get? name-properties { name: name, namespace: namespace })) {stx-burn: (try! (compute-name-price name (get price-function namespace-props)))}))
-        ;; Update the zonefile hash if provided
-        (match zonefile-hash
-            zonefile (try! (update-zonefile-hash namespace name zonefile))
-            false
-        )
         ;; Return success
         (ok true)
     )
@@ -1368,8 +1277,6 @@
         {
             registered-at: (optional uint), 
             imported-at: (optional uint), 
-            revoked: bool, 
-            zonefile-hash: (optional (buff 20)), 
             hashed-salted-fqn-preorder: (optional (buff 20)), 
             preordered-by: (optional principal), 
             renewal-height: uint, 
@@ -1409,8 +1316,6 @@
         {
             registered-at: (optional uint), 
             imported-at: (optional uint), 
-            revoked: bool, 
-            zonefile-hash: (optional (buff 20)), 
             hashed-salted-fqn-preorder: (optional (buff 20)), 
             preordered-by: (optional principal), 
             renewal-height: uint, 
@@ -1635,9 +1540,8 @@
         (update-primary-name-owner id owner)
         ;; Update primary name if needed for recipient
         (update-primary-name-recipient id recipient)
-        ;; Updates the name properties map with the new information.
-        ;; Maintains existing properties but sets the zonefile hash to none for a clean slate and updates the owner to the recipient.
-        (map-set name-properties name-and-namespace (merge name-props {zonefile-hash: none, owner: recipient}))
+        ;; Updates the owner to the recipient.
+        (map-set name-properties name-and-namespace (merge name-props {owner: recipient}))
         ;; Executes the NFT transfer from the current owner to the recipient.
         (nft-transfer? BNS-V2 id owner recipient)
     )
@@ -1672,8 +1576,6 @@
         {
             registered-at: (optional uint), 
             imported-at: (optional uint), 
-            revoked: bool, 
-            zonefile-hash: (optional (buff 20)), 
             hashed-salted-fqn-preorder: (optional (buff 20)), 
             preordered-by: (optional principal), 
             renewal-height: uint, 
@@ -1685,7 +1587,6 @@
     (contract-caller-preorder-height uint) 
     (stx-burned uint) (name (buff 48)) 
     (namespace (buff 20)) 
-    (zonefile-hash (buff 20))
     (renewal uint)
 )
     (let 
@@ -1704,11 +1605,23 @@
             (asserts! (> (unwrap-panic (get registered-at name-props)) contract-caller-preorder-height) ERR-FAST-MINTED-BEFORE)
         )
         ;; Update the name properties with the new preorder information since it is the best preorder
-        (map-set name-properties {name: name, namespace: namespace} (merge name-props {hashed-salted-fqn-preorder: (some hashed-salted-fqn), preordered-by: (some contract-caller), registered-at: (some burn-block-height), renewal-height: (+ burn-block-height renewal), stx-burn: stx-burned}))
+        (map-set name-properties {name: name, namespace: namespace} 
+            (merge name-props 
+                {
+                    hashed-salted-fqn-preorder: (some hashed-salted-fqn), 
+                    preordered-by: (some contract-caller), 
+                    registered-at: (some burn-block-height), 
+                    renewal-height: (if (is-eq renewal u0)
+                                        u0
+                                        (+ burn-block-height renewal)
+                                    ), 
+                    stx-burn: stx-burned
+                }
+            )
+        )
         (try! (as-contract (stx-transfer? stx-burned .BNS-V2 (get owner name-props))))
         ;; Transfer ownership of the name to the new owner
         (try! (purchase-transfer name-index (get owner name-props) contract-caller))
-        (try! (update-zonefile-hash namespace name zonefile-hash))
         ;; Log the name transfer event
         (print {topic: "new-name", owner: contract-caller, name: {name: name, namespace: namespace}, id: name-index})
         ;; Return the name index
@@ -1716,7 +1629,7 @@
     )
 )
 
-(define-private (register-new-name (id-to-be-minted uint) (hashed-salted-fqn (buff 20)) (zonefile-hash (buff 20)) (stx-burned uint) (name (buff 48)) (namespace (buff 20)) (lifetime uint))
+(define-private (register-new-name (id-to-be-minted uint) (hashed-salted-fqn (buff 20)) (stx-burned uint) (name (buff 48)) (namespace (buff 20)) (lifetime uint))
     (begin
         ;; Set the properties for the newly registered name
         (map-set name-properties
@@ -1724,11 +1637,12 @@
             {
                 registered-at: (some burn-block-height),
                 imported-at: none,
-                revoked: false,
-                zonefile-hash: (some zonefile-hash),
                 hashed-salted-fqn-preorder: (some hashed-salted-fqn),
                 preordered-by: (some contract-caller),
-                renewal-height: (+ lifetime burn-block-height),
+                renewal-height: (if (is-eq lifetime u0)
+                                    u0
+                                    (+ burn-block-height lifetime)
+                                ),
                 stx-burn: stx-burned,
                 owner: contract-caller,
             }
@@ -1768,7 +1682,7 @@
         ;; Check if migration is complete
         (asserts! (not (var-get migration-complete)) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the contract-caller is the airdrop contract.
-        (asserts! (is-eq .migration-airdrop contract-caller) ERR-OPERATION-UNAUTHORIZED)
+        (asserts! (is-eq .ma-test-1 contract-caller) ERR-OPERATION-UNAUTHORIZED)
         ;; Ensure the namespace consists of valid characters only.
         (asserts! (not (has-invalid-chars namespace)) ERR-CHARSET-INVALID)
         ;; Check that the namespace is available for reveal.
@@ -1797,8 +1711,6 @@
     (namespace (buff 20))
     (imported-at (optional uint)) 
     (registered-at (optional uint)) 
-    (revoked-at bool) 
-    (zonefile-hash (optional (buff 20)))
     (renewal-height uint)
     (owner principal)
 )
@@ -1812,7 +1724,7 @@
         ;; Check if migration is complete
         (asserts! (not (var-get migration-complete)) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the contract-caller is the airdrop contract.
-        (asserts! (is-eq .migration-airdrop contract-caller) ERR-OPERATION-UNAUTHORIZED)
+        (asserts! (is-eq .ma-test-1 contract-caller) ERR-OPERATION-UNAUTHORIZED)
         ;; Ensure the name does not exist
         (asserts! (is-none (map-get? name-to-index {name: name, namespace: namespace})) ERR-NAME-NOT-AVAILABLE)
         ;; Set all properties
@@ -1822,9 +1734,6 @@
             {
                 registered-at: registered-at,
                 imported-at: imported-at,
-                ;; set to true or false
-                revoked-at: revoked-at,
-                zonefile-hash: zonefile-hash,
                 ;; Set to none new property
                 hashed-salted-fqn-preorder: none,
                 ;; Set to none new property
