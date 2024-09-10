@@ -21,7 +21,6 @@ import {
   ERR_NAME_NOT_AVAILABLE,
   ERR_NAMESPACE_BLANK,
   ERR_NAME_BLANK,
-  ERR_NAME_REVOKED,
   ERR_NAME_PREORDERED_BEFORE_NAMESPACE_LAUNCH,
   ERR_NAMESPACE_HAS_MANAGER,
   ERR_OVERFLOW,
@@ -44,8 +43,6 @@ import {
   name2Buff,
   invalidNameBuff,
   invalidNamespaceBuff,
-  zonefileBuff,
-  zonefile2Buff,
   namespaceBuff,
   name1BuffSalt,
   name1BuffDifferentSalt,
@@ -72,9 +69,7 @@ import {
   callTransferName,
   callTurnOffManagerTransfers,
   callRenewName,
-  callRevokeName,
   callImportName,
-  callUpdateZonefileHash,
   callClaimPreorder,
   callNamespaceFreezePrice,
   callNamespaceUpdatePrice,
@@ -136,11 +131,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -161,11 +155,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -231,11 +224,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -249,11 +241,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address3,
     });
@@ -276,11 +267,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5007,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -296,11 +286,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5007,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -322,11 +311,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -340,11 +328,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address3,
     });
@@ -362,11 +349,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -380,11 +366,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -398,11 +383,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address2,
     });
@@ -423,11 +407,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -442,11 +425,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -461,11 +443,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -485,34 +466,24 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
     // Check Primary Names
     callGetPrimaryName(address1, 1);
     callGetPrimaryName(address3, null);
-    callFastClaimName(
-      name2Buff,
-      namespaceBuff,
-      zonefile2Buff,
-      address3,
-      address3,
-      2,
-      false
-    );
+    callFastClaimName(name2Buff, namespaceBuff, address3, address3, 2, false);
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 10,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5010,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -530,11 +501,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -554,34 +524,24 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
     // Check Primary Names
     callGetPrimaryName(address1, 1);
     callGetPrimaryName(address3, null);
-    callFastClaimName(
-      name2Buff,
-      namespaceBuff,
-      zonefile2Buff,
-      address1,
-      address1,
-      2,
-      false
-    );
+    callFastClaimName(name2Buff, namespaceBuff, address1, address1, 2, false);
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 10,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5010,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -601,11 +561,11 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 10,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
+
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5010,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -643,25 +603,16 @@ describe("TRANSFER FUNCTION", () => {
       true,
       false
     );
-    callImportName(
-      namespaceBuff,
-      name1Buff,
-      zonefileBuff,
-      address1,
-      address1,
-      true,
-      false
-    );
+    callImportName(namespaceBuff, name1Buff, address1, address1, true, false);
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -692,11 +643,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -712,11 +662,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -746,11 +695,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5007,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -772,11 +720,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5007,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -794,11 +741,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -820,11 +766,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -863,26 +808,17 @@ describe("TRANSFER FUNCTION", () => {
       false
     );
 
-    callImportName(
-      namespaceBuff,
-      name1Buff,
-      zonefileBuff,
-      address1,
-      address1,
-      true,
-      false
-    );
+    callImportName(namespaceBuff, name1Buff, address1, address1, true, false);
 
     // Check the initial state
     callGetOwner(1, address1);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -919,65 +855,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 10,
-      owner: address1,
-    });
-  });
 
-  it("This should block transfers of revoked names", () => {
-    callFlipSwitch();
-    // Register a name
-    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-
-    // Check the initial state
-    callGetOwner(1, address1);
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 8,
-      "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "renewal-height": 5008,
-      "stx-burn": 10,
-      owner: address1,
-    });
-
-    // Revoke the name
-    callRevokeName(namespaceBuff, name1Buff, address1, true, false);
-
-    // Check the state after revocation
-    callGetOwner(1, address1);
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 8,
-      "imported-at": null,
-      revoked: true,
-      "zonefile-hash": null,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "renewal-height": 5008,
-      "stx-burn": 10,
-      owner: address1,
-    });
-
-    // Attempt to transfer the revoked name (should fail)
-    callTransferName(1, address1, address3, address1, ERR_NAME_REVOKED, true);
-
-    // Check that the state hasn't changed
-    callGetOwner(1, address1);
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 8,
-      "imported-at": null,
-      revoked: true,
-      "zonefile-hash": null,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "renewal-height": 5008,
       "stx-burn": 10,
       owner: address1,
     });
@@ -992,11 +873,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -1018,11 +898,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -1042,11 +921,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1068,11 +946,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1092,11 +969,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1111,11 +987,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1137,11 +1012,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1163,11 +1037,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1187,11 +1060,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5007,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -1206,11 +1078,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5007,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -1228,11 +1099,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -1254,11 +1124,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -1288,11 +1157,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5007,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -1307,11 +1175,10 @@ describe("TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5007,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -1331,11 +1198,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1349,11 +1215,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address3,
     });
@@ -1370,11 +1235,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1388,11 +1252,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address3,
     });
@@ -1432,7 +1295,6 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callImportName(
       namespaceBuff,
       name1Buff,
-      zonefileBuff,
       address1,
       managerAddress,
       true,
@@ -1445,11 +1307,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1463,11 +1324,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address3,
     });
@@ -1483,11 +1343,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1504,11 +1363,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address3,
     });
@@ -1524,11 +1382,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address2,
     });
@@ -1549,11 +1406,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address3,
     });
@@ -1568,11 +1424,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1603,11 +1458,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1645,7 +1499,6 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callImportName(
       namespaceBuff,
       name1Buff,
-      zonefileBuff,
       address1,
       managerAddress,
       true,
@@ -1657,11 +1510,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1681,64 +1533,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
-      "stx-burn": 0,
-      owner: address1,
-    });
-  });
 
-  it("This should fail to transfer a revoked name", () => {
-    callFlipSwitch();
-    successfullyTwoStepRegisterANameInAManagedNamespace();
-    callRevokeName(namespaceBuff, name1Buff, managerAddress, true, false);
-    callMngTransfer(
-      1,
-      address1,
-      address3,
-      managerAddress,
-      ERR_NAME_REVOKED,
-      true
-    );
-    // Check state hasn't changed (except for revocation)
-    callGetOwner(1, address1);
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: true,
-      "zonefile-hash": null,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "renewal-height": 0,
-      "stx-burn": 0,
-      owner: address1,
-    });
-  });
-
-  it("This should fail to transfer when owner and recipient are the same", () => {
-    callFlipSwitch();
-    successfullyTwoStepRegisterANameInAManagedNamespace();
-    callMngTransfer(
-      1,
-      address1,
-      address1,
-      managerAddress,
-      ERR_OPERATION_UNAUTHORIZED,
-      true
-    );
-    // Check state hasn't changed
-    callGetOwner(1, address1);
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "renewal-height": 0,
       "stx-burn": 0,
       owner: address1,
     });
@@ -1762,11 +1560,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1781,11 +1578,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1801,11 +1597,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1827,11 +1622,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -1856,11 +1650,10 @@ describe("MNG-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -2124,11 +1917,10 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -2149,11 +1941,10 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -2178,11 +1969,10 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address3,
     });
@@ -2208,11 +1998,10 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5007,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -2238,11 +2027,10 @@ describe("BUY-IN-USTX-FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": null,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address3,
     });
@@ -2349,7 +2137,6 @@ describe("SET-PRIMARY-NAME FUNCTION", () => {
     callFastClaimName(
       name2Buff,
       namespaceBuff,
-      zonefileBuff,
       address3,
       managerAddress,
       2,
@@ -2373,11 +2160,10 @@ describe("MNG-BURN FUNCTIONS", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -2411,11 +2197,10 @@ describe("MNG-BURN FUNCTIONS", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -2444,11 +2229,10 @@ describe("MNG-BURN FUNCTIONS", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -2460,11 +2244,10 @@ describe("MNG-BURN FUNCTIONS", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -2480,11 +2263,10 @@ describe("MNG-BURN FUNCTIONS", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -2497,11 +2279,10 @@ describe("MNG-BURN FUNCTIONS", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -2696,7 +2477,6 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
       namespaceBuff,
       name2Buff,
       saltBuff,
-      zonefileBuff,
       address3,
       address2,
       2,
@@ -2708,11 +2488,10 @@ describe("MNG-MANAGER-TRANSFER FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 11,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name2BuffSalt,
       "preordered-by": address3,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address3,
     });
@@ -3973,15 +3752,7 @@ describe("NAME-IMPORT FUNCTION", () => {
     callGetOwner(1, null);
     callGetPrimaryName(address3, null);
 
-    callImportName(
-      namespaceBuff,
-      name1Buff,
-      zonefileBuff,
-      address3,
-      address1,
-      true,
-      false
-    );
+    callImportName(namespaceBuff, name1Buff, address3, address1, true, false);
 
     callGetRenewalHeight(1, ERR_NAMESPACE_NOT_LAUNCHED, true);
 
@@ -3989,11 +3760,10 @@ describe("NAME-IMPORT FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -4031,47 +3801,29 @@ describe("NAME-IMPORT FUNCTION", () => {
     );
 
     // Import first name
-    callImportName(
-      namespaceBuff,
-      name1Buff,
-      zonefileBuff,
-      address3,
-      address1,
-      true,
-      false
-    );
+    callImportName(namespaceBuff, name1Buff, address3, address1, true, false);
 
     // Import second name
-    callImportName(
-      namespaceBuff,
-      name2Buff,
-      zonefileBuff,
-      address3,
-      address1,
-      true,
-      false
-    );
+    callImportName(namespaceBuff, name2Buff, address3, address1, true, false);
 
     // Check final state
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 10,
       owner: address3,
     });
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 6,
-      "revoked-at": false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -4085,7 +3837,6 @@ describe("NAME-IMPORT FUNCTION", () => {
     callImportName(
       namespaceBuff,
       name1Buff,
-      zonefileBuff,
       address3,
       address1,
       ERR_NAMESPACE_NOT_FOUND,
@@ -4123,21 +3874,12 @@ describe("NAME-IMPORT FUNCTION", () => {
     );
 
     // Import first name
-    callImportName(
-      namespaceBuff,
-      name1Buff,
-      zonefileBuff,
-      address3,
-      address1,
-      true,
-      false
-    );
+    callImportName(namespaceBuff, name1Buff, address3, address1, true, false);
 
     // Import second name
     callImportName(
       namespaceBuff,
       name1Buff,
-      zonefileBuff,
       address3,
       address1,
       ERR_NAME_NOT_AVAILABLE,
@@ -4148,11 +3890,10 @@ describe("NAME-IMPORT FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,  
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -4195,7 +3936,6 @@ describe("NAME-IMPORT FUNCTION", () => {
     callImportName(
       namespaceBuff,
       invalidNameBuff,
-      zonefileBuff,
       address3,
       address1,
       ERR_CHARSET_INVALID,
@@ -4241,7 +3981,6 @@ describe("NAME-IMPORT FUNCTION", () => {
     callImportName(
       namespaceBuff,
       name1Buff,
-      zonefileBuff,
       address3,
       address3,
       ERR_OPERATION_UNAUTHORIZED,
@@ -4305,7 +4044,6 @@ describe("NAME-IMPORT FUNCTION", () => {
     callImportName(
       namespaceBuff,
       name1Buff,
-      zonefileBuff,
       address3,
       address1,
       ERR_NAMESPACE_ALREADY_LAUNCHED,
@@ -4352,7 +4090,6 @@ describe("NAME-IMPORT FUNCTION", () => {
     callImportName(
       namespaceBuff,
       name1Buff,
-      zonefileBuff,
       address3,
       address1,
       ERR_NAMESPACE_PREORDER_LAUNCHABILITY_EXPIRED,
@@ -5177,11 +4914,10 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5007,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -5196,11 +4932,10 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -5211,36 +4946,26 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
   it("This should successfully fast mint two names on a launched namespace without a manager", () => {
     callFlipSwitch();
     successfullyFastClaimANameInAnUnmanagedNamespace();
-    callFastClaimName(
-      name2Buff,
-      namespaceBuff,
-      zonefile2Buff,
-      address1,
-      address1,
-      2,
-      false
-    );
+    callFastClaimName(name2Buff, namespaceBuff, address1, address1, 2, false);
 
     // Check final state
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5007,
+
       "stx-burn": 10,
       owner: address1,
     });
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -5255,7 +4980,6 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callFastClaimName(
       name2Buff,
       namespaceBuff,
-      zonefile2Buff,
       address1,
       managerAddress,
       2,
@@ -5266,22 +4990,20 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -5295,7 +5017,6 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callFastClaimName(
       name1Buff,
       namespaceBuff,
-      zonefileBuff,
       address1,
       address1,
       ERR_NAMESPACE_NOT_FOUND,
@@ -5312,7 +5033,6 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callFastClaimName(
       name1Buff,
       namespaceBuff,
-      zonefileBuff,
       address1,
       managerAddress,
       ERR_NAME_NOT_AVAILABLE,
@@ -5323,11 +5043,10 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -5367,7 +5086,6 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callFastClaimName(
       invalidNameBuff,
       namespaceBuff,
-      zonefileBuff,
       address1,
       address1,
       ERR_CHARSET_INVALID,
@@ -5411,7 +5129,6 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callFastClaimName(
       name1Buff,
       namespaceBuff,
-      zonefileBuff,
       address1,
       address1,
       ERR_NAMESPACE_NOT_LAUNCHED,
@@ -5456,7 +5173,6 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callFastClaimName(
       name1Buff,
       namespaceBuff,
-      zonefileBuff,
       address1,
       address1,
       ERR_NOT_AUTHORIZED,
@@ -5501,7 +5217,6 @@ describe("NAME-CLAIM-FAST FUNCTION", () => {
     callFastClaimName(
       name1Buff,
       namespaceBuff,
-      zonefileBuff,
       address3,
       address1,
       ERR_NOT_AUTHORIZED,
@@ -5814,8 +5529,6 @@ describe("NAME-REGISTER FUNCTION", () => {
       name1Buff,
       // The salt used
       saltBuff,
-      // The zonefile
-      zonefileBuff,
       // Who is calling the function, should be the same as the one that preordered the name
       address3,
       // The id minted, in this case this is the first NFT/Name
@@ -5862,16 +5575,13 @@ describe("NAME-REGISTER FUNCTION", () => {
       "registered-at": 8,
       // It was not imported
       "imported-at": null,
-      // Has not been revoked
-      revoked: false,
-      // It has the provided zone file when registering
-      "zonefile-hash": zonefileBuff,
       // It has the information from the preorder
       "hashed-salted-fqn-preorder": name1BuffSalt,
       // It has the buyer of the preorder
       "preordered-by": address3,
       // It has the renewal height which is the time it was registered + lifetime of the namespace, in this case 5000
       "renewal-height": 5008,
+
       // It has the amount of stx that was burnt to acquire the name
       "stx-burn": 10,
       // It has the current owner of the name
@@ -5910,15 +5620,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callLaunchNamespace(namespaceBuff, address1, true, false);
     callPreorderName(name1BuffSalt, 10, address3, 150, false);
     simnet.mineEmptyBlock();
-    callRegisterName(
-      namespaceBuff,
-      name1Buff,
-      saltBuff,
-      zonefileBuff,
-      address3,
-      1,
-      false
-    );
+    callRegisterName(namespaceBuff, name1Buff, saltBuff, address3, 1, false);
     // State Checking
     callGetBnsFromId(1, name1Buff, namespaceBuff);
     callGetIdFromBns(name1Buff, namespaceBuff, 1);
@@ -5928,11 +5630,10 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address3,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -5966,15 +5667,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callLaunchNamespace(namespaceBuff2, address1, true, false);
     callPreorderName(name1BuffSaltDiff, 10, address3, 157, false);
     simnet.mineEmptyBlock();
-    callRegisterName(
-      namespaceBuff2,
-      name1Buff,
-      saltBuff,
-      zonefile2Buff,
-      address3,
-      2,
-      false
-    );
+    callRegisterName(namespaceBuff2, name1Buff, saltBuff, address3, 2, false);
     // State Checking
     callGetBnsFromId(2, name1Buff, namespaceBuff2);
     callGetIdFromBns(name1Buff, namespaceBuff2, 2);
@@ -5984,11 +5677,10 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff2, {
       "registered-at": 15,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefile2Buff,
       "hashed-salted-fqn-preorder": name1BuffSaltDiff,
       "preordered-by": address3,
       "renewal-height": 5015,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -6033,15 +5725,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Block 7
     callPreorderName(name1BuffDifferentSalt, 10, address2, 151, false);
     // Block 8
-    callRegisterName(
-      namespaceBuff,
-      name1Buff,
-      saltBuff,
-      zonefileBuff,
-      address3,
-      1,
-      false
-    );
+    callRegisterName(namespaceBuff, name1Buff, saltBuff, address3, 1, false);
     // State Checking
     callGetBnsFromId(1, name1Buff, namespaceBuff);
     callGetIdFromBns(name1Buff, namespaceBuff, 1);
@@ -6050,11 +5734,10 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address3,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -6095,15 +5778,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callPreorderName(name1BuffSalt, 10, address3, 151, false);
     simnet.mineEmptyBlock();
     // Address 3 registers first and gets the name
-    callRegisterName(
-      namespaceBuff,
-      name1Buff,
-      saltBuff,
-      zonefileBuff,
-      address3,
-      1,
-      false
-    );
+    callRegisterName(namespaceBuff, name1Buff, saltBuff, address3, 1, false);
     // State Checking, right now everything should map to address 3
     callGetBnsFromId(1, name1Buff, namespaceBuff);
     callGetIdFromBns(name1Buff, namespaceBuff, 1);
@@ -6112,13 +5787,12 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 9,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       // The hash used for the preorder
       "hashed-salted-fqn-preorder": name1BuffSalt,
       // The address of the preorder
       "preordered-by": address3,
       "renewal-height": 5009,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -6128,7 +5802,6 @@ describe("NAME-REGISTER FUNCTION", () => {
       name1Buff,
       // Different salt used
       saltBuff2,
-      zonefile2Buff,
       address1,
       1,
       false
@@ -6145,15 +5818,13 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Updated registered at date, to start with the rightful owner
       "registered-at": 10,
       "imported-at": null,
-      revoked: false,
-      // Updated to the zonefile of the new owner
-      "zonefile-hash": zonefile2Buff,
       // Updated to the hash used by the new owner
       "hashed-salted-fqn-preorder": name1BuffDifferentSalt,
       // Updated to the address that created the preorder
       "preordered-by": address1,
       // Updated renewal date, to start with the rightful owner
       "renewal-height": 5010,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -6191,15 +5862,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     // Address 1 preorderes
     callPreorderName(name1BuffSalt, 10, address1, 150, false);
     // Address 3 fast claims
-    callFastClaimName(
-      name1Buff,
-      namespaceBuff,
-      zonefileBuff,
-      address3,
-      address3,
-      1,
-      false
-    );
+    callFastClaimName(name1Buff, namespaceBuff, address3, address3, 1, false);
     // State Checking, right now everything should map to address 3
     callGetBnsFromId(1, name1Buff, namespaceBuff);
     callGetIdFromBns(name1Buff, namespaceBuff, 1);
@@ -6208,27 +5871,18 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       // No hash since no preorder
       "hashed-salted-fqn-preorder": null,
       // No preordered by since no preorder
       "preordered-by": null,
       "renewal-height": 5008,
+
       // The amount address 3 burnt
       "stx-burn": 10,
       owner: address3,
     });
     // Then address 1 registers the name
-    callRegisterName(
-      namespaceBuff,
-      name1Buff,
-      saltBuff,
-      zonefile2Buff,
-      address1,
-      1,
-      false
-    );
+    callRegisterName(namespaceBuff, name1Buff, saltBuff, address1, 1, false);
     // State Checking, no everything should map to address 1
     callGetBnsFromId(1, name1Buff, namespaceBuff);
     callGetIdFromBns(name1Buff, namespaceBuff, 1);
@@ -6241,15 +5895,13 @@ describe("NAME-REGISTER FUNCTION", () => {
       // Updated registered at date, to start with the rightful owner
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      // Updated to the zonefile of the new owner
-      "zonefile-hash": zonefile2Buff,
       // Updated to the hash used by the new owner
       "hashed-salted-fqn-preorder": name1BuffSalt,
       // Updated to the address that created the preorder
       "preordered-by": address1,
       // Updated renewal date, to start with the rightful owner
       "renewal-height": 5008,
+
       // Updated to the amount burnt to register the name
       "stx-burn": 10,
       owner: address1,
@@ -6287,15 +5939,7 @@ describe("NAME-REGISTER FUNCTION", () => {
     callLaunchNamespace(namespaceBuff, address1, true, false);
     callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
-    callRegisterName(
-      namespaceBuff,
-      name1Buff,
-      saltBuff,
-      zonefileBuff,
-      address1,
-      1,
-      false
-    );
+    callRegisterName(namespaceBuff, name1Buff, saltBuff, address1, 1, false);
     // State Checking
     callGetBnsFromId(1, name1Buff, namespaceBuff);
     callGetIdFromBns(name1Buff, namespaceBuff, 1);
@@ -6304,25 +5948,16 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5008,
+
       "stx-burn": 10,
       owner: address1,
     });
     callPreorderName(name2BuffSalt, 10, address1, 153, false);
     simnet.mineEmptyBlock();
-    callRegisterName(
-      namespaceBuff,
-      name2Buff,
-      saltBuff,
-      zonefileBuff,
-      address1,
-      2,
-      false
-    );
+    callRegisterName(namespaceBuff, name2Buff, saltBuff, address1, 2, false);
     // State Checking
     callGetBnsFromId(2, name2Buff, namespaceBuff);
     callGetIdFromBns(name2Buff, namespaceBuff, 2);
@@ -6331,11 +5966,10 @@ describe("NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 11,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name2BuffSalt,
       "preordered-by": address1,
       "renewal-height": 5011,
+
       "stx-burn": 10,
       owner: address1,
     });
@@ -6374,7 +6008,6 @@ describe("NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       ERR_PREORDER_NOT_FOUND,
       true
@@ -6388,7 +6021,6 @@ describe("NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       ERR_NAMESPACE_NOT_FOUND,
       true
@@ -6429,7 +6061,6 @@ describe("NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       ERR_NOT_AUTHORIZED,
       true
@@ -6467,20 +6098,11 @@ describe("NAME-REGISTER FUNCTION", () => {
     callLaunchNamespace(namespaceBuff, address1, true, false);
     callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
+    callRegisterName(namespaceBuff, name1Buff, saltBuff, address1, 1, false);
     callRegisterName(
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
-      address1,
-      1,
-      false
-    );
-    callRegisterName(
-      namespaceBuff,
-      name1Buff,
-      saltBuff,
-      zonefileBuff,
       address1,
       ERR_OPERATION_UNAUTHORIZED,
       true
@@ -6518,20 +6140,11 @@ describe("NAME-REGISTER FUNCTION", () => {
     callLaunchNamespace(namespaceBuff, address1, true, false);
     callPreorderName(name1BuffDifferentSalt, 10, address3, 150, false);
     callPreorderName(name1BuffSalt, 10, address1, 151, false);
-    callRegisterName(
-      namespaceBuff,
-      name1Buff,
-      saltBuff2,
-      zonefileBuff,
-      address3,
-      1,
-      false
-    );
+    callRegisterName(namespaceBuff, name1Buff, saltBuff2, address3, 1, false);
     callRegisterName(
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       ERR_PREORDERED_BEFORE,
       true
@@ -6567,22 +6180,13 @@ describe("NAME-REGISTER FUNCTION", () => {
       false
     );
     callLaunchNamespace(namespaceBuff, address1, true, false);
-    callFastClaimName(
-      name1Buff,
-      namespaceBuff,
-      zonefileBuff,
-      address3,
-      address3,
-      1,
-      false
-    );
+    callFastClaimName(name1Buff, namespaceBuff, address3, address3, 1, false);
     callPreorderName(name1BuffSalt, 10, address1, 151, false);
     simnet.mineEmptyBlock();
     callRegisterName(
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       ERR_FAST_MINTED_BEFORE,
       true
@@ -6624,7 +6228,6 @@ describe("NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       ERR_PREORDER_CLAIMABILITY_EXPIRED,
       true
@@ -6666,7 +6269,6 @@ describe("NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       ERR_STX_BURNT_INSUFFICIENT,
       true
@@ -6742,15 +6344,7 @@ describe("CLAIM-PREORDER FUNCTION", () => {
     callLaunchNamespace(namespaceBuff, address1, true, false);
     callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
-    callRegisterName(
-      namespaceBuff,
-      name1Buff,
-      saltBuff,
-      zonefileBuff,
-      address1,
-      1,
-      false
-    );
+    callRegisterName(namespaceBuff, name1Buff, saltBuff, address1, 1, false);
     callClaimPreorder(
       name1BuffSalt,
       address1,
@@ -6970,7 +6564,6 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       managerAddress,
       1,
@@ -6984,11 +6577,10 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -7028,7 +6620,6 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       managerAddress,
       1,
@@ -7042,11 +6633,10 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 7,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -7055,7 +6645,6 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name2Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       managerAddress,
       2,
@@ -7069,11 +6658,10 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
     callGetBnsInfo(name2Buff, namespaceBuff, {
       "registered-at": 9,
       "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": name2BuffSalt,
       "preordered-by": address1,
       "renewal-height": 0,
+
       "stx-burn": 0,
       owner: address1,
     });
@@ -7086,7 +6674,6 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       managerAddress,
       ERR_NAMESPACE_NOT_FOUND,
@@ -7128,7 +6715,6 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       managerAddress,
       ERR_NO_NAMESPACE_MANAGER,
@@ -7169,7 +6755,6 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       managerAddress,
       ERR_PREORDER_NOT_FOUND,
@@ -7211,7 +6796,6 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       address1,
       ERR_PREORDER_NOT_FOUND,
@@ -7253,7 +6837,6 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       managerAddress,
       1,
@@ -7265,7 +6848,6 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff2,
-      zonefileBuff,
       address1,
       managerAddress,
       ERR_NAME_NOT_AVAILABLE,
@@ -7307,7 +6889,6 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       invalidNameBuff,
       saltBuff,
-      zonefileBuff,
       address1,
       managerAddress,
       ERR_CHARSET_INVALID,
@@ -7349,7 +6930,6 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       managerAddress,
       ERR_NAME_PREORDERED_BEFORE_NAMESPACE_LAUNCH,
@@ -7392,7 +6972,6 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
       namespaceBuff,
       name1Buff,
       saltBuff,
-      zonefileBuff,
       address1,
       managerAddress,
       ERR_PREORDER_CLAIMABILITY_EXPIRED,
@@ -7401,407 +6980,341 @@ describe("MNG-NAME-REGISTER FUNCTION", () => {
   });
 });
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
-  it("This should successfully update the zonefile hash of a name in an unmanaged namespace", () => {
-    callFlipSwitch();
-    successfullyFastClaimANameInAnUnmanagedNamespace();
+// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// describe("UPDATE-ZONEFILE-HASH FUNCTION", () => {
+//   it("This should successfully update the zonefile hash of a name in an unmanaged namespace", () => {
+//     callFlipSwitch();
+//     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    // Check initial state
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefileBuff,
-      "renewal-height": 5007,
-      owner: address1,
-      "stx-burn": 10,
-    });
+//     // Check initial state
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
 
-    callUpdateZonefileHash(
-      namespaceBuff,
-      name1Buff,
-      zonefile2Buff,
-      address1,
-      true,
-      false
-    );
+//       "renewal-height": 5007,
+//       owner: address1,
+//       "stx-burn": 10,
+//     });
 
-    // Check updated state
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "zonefile-hash": zonefile2Buff,
-      "renewal-height": 5007,
-      owner: address1,
-      "stx-burn": 10,
-    });
-  });
+//     callUpdateZonefileHash(
+//       namespaceBuff,
+//       name1Buff,
+//       zonefile2Buff,
+//       address1,
+//       true,
+//       false
+//     );
 
-  it("This should successfully update the zonefile hash of a name in a managed namespace", () => {
-    callFlipSwitch();
-    successfullyTwoStepRegisterANameInAManagedNamespace();
+//     // Check updated state
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "renewal-height": 5007,
+//       owner: address1,
+//       "stx-burn": 10,
+//     });
+//   });
 
-    // Check initial state
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "zonefile-hash": zonefileBuff,
-      "renewal-height": 0,
-      owner: address1,
-      "stx-burn": 0,
-    });
+//   it("This should successfully update the zonefile hash of a name in a managed namespace", () => {
+//     callFlipSwitch();
+//     successfullyTwoStepRegisterANameInAManagedNamespace();
 
-    callUpdateZonefileHash(
-      namespaceBuff,
-      name1Buff,
-      zonefile2Buff,
-      managerAddress,
-      true,
-      false
-    );
+//     // Check initial state
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": name1BuffSalt,
+//       "preordered-by": address1,
+//       "renewal-height": 0,
+//
+//       owner: address1,
+//       "stx-burn": 0,
+//     });
 
-    // Check updated state
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "zonefile-hash": zonefile2Buff,
-      "renewal-height": 0,
-      owner: address1,
-      "stx-burn": 0,
-    });
-  });
+//     callUpdateZonefileHash(
+//       namespaceBuff,
+//       name1Buff,
+//       zonefile2Buff,
+//       managerAddress,
+//       true,
+//       false
+//     );
 
-  it("This should fail to update the zonefile hash of a nonexistent name", () => {
-    callFlipSwitch();
-    callUpdateZonefileHash(
-      namespaceBuff,
-      name1Buff,
-      zonefile2Buff,
-      managerAddress,
-      ERR_NO_NAME,
-      true
-    );
-  });
+//     // Check updated state
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": name1BuffSalt,
+//       "preordered-by": address1,
+//       "renewal-height": 0,
+//
+//       owner: address1,
+//       "stx-burn": 0,
+//     });
+//   });
 
-  it("This should fail to update the zonefile hash if the zonefile is the same", () => {
-    callFlipSwitch();
-    successfullyTwoStepRegisterANameInAManagedNamespace();
+//   it("This should fail to update the zonefile hash of a nonexistent name", () => {
+//     callFlipSwitch();
+//     callUpdateZonefileHash(
+//       namespaceBuff,
+//       name1Buff,
+//       zonefile2Buff,
+//       managerAddress,
+//       ERR_NO_NAME,
+//       true
+//     );
+//   });
 
-    // Check initial state
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "zonefile-hash": zonefileBuff,
-      "renewal-height": 0,
-      owner: address1,
-      "stx-burn": 0,
-    });
+//   it("This should fail to update the zonefile hash if the name is revoked", () => {
+//     callFlipSwitch();
+//     successfullyFastClaimANameInAnUnmanagedNamespace();
+//     callRevokeName(namespaceBuff, name1Buff, address1, true, false);
 
-    callUpdateZonefileHash(
-      namespaceBuff,
-      name1Buff,
-      zonefileBuff,
-      managerAddress,
-      ERR_OPERATION_UNAUTHORIZED,
-      true
-    );
+//     // Check revoked state
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": null,
+//       "preordered-by": null,
+//       "renewal-height": 5007,
+//       owner: address1,
+//       "stx-burn": 10,
+//     });
 
-    // Check that the state hasn't changed
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "zonefile-hash": zonefileBuff,
-      "renewal-height": 0,
-      owner: address1,
-      "stx-burn": 0,
-    });
-  });
+//     callUpdateZonefileHash(
+//       namespaceBuff,
+//       name1Buff,
+//       zonefile2Buff,
+//       address1,
+//       ERR_NAME_REVOKED,
+//       true
+//     );
 
-  it("This should fail to update the zonefile hash if the name is revoked", () => {
-    callFlipSwitch();
-    successfullyFastClaimANameInAnUnmanagedNamespace();
-    callRevokeName(namespaceBuff, name1Buff, address1, true, false);
+//     // Check that the state hasn't changed
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": null,
+//       "preordered-by": null,
+//       "renewal-height": 5007,
+//       owner: address1,
+//       "stx-burn": 10,
+//     });
+//   });
 
-    // Check revoked state
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: true,
-      "hashed-salted-fqn-preorder": null,
-      "preordered-by": null,
-      "zonefile-hash": null,
-      "renewal-height": 5007,
-      owner: address1,
-      "stx-burn": 10,
-    });
+//   it("This should fail to update the zonefile hash of a name in an unmanaged namespace when the tx-sender is not the owner", () => {
+//     callFlipSwitch();
+//     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    callUpdateZonefileHash(
-      namespaceBuff,
-      name1Buff,
-      zonefile2Buff,
-      address1,
-      ERR_NAME_REVOKED,
-      true
-    );
+//     // Check initial state
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": null,
+//       "preordered-by": null,
+//       "renewal-height": 5007,
+//       owner: address1,
+//       "stx-burn": 10,
+//     });
 
-    // Check that the state hasn't changed
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: true,
-      "hashed-salted-fqn-preorder": null,
-      "preordered-by": null,
-      "zonefile-hash": null,
-      "renewal-height": 5007,
-      owner: address1,
-      "stx-burn": 10,
-    });
-  });
+//     callUpdateZonefileHash(
+//       namespaceBuff,
+//       name1Buff,
+//       zonefile2Buff,
+//       address3,
+//       ERR_NOT_AUTHORIZED,
+//       true
+//     );
 
-  it("This should fail to update the zonefile hash of a name in an unmanaged namespace when the tx-sender is not the owner", () => {
-    callFlipSwitch();
-    successfullyFastClaimANameInAnUnmanagedNamespace();
+//     // Check that the state hasn't changed
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": null,
+//       "preordered-by": null,
+//       "renewal-height": 5007,
+//       owner: address1,
+//       "stx-burn": 10,
+//     });
+//   });
 
-    // Check initial state
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "hashed-salted-fqn-preorder": null,
-      "preordered-by": null,
-      "zonefile-hash": zonefileBuff,
-      "renewal-height": 5007,
-      owner: address1,
-      "stx-burn": 10,
-    });
+//   it("This should fail to update the zonefile hash of a name in a managed namespace when the contract-caller is the owner", () => {
+//     callFlipSwitch();
+//     successfullyFastClaimANameInAManagedNamespace();
 
-    callUpdateZonefileHash(
-      namespaceBuff,
-      name1Buff,
-      zonefile2Buff,
-      address3,
-      ERR_NOT_AUTHORIZED,
-      true
-    );
+//     // Check initial state
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": null,
+//       "preordered-by": null,
+//       "renewal-height": 0,
+//
+//       owner: address1,
+//       "stx-burn": 0,
+//     });
 
-    // Check that the state hasn't changed
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "hashed-salted-fqn-preorder": null,
-      "preordered-by": null,
-      "zonefile-hash": zonefileBuff,
-      "renewal-height": 5007,
-      owner: address1,
-      "stx-burn": 10,
-    });
-  });
+//     callUpdateZonefileHash(
+//       namespaceBuff,
+//       name1Buff,
+//       zonefile2Buff,
+//       address1,
+//       ERR_NOT_AUTHORIZED,
+//       true
+//     );
 
-  it("This should fail to update the zonefile hash of a name in a managed namespace when the contract-caller is the owner", () => {
-    callFlipSwitch();
-    successfullyFastClaimANameInAManagedNamespace();
+//     // Check that the state hasn't changed
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": null,
+//       "preordered-by": null,
+//       "renewal-height": 0,
+//
+//       owner: address1,
+//       "stx-burn": 0,
+//     });
+//   });
 
-    // Check initial state
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "hashed-salted-fqn-preorder": null,
-      "preordered-by": null,
-      "zonefile-hash": zonefileBuff,
-      "renewal-height": 0,
-      owner: address1,
-      "stx-burn": 0,
-    });
+//   it("This should fail to update the zonefile hash of a name if the name is not in a valid grace period", () => {
+//     callFlipSwitch();
+//     successfullyFastClaimANameInAnUnmanagedNamespace();
 
-    callUpdateZonefileHash(
-      namespaceBuff,
-      name1Buff,
-      zonefile2Buff,
-      address1,
-      ERR_NOT_AUTHORIZED,
-      true
-    );
+//     // Check initial state
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": null,
+//       "preordered-by": null,
+//       "renewal-height": 5007,
+//       owner: address1,
+//       "stx-burn": 10,
+//     });
 
-    // Check that the state hasn't changed
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "hashed-salted-fqn-preorder": null,
-      "preordered-by": null,
-      "zonefile-hash": zonefileBuff,
-      "renewal-height": 0,
-      owner: address1,
-      "stx-burn": 0,
-    });
-  });
+//     simnet.mineEmptyBlocks(11000);
+//     callUpdateZonefileHash(
+//       namespaceBuff,
+//       name1Buff,
+//       zonefile2Buff,
+//       address1,
+//       ERR_OPERATION_UNAUTHORIZED,
+//       true
+//     );
 
-  it("This should fail to update the zonefile hash of a name if the name is not in a valid grace period", () => {
-    callFlipSwitch();
-    successfullyFastClaimANameInAnUnmanagedNamespace();
+//     // Check that the state hasn't changed
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": null,
+//       "preordered-by": null,
+//       "renewal-height": 5007,
+//       owner: address1,
+//       "stx-burn": 10,
+//     });
+//   });
+// });
 
-    // Check initial state
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "hashed-salted-fqn-preorder": null,
-      "preordered-by": null,
-      "zonefile-hash": zonefileBuff,
-      "renewal-height": 5007,
-      owner: address1,
-      "stx-burn": 10,
-    });
+// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// describe("NAME-REVOKE FUNCTION", () => {
+//   it("This should successfully revoke a name in an unmanaged namespace", () => {
+//     callFlipSwitch();
+//     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 8,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": name1BuffSalt,
+//       "preordered-by": address1,
+//       "renewal-height": 5008,
+//       owner: address1,
+//       "stx-burn": 10,
+//     });
+//     callRevokeName(namespaceBuff, name1Buff, address1, true, false);
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 8,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": name1BuffSalt,
+//       "preordered-by": address1,
+//       "renewal-height": 5008,
+//       owner: address1,
+//       "stx-burn": 10,
+//     });
+//   });
 
-    simnet.mineEmptyBlocks(11000);
-    callUpdateZonefileHash(
-      namespaceBuff,
-      name1Buff,
-      zonefile2Buff,
-      address1,
-      ERR_OPERATION_UNAUTHORIZED,
-      true
-    );
+//   it("This should successfully revoke a name in a managed namespace", () => {
+//     callFlipSwitch();
+//     successfullyTwoStepRegisterANameInAManagedNamespace();
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": name1BuffSalt,
+//       "preordered-by": address1,
+//       "renewal-height": 0,
+//
+//       owner: address1,
+//       "stx-burn": 0,
+//     });
+//     callRevokeName(namespaceBuff, name1Buff, managerAddress, true, false);
+//     callGetBnsInfo(name1Buff, namespaceBuff, {
+//       "registered-at": 7,
+//       "imported-at": null,
+//       "hashed-salted-fqn-preorder": name1BuffSalt,
+//       "preordered-by": address1,
+//       "renewal-height": 0,
+//
+//       owner: address1,
+//       "stx-burn": 0,
+//     });
+//   });
 
-    // Check that the state hasn't changed
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "hashed-salted-fqn-preorder": null,
-      "preordered-by": null,
-      "zonefile-hash": zonefileBuff,
-      "renewal-height": 5007,
-      owner: address1,
-      "stx-burn": 10,
-    });
-  });
-});
+//   it("This should fail to revoke a name in a namespace that does not exist", () => {
+//     callFlipSwitch();
+//     callRevokeName(
+//       namespaceBuff,
+//       name1Buff,
+//       managerAddress,
+//       ERR_NAMESPACE_NOT_FOUND,
+//       true
+//     );
+//   });
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-describe("NAME-REVOKE FUNCTION", () => {
-  it("This should successfully revoke a name in an unmanaged namespace", () => {
-    callFlipSwitch();
-    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 8,
-      "imported-at": null,
-      revoked: false,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "zonefile-hash": zonefileBuff,
-      "renewal-height": 5008,
-      owner: address1,
-      "stx-burn": 10,
-    });
-    callRevokeName(namespaceBuff, name1Buff, address1, true, false);
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 8,
-      "imported-at": null,
-      revoked: true,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "zonefile-hash": null,
-      "renewal-height": 5008,
-      owner: address1,
-      "stx-burn": 10,
-    });
-  });
+//   it("This should fail to revoke a name in a managed namespace but the contract-caller is not the manager", () => {
+//     callFlipSwitch();
+//     successfullyTwoStepRegisterANameInAManagedNamespace();
+//     callRevokeName(
+//       namespaceBuff,
+//       name1Buff,
+//       address1,
+//       ERR_NOT_AUTHORIZED,
+//       true
+//     );
+//   });
 
-  it("This should successfully revoke a name in a managed namespace", () => {
-    callFlipSwitch();
-    successfullyTwoStepRegisterANameInAManagedNamespace();
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: false,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "zonefile-hash": zonefileBuff,
-      "renewal-height": 0,
-      owner: address1,
-      "stx-burn": 0,
-    });
-    callRevokeName(namespaceBuff, name1Buff, managerAddress, true, false);
-    callGetBnsInfo(name1Buff, namespaceBuff, {
-      "registered-at": 7,
-      "imported-at": null,
-      revoked: true,
-      "hashed-salted-fqn-preorder": name1BuffSalt,
-      "preordered-by": address1,
-      "zonefile-hash": null,
-      "renewal-height": 0,
-      owner: address1,
-      "stx-burn": 0,
-    });
-  });
-
-  it("This should fail to revoke a name in a namespace that does not exist", () => {
-    callFlipSwitch();
-    callRevokeName(
-      namespaceBuff,
-      name1Buff,
-      managerAddress,
-      ERR_NAMESPACE_NOT_FOUND,
-      true
-    );
-  });
-
-  it("This should fail to revoke a name in a managed namespace but the contract-caller is not the manager", () => {
-    callFlipSwitch();
-    successfullyTwoStepRegisterANameInAManagedNamespace();
-    callRevokeName(
-      namespaceBuff,
-      name1Buff,
-      address1,
-      ERR_NOT_AUTHORIZED,
-      true
-    );
-  });
-
-  it("This should fail to revoke a name in an unmanaged namespace but the tx-sender is not the import address", () => {
-    callFlipSwitch();
-    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-    callRevokeName(
-      namespaceBuff,
-      name1Buff,
-      address3,
-      ERR_NOT_AUTHORIZED,
-      true
-    );
-  });
-});
+//   it("This should fail to revoke a name in an unmanaged namespace but the tx-sender is not the import address", () => {
+//     callFlipSwitch();
+//     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
+//     callRevokeName(
+//       namespaceBuff,
+//       name1Buff,
+//       address3,
+//       ERR_NOT_AUTHORIZED,
+//       true
+//     );
+//   });
+// });
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 describe("NAME-RENEWAL FUNCTION", () => {
   it("This should successfully renew a name in an unmanaged namespace when the name is still within the lifetime", () => {
     callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-    callRenewName(namespaceBuff, name1Buff, null, address1, true, false);
+    callRenewName(namespaceBuff, name1Buff, address1, true, false);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "zonefile-hash": zonefileBuff,
       "renewal-height": 10008,
+
       owner: address1,
       "stx-burn": 10,
     });
@@ -7814,15 +7327,14 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlocks(6000);
-    callRenewName(namespaceBuff, name1Buff, null, address1, true, false);
+    callRenewName(namespaceBuff, name1Buff, address1, true, false);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "zonefile-hash": zonefileBuff,
       "renewal-height": 11009,
+
       owner: address1,
       "stx-burn": 10,
     });
@@ -7835,15 +7347,14 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlocks(11000);
-    callRenewName(namespaceBuff, name1Buff, null, address1, true, false);
+    callRenewName(namespaceBuff, name1Buff, address1, true, false);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "zonefile-hash": zonefileBuff,
       "renewal-height": 16009,
+
       owner: address1,
       "stx-burn": 10,
     });
@@ -7856,22 +7367,14 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlocks(11000);
-    callRenewName(
-      namespaceBuff,
-      name1Buff,
-      zonefile2Buff,
-      address3,
-      true,
-      false
-    );
+    callRenewName(namespaceBuff, name1Buff, address3, true, false);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": 8,
       "imported-at": null,
-      revoked: false,
       "hashed-salted-fqn-preorder": name1BuffSalt,
       "preordered-by": address1,
-      "zonefile-hash": zonefile2Buff,
       "renewal-height": 16009,
+
       owner: address3,
       "stx-burn": 10,
     });
@@ -7915,15 +7418,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callGetOwner(1, null);
     callGetPrimaryName(address3, null);
 
-    callImportName(
-      namespaceBuff,
-      name1Buff,
-      zonefileBuff,
-      address3,
-      address1,
-      true,
-      false
-    );
+    callImportName(namespaceBuff, name1Buff, address3, address1, true, false);
 
     callGetRenewalHeight(1, ERR_NAMESPACE_NOT_LAUNCHED, true);
 
@@ -7931,11 +7426,10 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
-      "zonefile-hash": zonefileBuff,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
       "renewal-height": 0,
+
       "stx-burn": 10,
       owner: address3,
     });
@@ -7943,23 +7437,15 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callGetPrimaryName(address3, 1);
     callLaunchNamespace(namespaceBuff, address1, true, false);
     callGetRenewalHeight(1, 5006, false);
-    callRenewName(
-      namespaceBuff,
-      name1Buff,
-      zonefile2Buff,
-      address3,
-      true,
-      false
-    );
+    callRenewName(namespaceBuff, name1Buff, address3, true, false);
     callGetRenewalHeight(1, 10006, false);
     callGetBnsInfo(name1Buff, namespaceBuff, {
       "registered-at": null,
       "imported-at": 5,
-      "revoked-at": false,
       "hashed-salted-fqn-preorder": null,
       "preordered-by": null,
-      "zonefile-hash": zonefile2Buff,
       "renewal-height": 10006,
+
       owner: address3,
       "stx-burn": 10,
     });
@@ -7970,7 +7456,7 @@ describe("NAME-RENEWAL FUNCTION", () => {
 
   it("This should fail to renew a name in an unmanaged namespace when the name does not exist", () => {
     callFlipSwitch();
-    callRenewName(namespaceBuff, name1Buff, null, address1, ERR_NO_NAME, true);
+    callRenewName(namespaceBuff, name1Buff, address1, ERR_NO_NAME, true);
   });
 
   it("This should fail to renew a name in a managed namespace", () => {
@@ -7979,7 +7465,6 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callRenewName(
       namespaceBuff,
       name1Buff,
-      null,
       address1,
       ERR_LIFETIME_EQUAL_0,
       true
@@ -8014,19 +7499,10 @@ describe("NAME-RENEWAL FUNCTION", () => {
       true,
       false
     );
-    callImportName(
-      namespaceBuff,
-      name1Buff,
-      zonefileBuff,
-      address3,
-      address1,
-      true,
-      false
-    );
+    callImportName(namespaceBuff, name1Buff, address3, address1, true, false);
     callRenewName(
       namespaceBuff,
       name1Buff,
-      null,
       address1,
       ERR_LIFETIME_EQUAL_0,
       true
@@ -8064,19 +7540,10 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callLaunchNamespace(namespaceBuff, address1, true, false);
     callPreorderName(name1BuffSalt, 10, address1, 150, false);
     simnet.mineEmptyBlock();
-    callRegisterName(
-      namespaceBuff,
-      name1Buff,
-      saltBuff,
-      zonefileBuff,
-      address1,
-      1,
-      false
-    );
+    callRegisterName(namespaceBuff, name1Buff, saltBuff, address1, 1, false);
     callRenewName(
       namespaceBuff,
       name1Buff,
-      null,
       address1,
       ERR_LIFETIME_EQUAL_0,
       true
@@ -8087,40 +7554,12 @@ describe("NAME-RENEWAL FUNCTION", () => {
     callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
     simnet.mineEmptyBlocks(7500);
-    callRenewName(
-      namespaceBuff,
-      name1Buff,
-      null,
-      address3,
-      ERR_NOT_AUTHORIZED,
-      true
-    );
+    callRenewName(namespaceBuff, name1Buff, address3, ERR_NOT_AUTHORIZED, true);
   });
 
   it("This should fail to renew a name if the owner is not the tx-sender and the name is in its current lifetime", () => {
     callFlipSwitch();
     successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-    callRenewName(
-      namespaceBuff,
-      name1Buff,
-      null,
-      address3,
-      ERR_NOT_AUTHORIZED,
-      true
-    );
-  });
-
-  it("This should fail to renew a name if the name is revoked", () => {
-    callFlipSwitch();
-    successfullyTwoStepRegisterANameInAnUnmanagedNamespace();
-    callRevokeName(namespaceBuff, name1Buff, address1, true, false);
-    callRenewName(
-      namespaceBuff,
-      name1Buff,
-      null,
-      address1,
-      ERR_NAME_REVOKED,
-      true
-    );
+    callRenewName(namespaceBuff, name1Buff, address3, ERR_NOT_AUTHORIZED, true);
   });
 });

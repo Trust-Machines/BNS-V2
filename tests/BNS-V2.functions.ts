@@ -11,8 +11,6 @@ import {
   name2Buff,
   invalidNameBuff,
   invalidNamespaceBuff,
-  zonefileBuff,
-  zonefile2Buff,
   namespaceBuff,
   name1BuffSalt,
   name1BuffDifferentSalt,
@@ -152,7 +150,6 @@ export const callRegisterName = (
   namespaceBuffer: Uint8Array,
   nameBuffer: Uint8Array,
   saltBuffer: Uint8Array,
-  zonefileBuffer: Uint8Array,
   callerAddress: string,
   expectedReturnValue: number,
   isError: boolean
@@ -160,12 +157,7 @@ export const callRegisterName = (
   const registerNameResult = simnet.callPublicFn(
     "BNS-V2",
     "name-register",
-    [
-      Cl.buffer(namespaceBuffer),
-      Cl.buffer(nameBuffer),
-      Cl.buffer(saltBuffer),
-      Cl.buffer(zonefileBuffer),
-    ],
+    [Cl.buffer(namespaceBuffer), Cl.buffer(nameBuffer), Cl.buffer(saltBuffer)],
     callerAddress
   );
 
@@ -200,7 +192,6 @@ export const callManagedRegisterNameWithAddress = (
   namespaceBuffer: Uint8Array,
   nameBuffer: Uint8Array,
   saltBuffer: Uint8Array,
-  zonefileBuffer: Uint8Array,
   addressToSend: string,
   callerAddress: string,
   expectedReturnValue: number,
@@ -213,7 +204,6 @@ export const callManagedRegisterNameWithAddress = (
       Cl.buffer(namespaceBuffer),
       Cl.buffer(nameBuffer),
       Cl.buffer(saltBuffer),
-      Cl.buffer(zonefileBuffer),
       Cl.principal(addressToSend),
     ],
     callerAddress
@@ -229,7 +219,6 @@ export const callManagedRegisterNameWithAddress = (
 export const callFastClaimName = (
   nameBuffer: Uint8Array,
   namespaceBuffer: Uint8Array,
-  zonefileBuffer: Uint8Array,
   recipientAddress: string,
   callerAddress: string,
   expectedReturnValue: number,
@@ -241,7 +230,6 @@ export const callFastClaimName = (
     [
       Cl.buffer(nameBuffer),
       Cl.buffer(namespaceBuffer),
-      Cl.buffer(zonefileBuffer),
       Cl.principal(recipientAddress),
     ],
     callerAddress
@@ -313,7 +301,6 @@ export const callTurnOffManagerTransfers = (
 export const callRenewName = (
   namespaceBuffer: Uint8Array,
   nameBuffer: Uint8Array,
-  zonefileHash: Uint8Array | null,
   callerAddress: string,
   expectedReturnValue: boolean | number,
   isError: boolean
@@ -321,11 +308,7 @@ export const callRenewName = (
   const renewNameResult = simnet.callPublicFn(
     "BNS-V2",
     "name-renewal",
-    [
-      Cl.buffer(namespaceBuffer),
-      Cl.buffer(nameBuffer),
-      zonefileHash !== null ? Cl.some(Cl.buffer(zonefileHash)) : Cl.none(),
-    ],
+    [Cl.buffer(namespaceBuffer), Cl.buffer(nameBuffer)],
     callerAddress
   );
 
@@ -340,60 +323,34 @@ export const callRenewName = (
   }
 };
 
-export const callRevokeName = (
-  namespaceBuffer: Uint8Array,
-  nameBuffer: Uint8Array,
-  callerAddress: string,
-  expectedReturnValue: boolean | number,
-  isError: boolean
-) => {
-  const revokeNameResult = simnet.callPublicFn(
-    "BNS-V2",
-    "name-revoke",
-    [Cl.buffer(namespaceBuffer), Cl.buffer(nameBuffer)],
-    callerAddress
-  );
+// export const callRevokeName = (
+//   namespaceBuffer: Uint8Array,
+//   nameBuffer: Uint8Array,
+//   callerAddress: string,
+//   expectedReturnValue: boolean | number,
+//   isError: boolean
+// ) => {
+//   const revokeNameResult = simnet.callPublicFn(
+//     "BNS-V2",
+//     "name-revoke",
+//     [Cl.buffer(namespaceBuffer), Cl.buffer(nameBuffer)],
+//     callerAddress
+//   );
 
-  if (isError) {
-    expect(revokeNameResult.result).toBeErr(
-      Cl.uint(expectedReturnValue as number)
-    );
-  } else {
-    expect(revokeNameResult.result).toBeOk(
-      Cl.bool(expectedReturnValue as boolean)
-    );
-  }
-};
-
-export const callUnrevokeName = (
-  namespaceBuffer: Uint8Array,
-  nameBuffer: Uint8Array,
-  callerAddress: string,
-  expectedReturnValue: boolean | number,
-  isError: boolean
-) => {
-  const revokeNameResult = simnet.callPublicFn(
-    "BNS-V2",
-    "name-unrevoke",
-    [Cl.buffer(namespaceBuffer), Cl.buffer(nameBuffer)],
-    callerAddress
-  );
-
-  if (isError) {
-    expect(revokeNameResult.result).toBeErr(
-      Cl.uint(expectedReturnValue as number)
-    );
-  } else {
-    expect(revokeNameResult.result).toBeOk(
-      Cl.bool(expectedReturnValue as boolean)
-    );
-  }
-};
+//   if (isError) {
+//     expect(revokeNameResult.result).toBeErr(
+//       Cl.uint(expectedReturnValue as number)
+//     );
+//   } else {
+//     expect(revokeNameResult.result).toBeOk(
+//       Cl.bool(expectedReturnValue as boolean)
+//     );
+//   }
+// };
 
 export const callImportName = (
   namespaceBuffer: Uint8Array,
   nameBuffer: Uint8Array,
-  zonefileBuffer: Uint8Array,
   recipientAddress: string,
   callerAddress: string,
   expectedReturnValue: boolean | number,
@@ -406,7 +363,6 @@ export const callImportName = (
       Cl.buffer(namespaceBuffer),
       Cl.buffer(nameBuffer),
       Cl.principal(recipientAddress),
-      Cl.buffer(zonefileBuffer),
     ],
     callerAddress
   );
@@ -422,35 +378,35 @@ export const callImportName = (
   }
 };
 
-export const callUpdateZonefileHash = (
-  namespaceBuffer: Uint8Array,
-  nameBuffer: Uint8Array,
-  zonefileBuffer: Uint8Array,
-  callerAddress: string,
-  expectedReturnValue: boolean | number,
-  isError: boolean
-) => {
-  const updateZonefileHashResult = simnet.callPublicFn(
-    "BNS-V2",
-    "update-zonefile-hash",
-    [
-      Cl.buffer(namespaceBuffer),
-      Cl.buffer(nameBuffer),
-      Cl.buffer(zonefileBuffer),
-    ],
-    callerAddress
-  );
+// export const callUpdateZonefileHash = (
+//   namespaceBuffer: Uint8Array,
+//   nameBuffer: Uint8Array,
+//   zonefileBuffer: Uint8Array,
+//   callerAddress: string,
+//   expectedReturnValue: boolean | number,
+//   isError: boolean
+// ) => {
+//   const updateZonefileHashResult = simnet.callPublicFn(
+//     "BNS-V2",
+//     "update-zonefile",
+//     [
+//       Cl.buffer(namespaceBuffer),
+//       Cl.buffer(nameBuffer),
+//       Cl.buffer(zonefileBuffer),
+//     ],
+//     callerAddress
+//   );
 
-  if (isError) {
-    expect(updateZonefileHashResult.result).toBeErr(
-      Cl.uint(expectedReturnValue as number)
-    );
-  } else {
-    expect(updateZonefileHashResult.result).toBeOk(
-      Cl.bool(expectedReturnValue as boolean)
-    );
-  }
-};
+//   if (isError) {
+//     expect(updateZonefileHashResult.result).toBeErr(
+//       Cl.uint(expectedReturnValue as number)
+//     );
+//   } else {
+//     expect(updateZonefileHashResult.result).toBeOk(
+//       Cl.bool(expectedReturnValue as boolean)
+//     );
+//   }
+// };
 
 export const callClaimPreorder = (
   nameBufferSalt: Uint8Array,
@@ -794,15 +750,7 @@ export const successfullyTwoStepRegisterANameInAnUnmanagedNamespace = () => {
   // Mine the empty block to fulfill request of 1 block between preorder and register, block 7
   simnet.mineEmptyBlock();
   // Register happens on block 8
-  callRegisterName(
-    namespaceBuff,
-    name1Buff,
-    saltBuff,
-    zonefileBuff,
-    address1,
-    1,
-    false
-  );
+  callRegisterName(namespaceBuff, name1Buff, saltBuff, address1, 1, false);
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 export const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace =
@@ -813,15 +761,7 @@ export const successfullyTwoStepRegisterASecondNameInAnUnmanagedNamespace =
     // Mine an empty block to allow one block between preorder and register, block 11
     simnet.mineEmptyBlock();
     // Register happens on the next block 12
-    callRegisterName(
-      namespaceBuff,
-      name2Buff,
-      saltBuff,
-      zonefileBuff,
-      address1,
-      2,
-      false
-    );
+    callRegisterName(namespaceBuff, name2Buff, saltBuff, address1, 2, false);
   };
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 export const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
@@ -864,7 +804,6 @@ export const successfullyTwoStepRegisterANameInAManagedNamespace = () => {
     namespaceBuff,
     name1Buff,
     saltBuff,
-    zonefileBuff,
     address1,
     managerAddress,
     1,
@@ -881,7 +820,6 @@ export const successfullyTwoStepRegisterASecondNameInAManagedNamespace = () => {
     namespaceBuff,
     name2Buff,
     saltBuff,
-    zonefileBuff,
     address1,
     managerAddress,
     2,
@@ -923,29 +861,13 @@ export const successfullyFastClaimANameInAnUnmanagedNamespace = () => {
   // Launch the namespace block 5
   callLaunchNamespace(namespaceBuff, address1, true, false);
   // Fast claim a name in the unmanaged namespace block 6, that for fast claim should register at block 7
-  callFastClaimName(
-    name1Buff,
-    namespaceBuff,
-    zonefileBuff,
-    address1,
-    address1,
-    1,
-    false
-  );
+  callFastClaimName(name1Buff, namespaceBuff, address1, address1, 1, false);
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 export const successfullyFastClaimASecondNameInAnUnmanagedNamespace = () => {
   // Block 8
   // Fast claim a second name in the unmanaged namespace block 9, that for fast claim should register at block 10
-  callFastClaimName(
-    name2Buff,
-    namespaceBuff,
-    zonefileBuff,
-    address1,
-    address1,
-    2,
-    false
-  );
+  callFastClaimName(name2Buff, namespaceBuff, address1, address1, 2, false);
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 export const successfullyFastClaimANameInAManagedNamespace = () => {
@@ -985,7 +907,6 @@ export const successfullyFastClaimANameInAManagedNamespace = () => {
   callFastClaimName(
     name1Buff,
     namespaceBuff,
-    zonefileBuff,
     address1,
     managerAddress,
     1,
@@ -999,7 +920,6 @@ export const successfullyFastClaimASecondNameInAManagedNamespace = () => {
   callFastClaimName(
     name2Buff,
     namespaceBuff,
-    zonefileBuff,
     address1,
     managerAddress,
     2,
@@ -1148,8 +1068,6 @@ export const callGetBnsInfo = (
   expectedInfo: {
     "registered-at"?: number | null;
     "imported-at"?: number | null;
-    revoked: boolean;
-    "zonefile-hash"?: Uint8Array | null;
     "hashed-salted-fqn-preorder"?: Uint8Array | null;
     "preordered-by"?: string | null;
     "renewal-height": number;
@@ -1177,13 +1095,6 @@ export const callGetBnsInfo = (
           expectedInfo["imported-at"] !== undefined
             ? expectedInfo["imported-at"] !== null
               ? Cl.some(Cl.uint(expectedInfo["imported-at"]))
-              : Cl.none()
-            : Cl.none(),
-        revoked: Cl.bool(expectedInfo["revoked"]),
-        "zonefile-hash":
-          expectedInfo["zonefile-hash"] !== undefined
-            ? expectedInfo["zonefile-hash"] !== null
-              ? Cl.some(Cl.buffer(expectedInfo["zonefile-hash"]))
               : Cl.none()
             : Cl.none(),
         "hashed-salted-fqn-preorder":
