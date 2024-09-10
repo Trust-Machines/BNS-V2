@@ -131,7 +131,6 @@
 )
 
 ;; Records namespace preorder transactions with their creation times, and STX burned.
-;; Removed the claimed field as it is not necessary
 (define-map namespace-preorders
     { hashed-salted-namespace: (buff 20), buyer: principal }
     { created-at: uint, stx-burned: uint, claimed: bool}
@@ -151,7 +150,6 @@
 
 ;; It maps a user's principal to the ID of their primary name.
 (define-map primary-name principal uint)
-
 
 ;; read-only
 ;; @desc (new) SIP-09 compliant function to get the last minted token's ID
@@ -509,7 +507,6 @@
     (begin 
         ;; Check if migration is complete
         (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
-
         ;; Verify the contract-caller is the owner of the name.
         (asserts! (is-eq (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NO-NAME) contract-caller) ERR-NOT-AUTHORIZED)
         ;; Update the contract-caller's primary name.
@@ -687,11 +684,13 @@
                     no-vowel-discount: p-func-no-vowel-discount
                 }
             )
-            ;; Retrieve the preorder record to ensure it exists and is valid for the revealing namespace.
+            ;; Retrieve the preorder record to ensure it exists and is valid for the revealing namespace
             (preorder (unwrap! (map-get? namespace-preorders { hashed-salted-namespace: hashed-salted-namespace, buyer: contract-caller}) ERR-PREORDER-NOT-FOUND))
             ;; Calculate the namespace's registration price for validation.
             (namespace-price (try! (get-namespace-price namespace)))
         )
+        ;; Ensure the preorder has not been claimed before
+        (asserts! (not (get claimed preorder)) ERR-NAMESPACE-ALREADY-EXISTS)
         ;; Check if migration is complete
         (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the namespace consists of valid characters only.
@@ -735,7 +734,15 @@
                     price-function: price-function 
                 }
             )
-        )  
+        )
+        ;; Update the claimed value for the preorder
+        (map-set namespace-preorders { hashed-salted-namespace: hashed-salted-namespace, buyer: contract-caller } 
+            (merge preorder 
+                {
+                    claimed: true
+                }
+            )
+        )   
         ;; Confirm successful reveal of the namespace
         (ok true)
     )
