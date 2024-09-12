@@ -41,6 +41,8 @@ Name prices are calculated based on:
 Each name is minted as an NFT, allowing:
 - Easy transfers of ownership
 - Integration with NFT marketplaces and other applications
+### Zonefiles
+The zonefile management system differs from the previous (v1) version of BNS. In this update, the Zonefile no longer lives in Gaia/Atlas but rather on-chain in the form of a BNS resolver contract. This contract provides an interface for name owners to read & write their zonefile data directly on-chain. 
 ### Unmanaged vs Managed Namespaces
 BNS-V2 supports two types of namespaces: **Unmanaged** and **Managed**.
 
@@ -71,6 +73,14 @@ The key differences between unmanaged and managed namespaces lie in their govern
 - **list-in-ustx:** List a name for sale
 - **unlist-in-ustx:** Remove a name from sale listing
 - **buy-in-ustx:** Purchase a listed name
+## Zonefile Resolver Contract
+As mentioned above, this update to BNS-V2 introduces a new on-chain zonefile resolver contract. This is done with a single map that stores up to 4096 bytes for the zonefile for a given name & namespace. Anyone can query a name & namespace for a zonefile, but the API, Hiro's, will provide additional support for two different types of zonefile formatting: on-chain or on IPFS. 
+### Main Functions
+- **resolve-name:** Return the zonefile for a given name
+- **update-zonefile:** Update the zonefile for a given name
+- **revoke-name:** Revoke a name, making it unresolvable
+
+In short, when writing to a zonefile, the user will be able to choose between on-chain or IPFS storage. If the zonefile size is exactly 34-bytes, the resolver will assume it is an IPFS CID & will perform an additional query. 
 ## Contributing
 We welcome and encourage contributions to the BNS-V2 project! If you’re interested in contributing to the BNS-V2 contract before its deployment to mainnet, please open an issue to allow the team to review your proposed changes or additions.
 ## License
