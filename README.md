@@ -74,7 +74,7 @@ The key differences between unmanaged and managed namespaces lie in their govern
 - **unlist-in-ustx:** Remove a name from sale listing
 - **buy-in-ustx:** Purchase a listed name
 ## Zonefile Resolver Contract
-As mentioned above, this update to BNS-V2 introduces a new on-chain zonefile resolver contract. This is done with a single map that stores up to 4096 bytes for the zonefile for a given name & namespace. Anyone can query a name & namespace for a zonefile, but the API, Hiro's, will provide additional support for two different types of zonefile formatting: on-chain or on IPFS. 
+As mentioned above, this update to BNS-V2 introduces a new on-chain zonefile resolver contract. This is done with a single map that stores up to 4096 bytes for the zonefile for a given name & namespace. Anyone can query a name & namespace for a zonefile, but the API, TBD, will provide additional support for two different types of zonefile formatting: on-chain or on IPFS. 
 ### Main Functions
 - **resolve-name:** Return the zonefile for a given name
 - **update-zonefile:** Update the zonefile for a given name
