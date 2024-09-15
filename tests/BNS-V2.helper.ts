@@ -134,3 +134,20 @@ export const invalidNameBuffSalt = createHash160Name(
   namespaceBuff,
   saltBuff
 );
+
+export const prettyConsoleLog = (...items: (string | undefined)[]) => {
+  // Ensure we only render up to the first 10 items for brevity.
+  const renderItems = items.slice(0, 10);
+  const columnWidth = 30; // Standard width for each column after the first two.
+  const halfColumns = Math.floor(columnWidth / 2);
+
+  // Pad columns to their widths: half for the first two, full for the rest.
+  const prettyPrint = renderItems.map((content, index) =>
+    // Check if the index is less than 2 (i.e., first two items).
+    content
+      ? (index < 2 ? content.padEnd(halfColumns + 2) : content.padEnd(columnWidth))
+      : (index < 2 ? "".padEnd(halfColumns) : "".padEnd(columnWidth))
+  );
+
+  process.stdout.write(`${prettyPrint.join("")}\n`);
+};
