@@ -59,7 +59,6 @@ The key differences between unmanaged and managed namespaces lie in their govern
 - **name-register:** Register a previously preordered name
 - **name-renewal:** Renew a name's registration
 - **name-revoke:** Make a name unresolvable
-- **update-zonefile-hash:** Update the information for a name
 ### Fast Registration
 - **name-claim-fast:** Register a name in a single transaction (may be front-runnable)
 ### Managed Namespace Functions (only callable by namespace managers)
@@ -76,6 +75,7 @@ The key differences between unmanaged and managed namespaces lie in their govern
 ### Overview
 Managed namespaces are one of the biggest updates in this version of BNSv2. Meant to allow for significant more control & flexibility over a namespace, a "managed" namespace is controlled by a single principal (almost always a *contract* principal). For expected behavior, you must be very careful on setting up this contract principal - if it's not setup correctly, it's possible to to permanently lose control of the namespace.
 
+### Considerations
 A few important decisions to make when creating a managed namespace are:
 - Will the manager contract *ever* need to be changed?
 - How will your mint process work?
@@ -86,6 +86,15 @@ These are critical decisions that one must consider to future-proof a managed na
 Next, the mint process is vastly more customizable in a managed namespace. At a high-level, managed namespaces have access to the same two paths for name registration: 2 steps / mng-name-preorder + mng-name-register, or a single step / fast-claim. Managed contracts **must** have access to one or both of these functions to successfully mint names in a namespace; additionally, the mint process can be customized to a high degree to allow for: free mints, token-gated mints, variable pricing, sip-10 token support, etc...
 
 Lastly, the ability to allow for the managed namespace contract *itself* to transfer any name is a critical decision. It's almost guranteed that you **don't** want to allow this, as it would allow the contract to transfer any name to any principal; however, there are some use-cases where much more granular control is required. 
+
+## Zonefiles
+### Overview
+Zonefiles also look significantly different in this upgrade. These changes can summarized in two ways:
+1. Zonesfiles, or links to zonefiles, now live on-chain
+2. Zonefiles are now decoupled from the BNS-v2 contract
+Zonefiles now live-onchain & in their own contract. This contract is fairly limited with a single map & only three functions: resolve-name, update-zonefile & revoke-name. 
+
+### Considerations
 
 ## Contributing
 We welcome and encourage contributions to the BNS-V2 project! If you’re interested in contributing to the BNS-V2 contract before its deployment to mainnet, please open an issue to allow the team to review your proposed changes or additions.
