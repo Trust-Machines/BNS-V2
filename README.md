@@ -71,6 +71,18 @@ The key differences between unmanaged and managed namespaces lie in their govern
 - **list-in-ustx:** List a name for sale
 - **unlist-in-ustx:** Remove a name from sale listing
 - **buy-in-ustx:** Purchase a listed name
+
+## Creating A Managed Namespace
+### Overview
+Managed namespaces are one of the biggest updates in this version of BNSv2. Meant to allow for significant more control & flexibility over a namespace, a "managed" namespace is controlled by a single principal (almost always a *contract* principal). For expected behavior, you must be very careful on setting up this contract principal - if it's not setup correctly, it's possible to to permanently lose control of the namespace.
+
+A few important decisions to make when creating a managed namespace are:
+- Will the manager contract *ever* need to be changed?
+- How will your mint process work?
+- Can managers transfer *any* name?
+
+These are critical decisions that one must consider to future-proof a managed namespace. For the first question, it's almost guranteed that you *will* need to update or remove the manager contract, therefore, it's imperative that manager contract include access to the 'mng-manager-transfer' function. If the initial manager contract does not include this function, it will be impossible to update or remove the namespace to a new manager contract. 
+
 ## Contributing
 We welcome and encourage contributions to the BNS-V2 project! If you’re interested in contributing to the BNS-V2 contract before its deployment to mainnet, please open an issue to allow the team to review your proposed changes or additions.
 ## License
