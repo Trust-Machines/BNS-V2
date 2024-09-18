@@ -59,7 +59,7 @@
 
 ;; Update the zonefile for a name
 ;; This function allows authorized users to update the zonefile of a name
-(define-public (update-zonefile (name (buff 48)) (namespace (buff 20)) (new-zonefile (optional (buff 2048))))
+(define-public (update-zonefile (name (buff 48)) (namespace (buff 20)) (new-zonefile (optional (buff 4096))))
     (let 
         (
             ;; Retrieve namespace and name properties
