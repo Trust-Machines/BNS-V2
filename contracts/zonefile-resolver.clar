@@ -110,6 +110,14 @@
                 revoked: false
             }
         )
+        (print 
+            {
+                topic: "update-zonefile", 
+                name: name,
+                namespace: namespace,
+                new-zonefile: new-zonefile
+            }
+        )
         (ok true)
     )
 )
@@ -142,6 +150,14 @@
                 zonefile: none,
                 ;; Set revoked to true
                 revoked: true
+            }
+        )
+        (print 
+            {
+                topic: "revoke-name", 
+                name: name,
+                namespace: namespace,
+                zonefile: 0x
             }
         )
         (ok true)
