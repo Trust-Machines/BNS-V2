@@ -30,7 +30,7 @@
 )
 
 ;; (new) Constant to store the token URI, allowing for metadata association with the NFT
-(define-constant token-uri "test")
+(define-constant token-uri "https://gateway.pinata.cloud/ipfs/QmWKTZEMQNWngp23i7bgPzkineYC9LDvcxYkwNyVQVoH8y")
 
 ;; Only authorized caller to flip the switch
 (define-constant deployer tx-sender)
