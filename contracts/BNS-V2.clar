@@ -340,7 +340,17 @@
         ;; Update primary name if needed for recipient
         (update-primary-name-recipient id recipient)
         ;; Execute the NFT transfer.
-        (nft-transfer? BNS-V2 id nft-current-owner recipient)
+        (try! (nft-transfer? BNS-V2 id nft-current-owner recipient))
+        (print 
+            {
+                topic: "transfer-name", 
+                owner: recipient, 
+                name: {name: name, namespace: namespace}, 
+                id: id,
+                properties: (map-get? name-properties {name: name, namespace: namespace})
+            }
+        )
+        (ok true)
     )
 )
 
@@ -394,7 +404,17 @@
         ;; Update the name properties with the new owner
         (map-set name-properties name-and-namespace (merge name-props {owner: recipient}))
         ;; Execute the NFT transfer.
-        (nft-transfer? BNS-V2 id nft-current-owner recipient)
+        (try! (nft-transfer? BNS-V2 id nft-current-owner recipient))
+        (print 
+            {
+                topic: "transfer-name", 
+                owner: recipient, 
+                name: {name: name, namespace: namespace}, 
+                id: id,
+                properties: (map-get? name-properties {name: name, namespace: namespace})
+            }
+        )
+        (ok true)
     )
 )
 
@@ -509,7 +529,6 @@
     (begin 
         ;; Check if migration is complete
         (asserts! (var-get migration-complete) ERR-MIGRATION-IN-PROGRESS)
-
         ;; Verify the contract-caller is the owner of the name.
         (asserts! (is-eq (unwrap! (nft-get-owner? BNS-V2 primary-name-id) ERR-NO-NAME) contract-caller) ERR-NOT-AUTHORIZED)
         ;; Update the contract-caller's primary name.
@@ -549,7 +568,16 @@
         ;; Remove the name-properties.
         (map-delete name-properties name-and-namespace)
         ;; Executes the burn operation for the specified NFT.
-        (nft-burn? BNS-V2 id (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP))
+        (try! (nft-burn? BNS-V2 id (unwrap! (nft-get-owner? BNS-V2 id) ERR-UNWRAP)))
+        (print 
+            {
+                topic: "burn-name", 
+                owner: "", 
+                name: {name: (get name name-and-namespace), namespace: (get namespace name-and-namespace)}, 
+                id: id
+            }
+        )
+        (ok true)
     )
 )
 
@@ -569,14 +597,14 @@
         ;; Ensure manager can be changed
         (asserts! (not (get manager-frozen namespace-props)) ERR-NOT-AUTHORIZED)
         ;; Update the namespace manager to the new manager.
-        (ok 
-            (map-set namespaces namespace 
-                (merge 
-                    namespace-props 
-                    {namespace-manager: new-manager}
-                )
+        (map-set namespaces namespace 
+            (merge 
+                namespace-props 
+                {namespace-manager: new-manager}
             )
         )
+        (print { namespace: namespace, status: "transfer-manager", properties: (map-get? namespaces namespace) })
+        (ok true)
     )
 )
 
@@ -593,14 +621,14 @@
         ;; Ensure the caller is the current namespace manager.
         (asserts! (is-eq contract-caller (unwrap! (get namespace-manager namespace-props) ERR-NO-NAMESPACE-MANAGER)) ERR-NOT-AUTHORIZED)
         ;; Update the namespace manager to the new manager.
-        (ok 
-            (map-set namespaces namespace 
+        (map-set namespaces namespace 
                 (merge 
                     namespace-props 
                     {manager-frozen: true}
                 )
             )
-        )
+        (print { namespace: namespace, status: "freeze-manager", properties: (map-get? namespaces namespace) })
+        (ok true)
     )
 )
 
@@ -760,7 +788,7 @@
         ;; Update the `namespaces` map with the newly launched status.
         (map-set namespaces namespace (merge namespace-props { launched-at: (some burn-block-height) }))      
         ;; Emit an event to indicate the namespace is now ready and launched.
-        (print { namespace: namespace, status: "ready", properties: (map-get? namespaces namespace) })
+        (print { namespace: namespace, status: "launch", properties: (map-get? namespaces namespace) })
         ;; Confirm the successful launch of the namespace.
         (ok true)
     )
@@ -781,6 +809,7 @@
         (asserts! (is-eq contract-caller namespace-manager) ERR-NOT-AUTHORIZED)
         ;; Disable manager transfers.
         (map-set namespaces namespace (merge namespace-props {manager-transferable: false}))
+        (print { namespace: namespace, status: "turn-off-manager-transfers", properties: (map-get? namespaces namespace) })
         ;; Confirm successful execution.
         (ok true)
     )
@@ -844,6 +873,7 @@
                 owner: beneficiary,
                 name: {name: name, namespace: namespace},
                 id: current-mint,
+                properties: (map-get? name-properties {name: name, namespace: namespace})
             }
         )
         ;; Confirm successful import of the name.
@@ -909,6 +939,7 @@
         (asserts! (get can-update-price-function namespace-props) ERR-OPERATION-UNAUTHORIZED)
         ;; Update the namespace's record in the `namespaces` map with the new price function.
         (map-set namespaces namespace (merge namespace-props { price-function: price-function }))
+        (print { namespace: namespace, status: "update-price-manager", properties: (map-get? namespaces namespace) })
         ;; Confirm the successful update of the price function.
         (ok true)
     )
@@ -935,6 +966,7 @@
         (map-set namespaces namespace 
             (merge namespace-props { can-update-price-function: false })
         )
+        (print { namespace: namespace, status: "freeze-price-manager", properties: (map-get? namespaces namespace) })
         ;; Return a success confirmation.
         (ok true)
     )
@@ -1018,6 +1050,7 @@
                 owner: send-to,
                 name: {name: name, namespace: namespace},
                 id: id-to-be-minted,
+                properties: (map-get? name-properties {name: name, namespace: namespace})
             }
         )
         ;; Signals successful completion.
@@ -1216,6 +1249,7 @@
                 owner: send-to,
                 name: {name: name, namespace: namespace},
                 id: id-to-be-minted,
+                properties: (map-get? name-properties {name: name, namespace: namespace})
             }
         )
         ;; Confirms successful registration of the name.
@@ -1304,6 +1338,15 @@
                 }
             )
         )
+        (print 
+            {
+                topic: "renew-name", 
+                owner: owner, 
+                name: {name: name, namespace: namespace}, 
+                id: (get-id-from-bns name namespace),
+                properties: (map-get? name-properties {name: name, namespace: namespace})
+            }
+        )
         (ok true)
     )
 )
@@ -1347,7 +1390,6 @@
             )
             ;; Update the name properties with the new renewal height and owner
             (ok (try! (purchase-transfer name-index owner contract-caller)))
-
         )
     )  
 )
@@ -1543,7 +1585,17 @@
         ;; Updates the owner to the recipient.
         (map-set name-properties name-and-namespace (merge name-props {owner: recipient}))
         ;; Executes the NFT transfer from the current owner to the recipient.
-        (nft-transfer? BNS-V2 id owner recipient)
+        (try! (nft-transfer? BNS-V2 id owner recipient))
+        (print 
+            {
+                topic: "transfer-name", 
+                owner: recipient, 
+                name: {name: (get name name-and-namespace), namespace: (get namespace name-and-namespace)}, 
+                id: id,
+                properties: (map-get? name-properties {name: (get name name-and-namespace), namespace: (get namespace name-and-namespace)})
+            }
+        )
+        (ok true)
     )
 )
 
@@ -1623,7 +1675,15 @@
         ;; Transfer ownership of the name to the new owner
         (try! (purchase-transfer name-index (get owner name-props) contract-caller))
         ;; Log the name transfer event
-        (print {topic: "new-name", owner: contract-caller, name: {name: name, namespace: namespace}, id: name-index})
+        (print 
+            {
+                topic: "transfer-name", 
+                owner: contract-caller, 
+                name: {name: name, namespace: namespace}, 
+                id: name-index,
+                properties: (map-get? name-properties {name: name, namespace: namespace})
+            }
+        )
         ;; Return the name index
         (ok name-index)
     )
@@ -1659,7 +1719,15 @@
         ;; Burn the STX paid for the name registration
         (try! (as-contract (stx-burn? stx-burned .BNS-V2)))
         ;; Log the new name registration event
-        (print {topic: "new-name", owner: contract-caller, name: {name: name, namespace: namespace}, id: id-to-be-minted})
+        (print 
+            {
+                topic: "new-name", 
+                owner: contract-caller, 
+                name: {name: name, namespace: namespace}, 
+                id: id-to-be-minted,
+                properties: (map-get? name-properties {name: name, namespace: namespace})
+            }
+        )
         ;; Return the ID of the newly minted name
         (ok id-to-be-minted)
     )
@@ -1701,6 +1769,8 @@
                 price-function: pricing 
             }
         )
+        ;; Emit an event to indicate the namespace is now ready and launched.
+        (print { namespace: namespace, status: "launch", properties: (map-get? namespaces namespace)})
         ;; Confirm successful airdrop of the namespace
         (ok namespace)
     )
@@ -1749,6 +1819,15 @@
         (update-primary-name-recipient mint-index owner)
         ;; Mint the Name to the owner
         (try! (nft-mint? BNS-V2 mint-index owner))
+        (print 
+            {
+                topic: "new-name", 
+                owner: owner, 
+                name: {name: name, namespace: namespace}, 
+                id: mint-index,
+                properties: (map-get? name-properties {name: name, namespace: namespace})
+            }
+        )
         ;; Confirm successful airdrop of the namespace
         (ok mint-index)
     )
