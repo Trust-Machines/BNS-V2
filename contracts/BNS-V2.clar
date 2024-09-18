@@ -66,6 +66,7 @@
 (define-constant ERR-IMPORTED-BEFORE (err u128))
 (define-constant ERR-LIFETIME-EQUAL-0 (err u129))
 (define-constant ERR-MIGRATION-IN-PROGRESS (err u130))
+(define-constant ERR-NO-PRIMARY-NAME (err u131))
 
 ;; variables
 ;; (new) Variable to see if migration is complete
@@ -216,6 +217,12 @@
     (ok (nft-get-owner? BNS-V2 id))
 )
 
+;; @desc (new) New get owner function
+(define-read-only (get-owner-name (name (buff 48)) (namespace (buff 20)))
+    ;; Check and return the owner of the specified NFT
+    (ok (nft-get-owner? BNS-V2 (unwrap! (get-id-from-bns name namespace) ERR-NO-NAME)))
+)
+
 ;; Read-only function `get-namespace-price` calculates the registration price for a namespace based on its length.
 ;; @params:
     ;; namespace (buff 20): The namespace for which the price is being calculated.
@@ -288,6 +295,11 @@
 ;; (new) Fetcher for primary name
 (define-read-only (get-primary-name (owner principal))
     (map-get? primary-name owner)
+)
+
+;; (new) Fetcher for primary name returns name and namespace
+(define-read-only (get-primary (owner principal))
+    (ok (get-bns-from-id (unwrap! (map-get? primary-name owner) ERR-NO-PRIMARY-NAME)))
 )
 
 ;; public functions
