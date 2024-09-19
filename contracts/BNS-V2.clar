@@ -29,11 +29,31 @@
     u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000 u640000000)
 )
 
-;; (new) Constant to store the token URI, allowing for metadata association with the NFT
-(define-constant token-uri "https://gateway.pinata.cloud/ipfs/QmWKTZEMQNWngp23i7bgPzkineYC9LDvcxYkwNyVQVoH8y")
-
-;; Only authorized caller to flip the switch
+;; Only authorized caller to flip the switch and update URI
 (define-constant deployer tx-sender)
+
+;; (new) Var to store the token URI, allowing for metadata association with the NFT
+(define-data-var token-uri (string-ascii 256) "ipfs://QmUQY1aZ799SPRaNBFqeCvvmZ4fTQfZvWHauRvHAukyQDB")
+
+(define-public (update-token-uri (new-token-uri (string-ascii 256)))
+    (ok 
+        (begin 
+            (asserts! (is-eq contract-caller deployer) ERR-NOT-AUTHORIZED) 
+            (var-set token-uri new-token-uri)
+        )
+    )
+)
+
+(define-data-var contract-uri (string-ascii 256) "ipfs://QmWKTZEMQNWngp23i7bgPzkineYC9LDvcxYkwNyVQVoH8y")
+
+(define-public (update-contract-uri (new-token-uri (string-ascii 256)))
+    (ok 
+        (begin 
+            (asserts! (is-eq contract-caller deployer) ERR-NOT-AUTHORIZED) 
+            (var-set token-uri new-token-uri)
+        )
+    )
+)
 
 ;; errors
 (define-constant ERR-UNWRAP (err u101))
@@ -202,11 +222,15 @@
     )
 )
 
-
 ;; @desc (new) SIP-09 compliant function to get token URI
 (define-read-only (get-token-uri (id uint))
     ;; Returns a predefined set URI for the token metadata
-    (ok (some token-uri))
+    (ok (some (var-get token-uri)))
+)
+
+(define-read-only (get-contract-uri)
+    ;; Returns a predefined set URI for the contract metadata
+    (ok (some (var-get contract-uri)))
 )
 
 ;; @desc (new) SIP-09 compliant function to get the owner of a specific token by its ID
@@ -234,7 +258,7 @@
         (asserts! (> namespace-len u0) ERR-NAMESPACE-BLANK)
         ;; Retrieve the price for the namespace based on its length from the NAMESPACE-PRICE-TIERS list.
         ;; The price tier is determined by the minimum of 7 or the namespace length minus one.
-        (ok (unwrap! (element-at NAMESPACE-PRICE-TIERS (min u7 (- namespace-len u1))) ERR-UNWRAP))
+        (ok (unwrap! (element-at? NAMESPACE-PRICE-TIERS (min u7 (- namespace-len u1))) ERR-UNWRAP))
     )
 )
 
@@ -1429,7 +1453,7 @@
 ;; Retrieves an exponent value from a list of buckets based on the provided index.
 (define-private (get-exp-at-index (buckets (list 16 uint)) (index uint))
     ;; Retrieves the element at the specified index.
-    (unwrap-panic (element-at buckets index))  
+    (unwrap-panic (element-at? buckets index))  
 )
 
 ;; Determines if a character is a digit (0-9).
@@ -1861,3 +1885,4 @@
         )
     )
 )
+
