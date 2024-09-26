@@ -50,14 +50,17 @@ plan:
     - id: 0
       transactions:
         - emulated-contract-publish:
+            contract-name: nft-trait
+            emulated-sender: SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9
+            path: "./.cache/requirements/SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.clar"
+            clarity-version: 1
+      epoch: "2.0"
+    - id: 1
+      transactions:
+        - emulated-contract-publish:
             contract-name: commission-trait
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/commission-trait.clar
-            clarity-version: 2
-        - emulated-contract-publish:
-            contract-name: sip-09
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/sip-09.clar
             clarity-version: 2
         - emulated-contract-publish:
             contract-name: BNS-V2
@@ -75,9 +78,19 @@ plan:
             path: contracts/migration-airdrop.clar
             clarity-version: 2
         - emulated-contract-publish:
+            contract-name: name-airdrop
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/name-airdrop.clar
+            clarity-version: 2
+        - emulated-contract-publish:
             contract-name: namespace-airdrop
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/namespace-airdrop.clar
+            clarity-version: 2
+        - emulated-contract-publish:
+            contract-name: sip-09
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/sip-09.clar
             clarity-version: 2
         - emulated-contract-publish:
             contract-name: wrong-bns-v2-commission-container

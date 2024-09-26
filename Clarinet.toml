@@ -4,7 +4,9 @@ description = ''
 authors = []
 telemetry = true
 cache_dir = './.cache'
-requirements = []
+
+[[project.requirements]]
+contract_id = 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait'
 [contracts.BNS-V2]
 path = 'contracts/BNS-V2.clar'
 clarity_version = 2
@@ -22,6 +24,11 @@ epoch = 2.4
 
 [contracts.migration-airdrop]
 path = 'contracts/migration-airdrop.clar'
+clarity_version = 2
+epoch = 2.4
+
+[contracts.name-airdrop]
+path = 'contracts/name-airdrop.clar'
 clarity_version = 2
 epoch = 2.4
 

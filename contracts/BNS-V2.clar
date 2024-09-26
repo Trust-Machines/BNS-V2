@@ -1,11 +1,10 @@
 ;; title: BNS-V2
-;; version: V-1
+;; version: V-2
 ;; summary: Updated BNS contract, handles the creation of new namespaces and new names on each namespace
-;; description:
 
 ;; traits
 ;; (new) Import SIP-09 NFT trait 
-(impl-trait .sip-09.nft-trait)
+(impl-trait 'SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.nft-trait.nft-trait)
 ;; (new) Import a custom commission trait for handling commissions for NFT marketplaces functions
 (use-trait commission-trait .commission-trait.commission)
 
@@ -30,7 +29,7 @@
 )
 
 ;; Only authorized caller to flip the switch and update URI
-(define-constant deployer tx-sender)
+(define-constant DEPLOYER tx-sender)
 
 ;; (new) Var to store the token URI, allowing for metadata association with the NFT
 (define-data-var token-uri (string-ascii 256) "ipfs://QmUQY1aZ799SPRaNBFqeCvvmZ4fTQfZvWHauRvHAukyQDB")
@@ -38,7 +37,7 @@
 (define-public (update-token-uri (new-token-uri (string-ascii 256)))
     (ok 
         (begin 
-            (asserts! (is-eq contract-caller deployer) ERR-NOT-AUTHORIZED) 
+            (asserts! (is-eq contract-caller DEPLOYER) ERR-NOT-AUTHORIZED) 
             (var-set token-uri new-token-uri)
         )
     )
@@ -46,11 +45,11 @@
 
 (define-data-var contract-uri (string-ascii 256) "ipfs://QmWKTZEMQNWngp23i7bgPzkineYC9LDvcxYkwNyVQVoH8y")
 
-(define-public (update-contract-uri (new-token-uri (string-ascii 256)))
+(define-public (update-contract-uri (new-contract-uri (string-ascii 256)))
     (ok 
         (begin 
-            (asserts! (is-eq contract-caller deployer) ERR-NOT-AUTHORIZED) 
-            (var-set token-uri new-token-uri)
+            (asserts! (is-eq contract-caller DEPLOYER) ERR-NOT-AUTHORIZED) 
+            (var-set token-uri new-contract-uri)
         )
     )
 )
@@ -1788,13 +1787,13 @@
     (manager-transfers bool) 
     (manager-frozen bool)
     (revealed-at uint)
-    (launched-at (optional uint))
+    (launched-at uint)
 )
     (begin
         ;; Check if migration is complete
         (asserts! (not (var-get migration-complete)) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the contract-caller is the airdrop contract.
-        (asserts! (is-eq .ma-test-1 contract-caller) ERR-OPERATION-UNAUTHORIZED)
+        (asserts! (is-eq DEPLOYER tx-sender) ERR-OPERATION-UNAUTHORIZED)
         ;; Ensure the namespace consists of valid characters only.
         (asserts! (not (has-invalid-chars namespace)) ERR-CHARSET-INVALID)
         ;; Check that the namespace is available for reveal.
@@ -1807,7 +1806,7 @@
                 manager-frozen: manager-frozen,
                 namespace-import: namespace-import,
                 revealed-at: revealed-at,
-                launched-at: launched-at,
+                launched-at: (some launched-at),
                 lifetime: lifetime,
                 can-update-price-function: can-update-price,
                 price-function: pricing 
@@ -1823,53 +1822,45 @@
 (define-public (name-airdrop
     (name (buff 48))
     (namespace (buff 20))
-    (imported-at (optional uint)) 
-    (registered-at (optional uint)) 
-    (renewal-height uint)
+    (registered-at uint)
+    (lifetime uint) 
     (owner principal)
 )
     (let
         (
             (mint-index (+ u1 (var-get bns-index)))
-            (namespace-props (unwrap! (map-get? namespaces namespace) ERR-NAMESPACE-NOT-FOUND))
-            (pricing (get price-function namespace-props))
-            (name-price (try! (compute-name-price name pricing)))
         )
         ;; Check if migration is complete
         (asserts! (not (var-get migration-complete)) ERR-MIGRATION-IN-PROGRESS)
         ;; Ensure the contract-caller is the airdrop contract.
-        (asserts! (is-eq .ma-test-1 contract-caller) ERR-OPERATION-UNAUTHORIZED)
-        ;; Ensure the name does not exist
-        (asserts! (is-none (map-get? name-to-index {name: name, namespace: namespace})) ERR-NAME-NOT-AVAILABLE)
+        (asserts! (is-eq DEPLOYER tx-sender) ERR-OPERATION-UNAUTHORIZED)
         ;; Set all properties
         (map-set name-to-index {name: name, namespace: namespace} mint-index)
         (map-set index-to-name mint-index {name: name, namespace: namespace})
         (map-set name-properties {name: name, namespace: namespace}
             {
-                registered-at: registered-at,
-                imported-at: imported-at,
-                ;; Set to none new property
+                registered-at: (some registered-at),
+                imported-at: none,
                 hashed-salted-fqn-preorder: none,
-                ;; Set to none new property
                 preordered-by: none,
-                renewal-height: renewal-height,
-                stx-burn: name-price,
+                renewal-height: (if (is-eq lifetime u0) u0 (+ burn-block-height lifetime)),
+                stx-burn: u0,
                 owner: owner,
             }
         )
         ;; Update the index 
         (var-set bns-index mint-index)
         ;; Update the primary name of the recipient
-        (update-primary-name-recipient mint-index owner)
+        (map-set primary-name owner mint-index)
         ;; Mint the Name to the owner
         (try! (nft-mint? BNS-V2 mint-index owner))
         (print 
             {
-                topic: "new-name", 
+                topic: "new-airdrop", 
                 owner: owner, 
                 name: {name: name, namespace: namespace}, 
                 id: mint-index,
-                properties: (map-get? name-properties {name: name, namespace: namespace})
+                registered-at: registered-at, 
             }
         )
         ;; Confirm successful airdrop of the namespace
@@ -1880,7 +1871,7 @@
 (define-public (flip-migration-complete)
     (ok 
         (begin 
-            (asserts! (is-eq contract-caller deployer) ERR-NOT-AUTHORIZED) 
+            (asserts! (is-eq contract-caller DEPLOYER) ERR-NOT-AUTHORIZED) 
             (var-set migration-complete true)
         )
     )

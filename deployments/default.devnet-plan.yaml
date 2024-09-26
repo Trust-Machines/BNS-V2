@@ -1,0 +1,74 @@
+---
+id: 0
+name: Devnet deployment
+network: devnet
+stacks-node: "http://localhost:20443"
+bitcoin-node: "http://devnet:devnet@localhost:18443"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - contract-publish:
+            contract-name: commission-trait
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 720
+            path: contracts/commission-trait.clar
+            anchor-block-only: true
+            clarity-version: 2
+        - contract-publish:
+            contract-name: sip-09
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 4680
+            path: contracts/sip-09.clar
+            anchor-block-only: true
+            clarity-version: 2
+        - contract-publish:
+            contract-name: BNS-V2
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 915140
+            path: contracts/BNS-V2.clar
+            anchor-block-only: true
+            clarity-version: 2
+        - contract-publish:
+            contract-name: gamma-bns-v2-commission-container
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 2460
+            path: contracts/gamma-bns-v2-commission-container.clar
+            anchor-block-only: true
+            clarity-version: 2
+        - contract-publish:
+            contract-name: migration-airdrop
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 19040
+            path: contracts/migration-airdrop.clar
+            anchor-block-only: true
+            clarity-version: 2
+        - contract-publish:
+            contract-name: name-airdrop
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 598610
+            path: contracts/name-airdrop.clar
+            anchor-block-only: true
+            clarity-version: 2
+        - contract-publish:
+            contract-name: namespace-airdrop
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 378400
+            path: contracts/namespace-airdrop.clar
+            anchor-block-only: true
+            clarity-version: 2
+        - contract-publish:
+            contract-name: wrong-bns-v2-commission-container
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 2450
+            path: contracts/wrong-bns-v2-commission-container.clar
+            anchor-block-only: true
+            clarity-version: 2
+        - contract-publish:
+            contract-name: zonefile-resolver
+            expected-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            cost: 64820
+            path: contracts/zonefile-resolver.clar
+            anchor-block-only: true
+            clarity-version: 2
+      epoch: "2.4"
