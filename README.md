@@ -96,13 +96,14 @@ Zonefiles now live-onchain & in their own contract. This contract is fairly limi
 
 ### Considerations
 Please make sure you are always interacting with the official versions of BNS-V2
-Mainnet
+
+**Mainnet**
 
 `SP2QEZ06AGJ3RKJPBV14SY1V5BBFNAW33D96YPGZF.BNS-V2`
 
 `SP2QEZ06AGJ3RKJPBV14SY1V5BBFNAW33D96YPGZF.zonefile-resolver`
 
-Testnet
+**Testnet**
 
 `ST2QEZ06AGJ3RKJPBV14SY1V5BBFNAW33D9SZJQ0M.BNS-V2`
 
