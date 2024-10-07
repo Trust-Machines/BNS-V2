@@ -95,6 +95,18 @@ Zonefiles also look significantly different in this upgrade. These changes can s
 Zonefiles now live-onchain & in their own contract. This contract is fairly limited with a single map & only three functions: resolve-name, update-zonefile & revoke-name. 
 
 ### Considerations
+Please make sure you are always interacting with the official versions of BNS-V2
+Mainnet
+
+`SP2QEZ06AGJ3RKJPBV14SY1V5BBFNAW33D96YPGZF.BNS-V2`
+
+`SP2QEZ06AGJ3RKJPBV14SY1V5BBFNAW33D96YPGZF.zonefile-resolver`
+
+Testnet
+
+`ST2QEZ06AGJ3RKJPBV14SY1V5BBFNAW33D9SZJQ0M.BNS-V2`
+
+`ST2QEZ06AGJ3RKJPBV14SY1V5BBFNAW33D9SZJQ0M.zonefile-resolver`
 
 ## Contributing
 We welcome and encourage contributions to the BNS-V2 project! If you’re interested in contributing to the BNS-V2 contract before its deployment to mainnet, please open an issue to allow the team to review your proposed changes or additions.
