@@ -80,10 +80,14 @@ A few important decisions to make when creating a managed namespace are:
 - Will the manager contract *ever* need to be changed?
 - How will your mint process work?
 - Can managers transfer *any* name?
+- Will you names be tradeable?
+- Does your namespace require metadata?
 
 These are critical decisions that one must consider to future-proof a managed namespace. For the first question, it's almost guranteed that you *will* need to update or remove the manager contract, therefore, it's imperative that manager contract include access to the 'mng-manager-transfer' function. If the initial manager contract does not include this function, it will be impossible to update or remove the namespace to a new manager contract. 
 
 Next, the mint process is vastly more customizable in a managed namespace. At a high-level, managed namespaces have access to the same two paths for name registration: 2 steps / mng-name-preorder + mng-name-register, or a single step / fast-claim. Managed contracts **must** have access to one or both of these functions to successfully mint names in a namespace; additionally, the mint process can be customized to a high degree to allow for: free mints, token-gated mints, variable pricing, sip-10 token support, etc...
+
+Once minted, you must take special care to implement the three standard sip-09 market functions: list, unlist & buy. Managed namespaces *are not* tradeable by default, they *must* include wrapped calls into the list,unlist & buy functions in BNSv2 as those functions specifically check against 'contract-caller' (aka the managed contract).
 
 Lastly, the ability to allow for the managed namespace contract *itself* to transfer any name is a critical decision. It's almost guranteed that you **don't** want to allow this, as it would allow the contract to transfer any name to any principal; however, there are some use-cases where much more granular control is required. 
 
