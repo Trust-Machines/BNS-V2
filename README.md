@@ -1,6 +1,6 @@
 # BNS-V2
 ## Overview
-The BNS-V2 is a decentralized naming system built on the Stacks blockchain. It allows users to register, manage, and transfer names within different namespaces. It offers features for decentralized name management, marketplace integration, and supports both open and managed namespaces. This system can be used to create human-readable identifiers for Stacks and Bitcoin addresses.
+The BNS-V2 is a decentralized naming system built on the Stacks blockchain. It allows users to register, manage, and transfer names within different namespaces. It offers features for decentralized name management, marketplace integration, and supports both open and managed namespaces. This system can be used to create human-readable identifiers for Stacks and Bitcoin addresses. The SDK documentation is here https://www.npmjs.com/package/bns-v2-sdk.
 ## Key Features
 - **Namespace Management:** Create and manage namespaces
 - **Name Registration:** Register names within namespaces
